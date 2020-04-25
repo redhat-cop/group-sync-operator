@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: group-sync-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: group-sync-operator
+  template:
+    metadata:
+      labels:
+        name: group-sync-operator
+    spec:
+      serviceAccountName: group-sync-operator
+      containers:
+        - name: group-sync-operator
+          image: quay.io/redhat-cop/group-sync-operator
+          command:
+            - group-sync-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "group-sync-operator"
