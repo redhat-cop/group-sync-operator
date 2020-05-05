@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: github-groupsync
+spec:
+  providers:
+    - name: github
+      github:
+        credentialsSecretName: github-group-sync
+        organization: myorg

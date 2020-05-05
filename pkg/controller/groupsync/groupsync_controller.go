@@ -10,6 +10,7 @@ import (
 	"github.com/redhat-cop/group-sync-operator/pkg/controller/constants"
 	"github.com/redhat-cop/group-sync-operator/pkg/controller/syncer"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	kapierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -164,9 +165,7 @@ func (r *ReconcileGroupSync) Reconcile(request reconcile.Request) (reconcile.Res
 			ocpGroup.SetAnnotations(ocpGroupAnnotations)
 
 			// Add Label for new resource
-			if ocpGroup.GetCreationTimestamp().Local().IsZero() {
-				ocpGroup.Labels[constants.SyncProvider] = providerLabel
-			}
+			ocpGroup.Labels[constants.SyncProvider] = providerLabel
 
 			// Add Gloabl Annotations/Labels
 			ocpGroup.Annotations[constants.SyncTimestamp] = ISO8601(time.Now())
@@ -190,8 +189,12 @@ func (r *ReconcileGroupSync) Reconcile(request reconcile.Request) (reconcile.Res
 
 	successResult, err := r.ManageSuccess(instance)
 
-	if err == nil && instance.Spec.ResyncPeriodMinutes != nil {
-		successResult.RequeueAfter = time.Duration((*instance.Spec.ResyncPeriodMinutes * 60) * (1000 * 1000 * 1000))
+	if err == nil && instance.Spec.Schedule != "" {
+		sched, _ := cron.ParseStandard(instance.Spec.Schedule)
+
+		currentTime := time.Now()
+		nextScheduledTime := sched.Next(currentTime)
+		successResult.RequeueAfter = nextScheduledTime.Sub(currentTime)
 	}
 
 	return successResult, err

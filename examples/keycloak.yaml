@@ -6,7 +6,6 @@ spec:
   providers:
     - name: keycloak
       keycloak:
-        insecure: true
         realm: ocp
-        url: "https://keycloak-keycloak-operator.apps.cluster-a8b1.a8b1.example.opentlc.com"
-        secretName: keycloak-group-sync
+        url: "https://keycloak-keycloak-operator.apps.openshift.com"
+        credentialsSecretName: keycloak-group-sync
