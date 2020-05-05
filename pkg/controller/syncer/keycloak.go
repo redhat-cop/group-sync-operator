@@ -22,15 +22,13 @@ import (
 )
 
 const (
-	masterRealm       = "master"
-	secretUsernameKey = "username"
-	secretPasswordKey = "password"
-	secretCaKey       = "ca.crt"
+	masterRealm        = "master"
+	defaultSecretCaKey = "ca.crt"
 )
 
 var (
-	log    = logf.Log.WithName("syncer_keycloak")
-	truthy = true
+	keycloakLogger = logf.Log.WithName("syncer_keycloak")
+	truthy         = true
 )
 
 type KeycloakSyncer struct {
@@ -42,12 +40,17 @@ type KeycloakSyncer struct {
 	CachedGroups       map[string]*gocloak.Group
 	CachedGroupMembers map[string][]*gocloak.User
 	ReconcilerBase     util.ReconcilerBase
-	Secret             *corev1.Secret
+	CredentialsSecret  *corev1.Secret
+	CaCertificate      []byte
 }
 
 func (k *KeycloakSyncer) Init() bool {
 
 	changed := false
+
+	k.CachedGroupMembers = make(map[string][]*gocloak.User)
+	k.CachedGroups = make(map[string]*gocloak.Group)
+	k.GoCloak = gocloak.NewClient(k.Provider.URL)
 
 	if k.Provider.LoginRealm == "" {
 		k.Provider.LoginRealm = masterRealm
@@ -68,8 +71,8 @@ func (k *KeycloakSyncer) Validate() error {
 	validationErrors := []error{}
 
 	// Verify Secret Containing Username and Password Exists with Valid Keys
-	secret := &corev1.Secret{}
-	err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.SecretName, Namespace: k.GroupSync.Namespace}, secret)
+	credentialsSecret := &corev1.Secret{}
+	err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CredentialsSecretName, Namespace: k.GroupSync.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
@@ -80,27 +83,46 @@ func (k *KeycloakSyncer) Validate() error {
 	}
 
 	// Username key validation
-	if _, found := secret.Data[secretUsernameKey]; !found {
-		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.SecretName, k.GroupSync.Namespace))
+	if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
+		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
 	}
 
 	// Password key validation
-	if _, found := secret.Data[secretUsernameKey]; !found {
-		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.SecretName, k.GroupSync.Namespace))
+	if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
+		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
 	}
 
-	k.Secret = secret
+	k.CredentialsSecret = credentialsSecret
+
+	if k.Provider.CaSecretRef != nil {
+		caSecret := &corev1.Secret{}
+		err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CaSecretRef.Name, Namespace: k.GroupSync.Namespace}, caSecret)
+
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		}
+
+		var secretCaKey string
+		if k.Provider.CaSecretRef.Key != "" {
+			secretCaKey = k.Provider.CaSecretRef.Key
+		} else {
+			secretCaKey = defaultSecretCaKey
+		}
+
+		// Password key validation
+		if _, found := caSecret.Data[secretCaKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, k.Provider.CaSecretRef.Name, k.GroupSync.Namespace))
+		}
+
+		k.CaCertificate = caSecret.Data[secretCaKey]
+
+	}
 
 	return utilerrors.NewAggregate(validationErrors)
 
 }
 
 func (k *KeycloakSyncer) Bind() error {
-
-	k.CachedGroupMembers = make(map[string][]*gocloak.User)
-	k.CachedGroups = make(map[string]*gocloak.Group)
-
-	k.GoCloak = gocloak.NewClient(k.Provider.URL)
 
 	restyClient := k.GoCloak.RestyClient()
 
@@ -109,21 +131,21 @@ func (k *KeycloakSyncer) Bind() error {
 	}
 
 	// Add trusted certificate if provided
-	if caCrt, found := k.Secret.Data[secretCaKey]; found {
+	if len(k.CaCertificate) > 0 {
 
 		tlsConfig := &tls.Config{}
 		if tlsConfig.RootCAs == nil {
 			tlsConfig.RootCAs = x509.NewCertPool()
 		}
 
-		tlsConfig.RootCAs.AppendCertsFromPEM(caCrt)
+		tlsConfig.RootCAs.AppendCertsFromPEM(k.CaCertificate)
 
 		restyClient.SetTLSClientConfig(tlsConfig)
 	}
 
 	k.GoCloak.SetRestyClient(restyClient)
 
-	token, err := k.GoCloak.LoginAdmin(string(k.Secret.Data[secretUsernameKey]), string(k.Secret.Data[secretPasswordKey]), k.Provider.LoginRealm)
+	token, err := k.GoCloak.LoginAdmin(string(k.CredentialsSecret.Data[secretUsernameKey]), string(k.CredentialsSecret.Data[secretPasswordKey]), k.Provider.LoginRealm)
 
 	k.Token = token
 
@@ -131,7 +153,7 @@ func (k *KeycloakSyncer) Bind() error {
 		return err
 	}
 
-	log.Info("Successfully Authenticated with Keycloak Provider")
+	keycloakLogger.Info("Successfully Authenticated with Keycloak Provider")
 
 	return nil
 }
@@ -143,11 +165,12 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 	groups, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupParams)
 
 	if err != nil {
-		log.Error(err, "Failed to get Groups", "Provider", k.Name)
+		keycloakLogger.Error(err, "Failed to get Groups", "Provider", k.Name)
 		return nil, err
 	}
 
 	for _, group := range groups {
+
 		if _, groupFound := k.CachedGroups[*group.ID]; !groupFound {
 			k.processGroupsAndMembers(group, nil, k.Provider.Scope)
 		}
@@ -192,6 +215,11 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 }
 
 func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Group, scope redhatcopv1alpha1.SyncScope) error {
+
+	if parentGroup == nil && !isGroupAllowed(*group.Name, k.Provider.Groups) {
+		return nil
+	}
+
 	k.CachedGroups[*group.ID] = group
 
 	groupParams := gocloak.GetGroupsParams{Full: &truthy}

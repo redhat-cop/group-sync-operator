@@ -3,10 +3,18 @@ package syncer
 import (
 	"fmt"
 
+	"github.com/robfig/cron/v3"
+
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/pkg/apis/redhatcop/v1alpha1"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+)
+
+const (
+	secretUsernameKey = "username"
+	secretPasswordKey = "password"
+	secretTokenKey    = "token"
 )
 
 type GroupSyncer interface {
@@ -49,6 +57,10 @@ func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider 
 		{
 			return &KeycloakSyncer{GroupSync: groupSync, Provider: provider.Keycloak, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
 		}
+	case provider.GitHub != nil:
+		{
+			return &GitHubSyncer{GroupSync: groupSync, Provider: provider.GitHub, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
+		}
 	}
 
 	return nil, fmt.Errorf("Could not find syncer for provider '%s'", provider.Name)
@@ -73,6 +85,13 @@ func (m *GroupSyncMgr) SetDefaults() bool {
 func (m *GroupSyncMgr) Validate() error {
 	syncersError := []error{}
 
+	// Validate Cron Schedule
+	if m.GroupSync.Spec.Schedule != "" {
+		if _, err := cron.ParseStandard(m.GroupSync.Spec.Schedule); err != nil {
+			syncersError = append(syncersError, fmt.Errorf(fmt.Sprintf("Failed to validate cron schedule: %s", m.GroupSync.Spec.Schedule)))
+		}
+	}
+
 	for _, syncer := range m.GroupSyncers {
 		err := syncer.Validate()
 
@@ -84,4 +103,18 @@ func (m *GroupSyncMgr) Validate() error {
 
 	return utilerrors.NewAggregate(syncersError)
 
+}
+
+func isGroupAllowed(groupName string, allowedGroups []string) bool {
+	if allowedGroups == nil || len(allowedGroups) == 0 {
+		return true
+	}
+
+	for _, allowedGroup := range allowedGroups {
+		if allowedGroup == groupName {
+			return true
+		}
+	}
+
+	return false
 }

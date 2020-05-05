@@ -23,7 +23,7 @@ type GroupSyncSpec struct {
 	// +patchStrategy=merge,retainKeys
 	Providers []Provider `json:"providers,omitempty" patchStrategy:"merge,retainKeys" patchMergeKey:"name" protobuf:"bytes,1,rep,name=providers"`
 
-	ResyncPeriodMinutes *int `json:"resyncPeriodMinutes,omitempty"`
+	Schedule string `json:"schedule,omitempty"`
 }
 
 // GroupSyncStatus defines the observed state of GroupSync
@@ -63,17 +63,36 @@ type Provider struct {
 // ProviderType represents the provider to synchronize against
 type ProviderType struct {
 	Keycloak *KeycloakProvider `json:"keycloak,omitempty"`
+	GitHub   *GitHubProvider   `json:"github,omitempty"`
 }
 
 // KeycloakProvider represents integration with Keycloak
 type KeycloakProvider struct {
-	URL        string `json:"url"`
-	LoginRealm string `json:"loginRealm,omitempty"`
-	Realm      string `json:"realm"`
-	SecretName string `json:"secretName"`
-	Insecure   bool   `json:"insecure,omitempty"`
+	CaSecretRef           *SecretRef `json:"caSecretRef,omitempty"`
+	CredentialsSecretName string     `json:"credentialsSecretName"`
+	Groups                []string   `json:"groups,omitempty"`
+	Insecure              bool       `json:"insecure,omitempty"`
+	LoginRealm            string     `json:"loginRealm,omitempty"`
+	Realm                 string     `json:"realm"`
 	// +kubebuilder:validation:Enum=one;sub
 	Scope SyncScope `json:"scope,omitempty"`
+	URL   string    `json:"url"`
+}
+
+// GitHubProvider represents integration with GitHub
+type GitHubProvider struct {
+	CaSecretRef           *SecretRef `json:"caSecretRef,omitempty"`
+	CredentialsSecretName string     `json:"credentialsSecretName"`
+	Insecure              bool       `json:"insecure,omitempty"`
+	Organization          string     `json:"organization,omitempty"`
+	Teams                 []string   `json:"teams,omitempty"`
+	URL                   *string    `json:"url,omitempty"`
+}
+
+// SecretRef represents a reference to an item within a Secret
+type SecretRef struct {
+	Name string `json:"name"`
+	Key  string `json:"key,omitempty"`
 }
 
 func (s *GroupSync) GetReconcileStatus() status.Conditions {

@@ -43,9 +43,66 @@ oc -n group-sync-operator apply -f deploy
 
 Integration with external systems is made possible through a set of plugable external providers. The following providers are currently supported:
 
+* [GitHub](https://github.com)
 * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
 
-The following sections describe the configuration options provided by each provider
+The following sections describe the configuration options available for each provider
+
+
+### GitHub
+
+Teams stored within a GitHub organization can be synchronized into OpenShift. The following table describes the set of configuration options for the GitHub provider:
+
+| Name | Description | Defaults | Required | 
+| ----- | ---------- | -------- | ----- |
+| `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `insecure` | Ignore SSL verification | 'false' | No |
+| `organization` | Organization to synchronize against | | Yes |
+| `teams` | List of teams to filter against | | No |
+| `url` | Base URL for the GitHub or GitHub Enterprise host (Must contain a trailing slash) | | No |
+
+
+The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
+
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: github-groupsync
+  namespace: group-sync-operator
+spec:
+  providers:
+  - github:
+      organization: ocp
+      credentialsSecretName: github-group-sync
+```
+
+#### Authenticating to GitHub
+
+Authentication to GitHub can be performed using an OAuth Personal Access Token or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
+
+When using an OAuth token, the following key is required:
+
+* `token` - OAuth token
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic github-group-sync --from-literal=token=<token>
+```
+
+
+The following keys are required for username and password:
+
+* `username` - Username for authenticating with Keycloak
+* `password` - Password for authenticating with Keycloak
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic github-group-sync --from-literal=username=<username> --from-literal=password=<password>
+```
 
 ### Keycloak
 
@@ -53,12 +110,15 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
-| `url` | URL Location for Keycloak | | Yes |
+| `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `groups` | List of groups to filter against | | No |
+| `insecure` | Ignore SSL verification | 'false' | No |
 | `loginRealm` | Realm to authenticate against | `master` | No |
 | `realm` | Realm to synchronize | | Yes |
-| `secretName` | Name of the secret containing authentication details (See below) | | Yes |
-| `insecure` | Ignore SSL verification | 'false' | No |
 | `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
+| `url` | URL Location for Keycloak | | Yes |
+
 
 The following is an example of a minimal configuration that can be applied to integrate with a Keycloak provider:
 
@@ -72,7 +132,7 @@ spec:
   providers:
   - keycloak:
       realm: ocp
-      secretName: keycloak-group-sync
+      credentialsSecretName: keycloak-group-sync
       url: https://keycloak-keycloak-operator.apps.openshift.com
 ```
 
@@ -83,12 +143,47 @@ A secret must be created in the same namespace that contains the `GroupSync` res
 * `username` - Username for authenticating with Keycloak
 * `password` - Password for authenticating with Keycloak
 
-To specify the TLS certificates that should be used to communicate with Keycloak, add the certificates to `ca.crt` key 
+## CA Certificates
 
-## Sync Period
+Each provider allows for certificates to be provided in a secret to communicate to the target host. The secret must be placed in the same namespace as the `GroupSync`. An example of how a CA certificate for the Keycloak provider can be found below:
 
-To specify the period for which synchronization should occur on a regular basis, the `syncPeriodMinutes` field can be set as described below
 
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: keycloak-groupsync
+  namespace: group-sync-operator
+spec:
+  providers:
+  - keycloak:
+      realm: ocp
+      credentialsSecretName: keycloak-group-sync
+      url: https://keycloak-keycloak-operator.apps.openshift.com
+      caSecretRef:
+        name: keycloak-certs
+        key: tls.crt
+```
+
+
+## Scheduled Execution
+
+A cron style expression can be specified for which a synchronization event will occur. The following specifies that a synchronization should occur nightly at 3AM
+
+
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: keycloak-groupsync
+  namespace: group-sync-operator
+spec:
+  schedule: "0 3 * * *"
+  providers:
+  - ...
+```
+
+If a schedule is not provided, synchronization will occur only when the object is reconciled by the platform.
 
 
 ## Local Development
@@ -110,3 +205,4 @@ Using the [operator-sdk](https://github.com/operator-framework/operator-sdk), ru
 ```shell
 oc apply -f deploy/crds/redhatcop.redhat.io_groupsyncs_crd.yaml
 OPERATOR_NAME='group-sync-operator' operator-sdk run --local --watch-namespace ""
+```

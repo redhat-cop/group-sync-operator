@@ -37,9 +37,55 @@ spec:
               items:
                 description: Provider represents the container for a single provider
                 properties:
+                  github:
+                    description: GitHubProvider represents integration with GitHub
+                    properties:
+                      caSecretRef:
+                        description: SecretRef represents a reference to an item within
+                          a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      credentialsSecretName:
+                        type: string
+                      insecure:
+                        type: boolean
+                      organization:
+                        type: string
+                      teams:
+                        items:
+                          type: string
+                        type: array
+                      url:
+                        type: string
+                    required:
+                    - credentialsSecretName
+                    type: object
                   keycloak:
                     description: KeycloakProvider represents integration with Keycloak
                     properties:
+                      caSecretRef:
+                        description: SecretRef represents a reference to an item within
+                          a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      credentialsSecretName:
+                        type: string
+                      groups:
+                        items:
+                          type: string
+                        type: array
                       insecure:
                         type: boolean
                       loginRealm:
@@ -51,13 +97,11 @@ spec:
                         - one
                         - sub
                         type: string
-                      secretName:
-                        type: string
                       url:
                         type: string
                     required:
+                    - credentialsSecretName
                     - realm
-                    - secretName
                     - url
                     type: object
                   name:
@@ -66,8 +110,8 @@ spec:
                 - name
                 type: object
               type: array
-            resyncPeriodMinutes:
-              type: integer
+            schedule:
+              type: string
           type: object
         status:
           description: GroupSyncStatus defines the observed state of GroupSync

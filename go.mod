@@ -4,10 +4,15 @@ go 1.13
 
 require (
 	github.com/Nerzal/gocloak/v5 v5.1.0
+	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-github/v31 v31.0.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/operator-framework/operator-sdk v0.16.0
 	github.com/redhat-cop/operator-utils v0.2.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/pflag v1.0.5
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	google.golang.org/appengine v1.6.5
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
