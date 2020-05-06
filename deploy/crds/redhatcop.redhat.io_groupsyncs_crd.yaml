@@ -66,6 +66,33 @@ spec:
                     required:
                     - credentialsSecretName
                     type: object
+                  gitlab:
+                    description: GitLabProvider represents integration with GitLab
+                    properties:
+                      caSecretRef:
+                        description: SecretRef represents a reference to an item within
+                          a Secret
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      credentialsSecretName:
+                        type: string
+                      groups:
+                        items:
+                          type: string
+                        type: array
+                      insecure:
+                        type: boolean
+                      url:
+                        type: string
+                    required:
+                    - credentialsSecretName
+                    type: object
                   keycloak:
                     description: KeycloakProvider represents integration with Keycloak
                     properties:

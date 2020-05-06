@@ -7,49 +7,41 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
-	"github.com/google/go-github/v31/github"
+	"github.com/hashicorp/go-cleanhttp"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/pkg/apis/redhatcop/v1alpha1"
+	"github.com/xanzy/go-gitlab"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var (
-	gitHubLogger = logf.Log.WithName("syncer_github")
-	// truthy = true
+	gitlabLogger = logf.Log.WithName("syncer_gitlab")
 )
 
-const (
-	pageSize = 100
-)
-
-type GitHubSyncer struct {
+type GitLabSyncer struct {
 	Name              string
 	GroupSync         *redhatcopv1alpha1.GroupSync
-	Provider          *redhatcopv1alpha1.GitHubProvider
-	Client            *github.Client
-	Context           context.Context
+	Provider          *redhatcopv1alpha1.GitLabProvider
+	Client            *gitlab.Client
 	ReconcilerBase    util.ReconcilerBase
 	CredentialsSecret *corev1.Secret
 	URL               *url.URL
 	CaCertificate     []byte
 }
 
-func (g *GitHubSyncer) Init() bool {
-
-	g.Context = context.Background()
+func (g *GitLabSyncer) Init() bool {
 
 	return false
 }
 
-func (g *GitHubSyncer) Validate() error {
+func (g *GitLabSyncer) Validate() error {
 
 	validationErrors := []error{}
 
@@ -58,10 +50,6 @@ func (g *GitHubSyncer) Validate() error {
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
-	}
-
-	if g.Provider.Organization == "" {
-		validationErrors = append(validationErrors, fmt.Errorf("Organization name not provided"))
 	}
 
 	// Check that provided secret contains required keys
@@ -101,14 +89,10 @@ func (g *GitHubSyncer) Validate() error {
 
 	if g.Provider.URL != nil {
 
-		if (*g.Provider.URL)[len(*g.Provider.URL)-1] != '/' {
-			validationErrors = append(validationErrors, fmt.Errorf("GitHub URL Must end with a slash ('/')"))
-		}
-
 		g.URL, err = url.Parse(*g.Provider.URL)
 
 		if err != nil {
-			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s", *g.Provider.URL))
+			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitLab URL: '%s", *g.Provider.URL))
 		}
 
 	}
@@ -116,23 +100,28 @@ func (g *GitHubSyncer) Validate() error {
 	return utilerrors.NewAggregate(validationErrors)
 }
 
-func (g *GitHubSyncer) Bind() error {
+func (g *GitLabSyncer) Bind() error {
+
+	var gitlabClient *gitlab.Client
+	var err error
 
 	usernameSecret, usernameSecretFound := g.CredentialsSecret.Data[secretUsernameKey]
 	passwordSecret, passwordSecretFound := g.CredentialsSecret.Data[secretPasswordKey]
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
 
-	var ghClient *github.Client
+	clientFns := []gitlab.ClientOptionFunc{}
 
-	var transport *http.Transport
+	if g.URL != nil {
+		clientFns = append(clientFns, gitlab.WithBaseURL(g.URL.String()))
+	}
 
-	if g.Provider.Insecure == true {
-		transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	} else {
-		if len(g.CaCertificate) > 0 {
+	if g.Provider.Insecure == true || len(g.CaCertificate) > 0 {
 
+		transport := cleanhttp.DefaultPooledTransport()
+
+		if g.Provider.Insecure == true {
+			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		} else if g.CaCertificate != nil {
 			tlsConfig := &tls.Config{}
 			if tlsConfig.RootCAs == nil {
 				tlsConfig.RootCAs = x509.NewCertPool()
@@ -140,67 +129,58 @@ func (g *GitHubSyncer) Bind() error {
 
 			tlsConfig.RootCAs.AppendCertsFromPEM(g.CaCertificate)
 
-			transport = &http.Transport{
-				TLSClientConfig: tlsConfig,
-			}
+			transport.TLSClientConfig = tlsConfig
+
 		}
+
+		clientFns = append(clientFns, gitlab.WithHTTPClient(&http.Client{Transport: transport}))
 	}
 
 	if tokenSecretFound {
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: string(tokenSecret)})
-
-		if transport != nil {
-			g.Context = context.WithValue(g.Context, oauth2.HTTPClient, &http.Client{Transport: transport})
-		}
-
-		httpClient := oauth2.NewClient(g.Context, ts)
-		ghClient = github.NewClient(httpClient)
-
+		gitlabClient, err = gitlab.NewOAuthClient(
+			string(tokenSecret),
+			clientFns...,
+		)
 	} else if usernameSecretFound && passwordSecretFound {
-		tp := github.BasicAuthTransport{
-			Username:  strings.TrimSpace(string(usernameSecret)),
-			Password:  strings.TrimSpace(string(passwordSecret)),
-			Transport: transport,
+		gitlabClient, err = gitlab.NewBasicAuthClient(
+			string(usernameSecret),
+			string(passwordSecret),
+			clientFns...,
+		)
+
+		if err != nil {
+			return err
 		}
-
-		ghClient = github.NewClient(tp.Client())
-
 	} else {
 		return fmt.Errorf("Could not locate credentials in Secret: '%s", g.Provider.CredentialsSecretName)
 	}
 
-	if g.URL != nil {
-		ghClient.BaseURL = g.URL
-	}
-
-	g.Client = ghClient
+	g.Client = gitlabClient
 
 	return nil
 
 }
 
-func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
+func (g *GitLabSyncer) Sync() ([]userv1.Group, error) {
 
 	ocpGroups := []userv1.Group{}
 
-	organization, _, err := g.Client.Organizations.Get(g.Context, g.Provider.Organization)
+	groups, err := g.getGroups()
 
 	if err != nil {
-		gitHubLogger.Error(err, "Failed to get Organization", "Organization", g.Provider.Organization, "Provider", g.Name)
 		return nil, err
 	}
 
-	// Get List of Teams in Organization
-	teams, err := g.getOrganizationTeams()
+	for _, group := range groups {
 
-	if err != nil {
-		gitHubLogger.Error(err, "Failed to get Teams", "Provider", g.Name)
-		return nil, err
-	}
-
-	for _, team := range teams {
-		if !isGroupAllowed(*team.Name, g.Provider.Teams) {
+		if !isGroupAllowed(group.Name, g.Provider.Groups) {
 			continue
+		}
+
+		groupMembers, err := g.getGroupMembers(group.ID)
+
+		if err != nil {
+			return nil, err
 		}
 
 		ocpGroup := userv1.Group{
@@ -209,22 +189,15 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 				APIVersion: userv1.SchemeGroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:        *team.Name,
+				Name:        group.Name,
 				Annotations: map[string]string{},
 				Labels:      map[string]string{},
 			},
 			Users: []string{},
 		}
 
-		teamMembers, err := g.listTeamMembers(team.ID, organization.ID)
-
-		if err != nil {
-			gitHubLogger.Error(err, "Failed to get Team Member for Team", "Team", team.Name, "Provider", g.Name)
-			return nil, err
-		}
-
-		for _, teamMember := range teamMembers {
-			ocpGroup.Users = append(ocpGroup.Users, *teamMember.Login)
+		for _, groupMember := range groupMembers {
+			ocpGroup.Users = append(ocpGroup.Users, groupMember.Username)
 		}
 
 		ocpGroups = append(ocpGroups, ocpGroup)
@@ -232,57 +205,75 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 	}
 
 	return ocpGroups, nil
+
 }
 
-func (g *GitHubSyncer) getOrganizationTeams() ([]*github.Team, error) {
-	opts := &github.ListOptions{PerPage: 100}
-	var allTeams []*github.Team
+func (g *GitLabSyncer) getGroups() ([]*gitlab.Group, error) {
+
+	var allGroups []*gitlab.Group
+
+	opt := &gitlab.ListGroupsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 50,
+			Page:    1,
+		},
+	}
 
 	for {
-		teams, r, err := g.Client.Teams.ListTeams(g.Context, g.Provider.Organization, opts)
+
+		groups, resp, err := g.Client.Groups.ListGroups(opt)
 
 		if err != nil {
 			return nil, err
 		}
 
-		for _, t := range teams {
-			allTeams = append(allTeams, t)
+		for _, t := range groups {
+			allGroups = append(allGroups, t)
 		}
 
-		if r.NextPage == 0 {
+		if resp.CurrentPage >= resp.TotalPages {
 			break
 		}
 
-		opts.Page = r.NextPage
+		opt.Page = resp.NextPage
+
 	}
 
-	return allTeams, nil
+	return allGroups, nil
+
 }
 
-func (g *GitHubSyncer) listTeamMembers(teamID *int64, organizationID *int64) ([]*github.User, error) {
+func (g *GitLabSyncer) getGroupMembers(groupId int) ([]*gitlab.GroupMember, error) {
 
-	teamUsers := []*github.User{}
+	groupMembers := []*gitlab.GroupMember{}
 
-	opts := github.TeamListTeamMembersOptions{
-		ListOptions: github.ListOptions{PerPage: 100},
+	opt := &gitlab.ListGroupMembersOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 50,
+			Page:    1,
+		},
 	}
 
 	for {
-		users, resp, err := g.Client.Teams.ListTeamMembersByID(g.Context, *organizationID, *teamID, &opts)
+		members, resp, err := g.Client.Groups.ListAllGroupMembers(groupId, opt)
+
 		if err != nil {
 			return nil, err
 		}
-		teamUsers = append(teamUsers, users...)
-		if resp.NextPage == 0 {
+
+		for _, u := range members {
+			groupMembers = append(groupMembers, u)
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
 			break
 		}
-		opts.Page = resp.NextPage
 	}
 
-	return teamUsers, nil
+	return groupMembers, nil
 
 }
 
-func (g *GitHubSyncer) GetProviderName() string {
+func (g *GitLabSyncer) GetProviderName() string {
 	return g.Name
 }

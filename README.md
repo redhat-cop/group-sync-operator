@@ -36,7 +36,7 @@ oc new-project group-sync-operator
 ```shell
 git clone https://github.com/redhat-cop/group-sync-operator.git
 cd group-sync-operator
-oc -n group-sync-operator apply -f deploy
+oc -n group-sync-operator --recursive=true -f deploy
 ```
 
 ## Providers
@@ -44,6 +44,7 @@ oc -n group-sync-operator apply -f deploy
 Integration with external systems is made possible through a set of plugable external providers. The following providers are currently supported:
 
 * [GitHub](https://github.com)
+* [GitLab](https://gitlab.com)
 * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
 
 The following sections describe the configuration options available for each provider
@@ -57,7 +58,7 @@ Teams stored within a GitHub organization can be synchronized into OpenShift. Th
 | ----- | ---------- | -------- | ----- |
 | `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
-| `insecure` | Ignore SSL verification | 'false' | No |
+| `insecure` | Ignore SSL verification | `false` | No |
 | `organization` | Organization to synchronize against | | Yes |
 | `teams` | List of teams to filter against | | No |
 | `url` | Base URL for the GitHub or GitHub Enterprise host (Must contain a trailing slash) | | No |
@@ -73,7 +74,8 @@ metadata:
   namespace: group-sync-operator
 spec:
   providers:
-  - github:
+  - name: github
+    github:
       organization: ocp
       credentialsSecretName: github-group-sync
 ```
@@ -95,13 +97,67 @@ oc create secret generic github-group-sync --from-literal=token=<token>
 
 The following keys are required for username and password:
 
-* `username` - Username for authenticating with Keycloak
-* `password` - Password for authenticating with Keycloak
+* `username` - Username for authenticating with GitHub
+* `password` - Password for authenticating with GitHub
 
 The secret can be created by executing the following command:
 
 ```shell
 oc create secret generic github-group-sync --from-literal=username=<username> --from-literal=password=<password>
+```
+
+### GitLub
+
+Groups stored within a GitLab can be synchronized into OpenShift. The following table describes the set of configuration options for the GitLab provider:
+
+| Name | Description | Defaults | Required | 
+| ----- | ---------- | -------- | ----- |
+| `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `insecure` | Ignore SSL verification | 'false' | No |
+| `groups` | List of groups to filter against | | No |
+| `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
+
+
+The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
+
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: gitlab-groupsync
+  namespace: group-sync-operator
+spec:
+  providers:
+  - name: gitlab
+    gitlab:
+      credentialsSecretName: gitlab-group-sync
+```
+
+#### Authenticating to GitLab
+
+Authentication to GitLab can be performed using an OAuth Personal Access Token or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
+
+When using an OAuth token, the following key is required:
+
+* `token` - OAuth token
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic gitlab-group-sync --from-literal=token=<token>
+```
+
+
+The following keys are required for username and password:
+
+* `username` - Username for authenticating with GitLab
+* `password` - Password for authenticating with GitLab
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic gitlab-group-sync --from-literal=username=<username> --from-literal=password=<password>
 ```
 
 ### Keycloak
@@ -130,7 +186,8 @@ metadata:
   namespace: group-sync-operator
 spec:
   providers:
-  - keycloak:
+  - name: keycloak
+    keycloak:
       realm: ocp
       credentialsSecretName: keycloak-group-sync
       url: https://keycloak-keycloak-operator.apps.openshift.com

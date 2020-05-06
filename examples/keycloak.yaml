@@ -7,5 +7,5 @@ spec:
     - name: keycloak
       keycloak:
         realm: ocp
-        url: "https://keycloak-keycloak-operator.apps.openshift.com"
+        url: "https://keycloak.apps.openshift.com"
         credentialsSecretName: keycloak-group-sync
