@@ -4,15 +4,15 @@ go 1.13
 
 require (
 	github.com/Nerzal/gocloak/v5 v5.1.0
-	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v31 v31.0.0
+	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/operator-framework/operator-sdk v0.16.0
 	github.com/redhat-cop/operator-utils v0.2.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	google.golang.org/appengine v1.6.5
+	github.com/xanzy/go-gitlab v0.30.1
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
@@ -22,6 +22,7 @@ require (
 
 // Pinned to kubernetes-1.16.2
 replace (
+	github.com/xanzy/go-gitlab => github.com/xanzy/go-gitlab v0.31.0
 	k8s.io/api => k8s.io/api v0.0.0-20191016110408-35e52d86657a
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191016113550-5357c4baaf65
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8

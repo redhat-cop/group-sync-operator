@@ -64,6 +64,7 @@ type Provider struct {
 type ProviderType struct {
 	Keycloak *KeycloakProvider `json:"keycloak,omitempty"`
 	GitHub   *GitHubProvider   `json:"github,omitempty"`
+	GitLab   *GitLabProvider   `json:"gitlab,omitempty"`
 }
 
 // KeycloakProvider represents integration with Keycloak
@@ -86,6 +87,15 @@ type GitHubProvider struct {
 	Insecure              bool       `json:"insecure,omitempty"`
 	Organization          string     `json:"organization,omitempty"`
 	Teams                 []string   `json:"teams,omitempty"`
+	URL                   *string    `json:"url,omitempty"`
+}
+
+// GitLabProvider represents integration with GitLab
+type GitLabProvider struct {
+	CaSecretRef           *SecretRef `json:"caSecretRef,omitempty"`
+	CredentialsSecretName string     `json:"credentialsSecretName"`
+	Insecure              bool       `json:"insecure,omitempty"`
+	Groups                []string   `json:"groups,omitempty"`
 	URL                   *string    `json:"url,omitempty"`
 }
 

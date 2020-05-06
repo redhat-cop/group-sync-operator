@@ -1,0 +1,10 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: gitlab-groupsync
+spec:
+  providers:
+    - name: gitlab
+      gitlab:
+        url: "https://gitlab.apps.openshift.com"
+        credentialsSecretName: gitlab-group-sync
