@@ -183,6 +183,9 @@ spec:
                 type: object
               description: Conditions is a set of Condition instances.
               type: array
+            lastSyncSuccessTime:
+              format: date-time
+              type: string
           required:
           - conditions
           type: object

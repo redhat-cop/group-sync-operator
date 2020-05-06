@@ -5,9 +5,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 type SyncScope string
 
 const (
@@ -28,7 +25,8 @@ type GroupSyncSpec struct {
 
 // GroupSyncStatus defines the observed state of GroupSync
 type GroupSyncStatus struct {
-	Conditions status.Conditions `json:"conditions"`
+	Conditions          status.Conditions `json:"conditions"`
+	LastSyncSuccessTime metav1.Time       `json:"lastSyncSuccessTime,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

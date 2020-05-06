@@ -13,6 +13,9 @@ import (
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	kapierrors "k8s.io/apimachinery/pkg/api/errors"
+	kubeclock "k8s.io/apimachinery/pkg/util/clock"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -26,7 +29,10 @@ const (
 	controllerName = "groupsync-controller"
 )
 
-var log = logf.Log.WithName("controller_groupsync")
+var (
+	log                   = logf.Log.WithName("controller_groupsync")
+	clock kubeclock.Clock = &kubeclock.RealClock{}
+)
 
 // Add creates a new GroupSync Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -186,6 +192,8 @@ func (r *ReconcileGroupSync) Reconcile(request reconcile.Request) (reconcile.Res
 		reqLogger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
 
 	}
+
+	instance.Status.LastSyncSuccessTime = metav1.Time{Time: clock.Now()}
 
 	successResult, err := r.ManageSuccess(instance)
 

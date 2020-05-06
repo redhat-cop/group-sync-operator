@@ -165,6 +165,7 @@ func (in *GroupSyncStatus) DeepCopyInto(out *GroupSyncStatus) {
 			(*out)[key] = *val.DeepCopy()
 		}
 	}
+	in.LastSyncSuccessTime.DeepCopyInto(&out.LastSyncSuccessTime)
 	return
 }
 
