@@ -106,7 +106,7 @@ The secret can be created by executing the following command:
 oc create secret generic github-group-sync --from-literal=username=<username> --from-literal=password=<password>
 ```
 
-### GitLub
+### GitLab
 
 Groups stored within a GitLab can be synchronized into OpenShift. The following table describes the set of configuration options for the GitLab provider:
 
