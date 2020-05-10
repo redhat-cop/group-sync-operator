@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v31/github"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/pkg/apis/redhatcop/v1alpha1"
+	"github.com/redhat-cop/group-sync-operator/pkg/controller/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
@@ -23,7 +25,6 @@ import (
 
 var (
 	gitHubLogger = logf.Log.WithName("syncer_github")
-	// truthy = true
 )
 
 const (
@@ -58,22 +59,23 @@ func (g *GitHubSyncer) Validate() error {
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
+	} else {
+
+		// Check that provided secret contains required keys
+		_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
+		_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
+		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
+
+		if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecretName, g.GroupSync.Namespace))
+		}
+
+		g.CredentialsSecret = credentialsSecret
 	}
 
 	if g.Provider.Organization == "" {
 		validationErrors = append(validationErrors, fmt.Errorf("Organization name not provided"))
 	}
-
-	// Check that provided secret contains required keys
-	_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
-	_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
-	_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
-
-	if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
-		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecretName, g.GroupSync.Namespace))
-	}
-
-	g.CredentialsSecret = credentialsSecret
 
 	if g.Provider.CaSecretRef != nil {
 		caSecret := &corev1.Secret{}
@@ -215,6 +217,10 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 			},
 			Users: []string{},
 		}
+
+		// Set Host Specific Details
+		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = g.URL.Host
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = strconv.FormatInt(*team.ID, 10)
 
 		teamMembers, err := g.listTeamMembers(team.ID, organization.ID)
 

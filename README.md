@@ -43,12 +43,54 @@ oc -n group-sync-operator --recursive=true -f deploy
 
 Integration with external systems is made possible through a set of plugable external providers. The following providers are currently supported:
 
+* [Azure](https://azure.microsoft.com/)
 * [GitHub](https://github.com)
 * [GitLab](https://gitlab.com)
 * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
 
 The following sections describe the configuration options available for each provider
 
+
+### Azure
+
+Groups contained within Azure Active Directory can be synchronized into OpenShift. The following table describes the set of configuration options for the Azure provider:
+
+| Name | Description | Defaults | Required | 
+| ----- | ---------- | -------- | ----- |
+| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `groups` | List of groups to filter against | | No |
+
+The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
+
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: azure-groupsync
+  namespace: group-sync-operator
+spec:
+  providers:
+  - name: azure
+    azure:
+      credentialsSecretName: azure-group-sync
+```
+
+#### Authenticating to Azure
+
+Authentication to Azure can be performed using Service Principal with access to query group information in Azure Active Directory. A secret must be created in the same namespace that contains the `GroupSync` resource:
+
+The following keys must be defined in the secret
+
+* `AZURE_SUBSCRIPTION_ID` - Subscription ID
+* `AZURE_TENANT_ID` - Tenant ID
+* `AZURE_CLIENT_ID` - Client ID
+* `AZURE_CLIENT_SECRET` - Client Secret
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic azure-group-sync --from-literal=AZURE_SUBSCRIPTION_ID=<AZURE_SUBSCRIPTION_ID> --from-literal=AZURE_TENANT_ID=<AZURE_TENANT_ID> --from-literal=AZURE_CLIENT_ID=<AZURE_CLIENT_ID> --from-literal=AZURE_CLIENT_SECRET=<AZURE_CLIENT_SECRET>
+```
 
 ### GitHub
 

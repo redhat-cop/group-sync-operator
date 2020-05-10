@@ -26,7 +26,7 @@ type GroupSyncSpec struct {
 // GroupSyncStatus defines the observed state of GroupSync
 type GroupSyncStatus struct {
 	Conditions          status.Conditions `json:"conditions"`
-	LastSyncSuccessTime metav1.Time       `json:"lastSyncSuccessTime,omitempty"`
+	LastSyncSuccessTime *metav1.Time      `json:"lastSyncSuccessTime,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -60,9 +60,10 @@ type Provider struct {
 
 // ProviderType represents the provider to synchronize against
 type ProviderType struct {
-	Keycloak *KeycloakProvider `json:"keycloak,omitempty"`
+	Azure    *AzureProvider    `json:"azure,omitempty"`
 	GitHub   *GitHubProvider   `json:"github,omitempty"`
 	GitLab   *GitLabProvider   `json:"gitlab,omitempty"`
+	Keycloak *KeycloakProvider `json:"keycloak,omitempty"`
 }
 
 // KeycloakProvider represents integration with Keycloak
@@ -95,6 +96,14 @@ type GitLabProvider struct {
 	Insecure              bool       `json:"insecure,omitempty"`
 	Groups                []string   `json:"groups,omitempty"`
 	URL                   *string    `json:"url,omitempty"`
+}
+
+// AzureProvider represents integration with Azure
+type AzureProvider struct {
+	CredentialsSecretName string   `json:"credentialsSecretName"`
+	Insecure              bool     `json:"insecure,omitempty"`
+	Groups                []string `json:"groups,omitempty"`
+	URL                   *string  `json:"url,omitempty"`
 }
 
 // SecretRef represents a reference to an item within a Secret

@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/hashicorp/go-cleanhttp"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/pkg/apis/redhatcop/v1alpha1"
+	"github.com/redhat-cop/group-sync-operator/pkg/controller/constants"
 	"github.com/xanzy/go-gitlab"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -50,18 +52,20 @@ func (g *GitLabSyncer) Validate() error {
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
+	} else {
+
+		// Check that provided secret contains required keys
+		_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
+		_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
+		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
+
+		if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecretName, g.GroupSync.Namespace))
+		}
+
+		g.CredentialsSecret = credentialsSecret
+
 	}
-
-	// Check that provided secret contains required keys
-	_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
-	_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
-	_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
-
-	if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
-		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecretName, g.GroupSync.Namespace))
-	}
-
-	g.CredentialsSecret = credentialsSecret
 
 	if g.Provider.CaSecretRef != nil {
 		caSecret := &corev1.Secret{}
@@ -195,6 +199,10 @@ func (g *GitLabSyncer) Sync() ([]userv1.Group, error) {
 			},
 			Users: []string{},
 		}
+
+		// Set Host Specific Details
+		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = g.URL.Host
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = strconv.Itoa(group.ID)
 
 		for _, groupMember := range groupMembers {
 			ocpGroup.Users = append(ocpGroup.Users, groupMember.Username)

@@ -193,7 +193,7 @@ func (r *ReconcileGroupSync) Reconcile(request reconcile.Request) (reconcile.Res
 
 	}
 
-	instance.Status.LastSyncSuccessTime = metav1.Time{Time: clock.Now()}
+	instance.Status.LastSyncSuccessTime = &metav1.Time{Time: clock.Now()}
 
 	successResult, err := r.ManageSuccess(instance)
 
