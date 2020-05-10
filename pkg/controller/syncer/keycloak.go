@@ -76,23 +76,25 @@ func (k *KeycloakSyncer) Validate() error {
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
+	} else {
+
+		// Username key validation
+		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
+		}
+
+		// Password key validation
+		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
+		}
+
+		k.CredentialsSecret = credentialsSecret
+
 	}
 
 	if _, err := url.ParseRequestURI(k.Provider.URL); err != nil {
 		validationErrors = append(validationErrors, err)
 	}
-
-	// Username key validation
-	if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
-		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
-	}
-
-	// Password key validation
-	if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
-		validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
-	}
-
-	k.CredentialsSecret = credentialsSecret
 
 	if k.Provider.CaSecretRef != nil {
 		caSecret := &corev1.Secret{}

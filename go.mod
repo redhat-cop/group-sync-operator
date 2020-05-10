@@ -3,6 +3,10 @@ module github.com/redhat-cop/group-sync-operator
 go 1.13
 
 require (
+	github.com/Azure/azure-sdk-for-go v32.5.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.9.3
+	github.com/Azure/go-autorest/autorest/adal v0.8.1
+	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2
 	github.com/Nerzal/gocloak/v5 v5.1.0
 	github.com/google/go-github/v31 v31.0.0
 	github.com/hashicorp/go-cleanhttp v0.5.1

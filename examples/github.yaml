@@ -7,4 +7,4 @@ spec:
     - name: github
       github:
         credentialsSecretName: github-group-sync
-        organization: myorg
+        organization: redhat-cop

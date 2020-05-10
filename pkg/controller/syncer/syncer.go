@@ -65,6 +65,10 @@ func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider 
 		{
 			return &GitLabSyncer{GroupSync: groupSync, Provider: provider.GitLab, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
 		}
+	case provider.Azure != nil:
+		{
+			return &AzureSyncer{GroupSync: groupSync, Provider: provider.Azure, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
+		}
 	}
 
 	return nil, fmt.Errorf("Could not find syncer for provider '%s'", provider.Name)

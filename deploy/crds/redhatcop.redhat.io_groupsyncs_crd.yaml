@@ -37,6 +37,22 @@ spec:
               items:
                 description: Provider represents the container for a single provider
                 properties:
+                  azure:
+                    description: AzureProvider represents integration with Azure
+                    properties:
+                      credentialsSecretName:
+                        type: string
+                      groups:
+                        items:
+                          type: string
+                        type: array
+                      insecure:
+                        type: boolean
+                      url:
+                        type: string
+                    required:
+                    - credentialsSecretName
+                    type: object
                   github:
                     description: GitHubProvider represents integration with GitHub
                     properties:

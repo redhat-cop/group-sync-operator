@@ -1,0 +1,9 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: azure-groupsync
+spec:
+  providers:
+    - name: azure
+      azure:
+        credentialsSecretName: azure-group-sync
