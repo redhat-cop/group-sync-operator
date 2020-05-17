@@ -163,7 +163,7 @@ func (k *KeycloakSyncer) Bind() error {
 func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	// Get Groups
-	groupParams := gocloak.GetGroupsParams{Full: &truthy}
+	groupParams := gocloak.GetGroupsParams{}
 	groups, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupParams)
 
 	if err != nil {
@@ -224,18 +224,19 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 
 	k.CachedGroups[*group.ID] = group
 
-	groupParams := gocloak.GetGroupsParams{Full: &truthy}
+	groupParams := gocloak.GetGroupsParams{}
 	groupMembers, err := k.GoCloak.GetGroupMembers(k.Token.AccessToken, k.Provider.Realm, *group.ID, groupParams)
 
 	if err != nil {
 		return err
 	}
 
-	// Add Group Members to Primary Group
 	k.CachedGroupMembers[*group.ID] = groupMembers
 
+	// Add Group Members to Primary Group
 	if parentGroup != nil {
-		k.CachedGroupMembers[*parentGroup.ID] = append(k.CachedGroupMembers[*parentGroup.ID], groupMembers...)
+		usersToAdd, _ := k.diff(groupMembers, k.CachedGroupMembers[*parentGroup.ID])
+		k.CachedGroupMembers[*parentGroup.ID] = append(k.CachedGroupMembers[*parentGroup.ID], usersToAdd...)
 	}
 
 	// Process Subgroups
@@ -248,6 +249,28 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 	}
 
 	return nil
+}
+
+func (k *KeycloakSyncer) diff(lhsSlice, rhsSlice []*gocloak.User) (lhsOnly []*gocloak.User, rhsOnly []*gocloak.User) {
+	return k.singleDiff(lhsSlice, rhsSlice), k.singleDiff(rhsSlice, lhsSlice)
+}
+
+func (k *KeycloakSyncer) singleDiff(lhsSlice, rhsSlice []*gocloak.User) (lhsOnly []*gocloak.User) {
+	for _, lhs := range lhsSlice {
+		found := false
+		for _, rhs := range rhsSlice {
+			if *lhs.ID == *rhs.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			lhsOnly = append(lhsOnly, lhs)
+		}
+	}
+
+	return lhsOnly
 }
 
 func (k *KeycloakSyncer) GetProviderName() string {
