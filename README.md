@@ -39,7 +39,7 @@ oc new-project group-sync-operator
 ```shell
 git clone https://github.com/redhat-cop/group-sync-operator.git
 cd group-sync-operator
-oc -n group-sync-operator --recursive=true -f deploy
+oc apply -n group-sync-operator --recursive=true -f deploy
 ```
 
 ## Providers
