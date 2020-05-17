@@ -207,7 +207,7 @@ func (a *AzureSyncer) processGroupsAndMembers(groupsClient graphrbac.GroupsClien
 	// Check to see if we have seen this group already
 	if _, groupFound := a.CachedGroups[*group.ObjectID]; groupFound {
 		if parentGroup != nil {
-			usersToAdd, _ := diff(a.CachedGroupUsers[*group.ObjectID], a.CachedGroupUsers[*parentGroup.ObjectID])
+			usersToAdd, _ := a.diff(a.CachedGroupUsers[*group.ObjectID], a.CachedGroupUsers[*parentGroup.ObjectID])
 			a.CachedGroupUsers[*parentGroup.ObjectID] = append(a.CachedGroupUsers[*parentGroup.ObjectID], usersToAdd...)
 		}
 		return nil
@@ -233,11 +233,11 @@ func (a *AzureSyncer) processGroupsAndMembers(groupsClient graphrbac.GroupsClien
 		}
 	}
 
-	usersToAdd, _ := diff(groupUsers, a.CachedGroupUsers[*group.ObjectID])
+	usersToAdd, _ := a.diff(groupUsers, a.CachedGroupUsers[*group.ObjectID])
 	a.CachedGroupUsers[*group.ObjectID] = append(a.CachedGroupUsers[*group.ObjectID], usersToAdd...)
 
 	if parentGroup != nil {
-		usersToAdd, _ := diff(groupUsers, a.CachedGroupUsers[*parentGroup.ObjectID])
+		usersToAdd, _ := a.diff(groupUsers, a.CachedGroupUsers[*parentGroup.ObjectID])
 		a.CachedGroupUsers[*parentGroup.ObjectID] = append(a.CachedGroupUsers[*parentGroup.ObjectID], usersToAdd...)
 	}
 
@@ -249,11 +249,11 @@ func (a *AzureSyncer) processGroupsAndMembers(groupsClient graphrbac.GroupsClien
 
 }
 
-func diff(lhsSlice, rhsSlice []*graphrbac.User) (lhsOnly []*graphrbac.User, rhsOnly []*graphrbac.User) {
-	return singleDiff(lhsSlice, rhsSlice), singleDiff(rhsSlice, lhsSlice)
+func (a *AzureSyncer) diff(lhsSlice, rhsSlice []*graphrbac.User) (lhsOnly []*graphrbac.User, rhsOnly []*graphrbac.User) {
+	return a.singleDiff(lhsSlice, rhsSlice), a.singleDiff(rhsSlice, lhsSlice)
 }
 
-func singleDiff(lhsSlice, rhsSlice []*graphrbac.User) (lhsOnly []*graphrbac.User) {
+func (a *AzureSyncer) singleDiff(lhsSlice, rhsSlice []*graphrbac.User) (lhsOnly []*graphrbac.User) {
 	for _, lhs := range lhsSlice {
 		found := false
 		for _, rhs := range rhsSlice {

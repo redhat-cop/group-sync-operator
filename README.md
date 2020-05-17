@@ -1,6 +1,9 @@
 Group Sync Operator
 ===================
 
+[![Build Status](https://github.com/redhat-cop/quay-operator/workflows/CI/CD/badge.svg?branch=master)](https://github.com/redhat-cop/quay-operator/actions?workflow=group-sync-operator)
+ [![Docker Repository on Quay](https://quay.io/repository/redhat-cop/quay-operator/status "Docker Repository on Quay")](https://quay.io/repository/sabre1041/group-sync-operator)
+
 Synchronizes groups from external providers into OpenShift
 
 ## Overview
@@ -41,7 +44,7 @@ oc -n group-sync-operator --recursive=true -f deploy
 
 ## Providers
 
-Integration with external systems is made possible through a set of plugable external providers. The following providers are currently supported:
+Integration with external systems is made possible through a set of pluggable external providers. The following providers are currently supported:
 
 * [Azure](https://azure.microsoft.com/)
 * [GitHub](https://github.com)
@@ -60,7 +63,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
 | `groups` | List of groups to filter against | | No |
 
-The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
+The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
 
 ```shell
 apiVersion: redhatcop.redhat.io/v1alpha1
