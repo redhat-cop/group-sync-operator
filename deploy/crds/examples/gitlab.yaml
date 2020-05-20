@@ -7,4 +7,6 @@ spec:
     - name: gitlab
       gitlab:
         url: "https://gitlab.apps.openshift.com"
-        credentialsSecretName: gitlab-group-sync
+        credentialsSecret:
+          name: gitlab-group-sync
+          namespace: group-sync-operator

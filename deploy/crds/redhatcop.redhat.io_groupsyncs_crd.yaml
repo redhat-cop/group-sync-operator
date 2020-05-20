@@ -9,7 +9,7 @@ spec:
     listKind: GroupSyncList
     plural: groupsyncs
     singular: groupsync
-  scope: Namespaced
+  scope: Cluster
   subresources:
     status: {}
   validation:
@@ -38,119 +38,238 @@ spec:
                 description: Provider represents the container for a single provider
                 properties:
                   azure:
-                    description: AzureProvider represents integration with Azure
+                    description: Azure represents the Azure provider
                     properties:
-                      credentialsSecretName:
-                        type: string
+                      credentialsSecret:
+                        description: CredentialsSecret is a reference to a secret
+                          containing authentication details for communicating to Azure
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
                       groups:
+                        description: Groups represents a filtered list of groups to
+                          synchronize
                         items:
                           type: string
                         type: array
                       insecure:
+                        description: Insecure specifies whether to allow for unverified
+                          certificates to be used when communicating to Azure
                         type: boolean
                       url:
+                        description: URL is the location of the Azure platform
                         type: string
                     required:
-                    - credentialsSecretName
+                    - credentialsSecret
                     type: object
                   github:
-                    description: GitHubProvider represents integration with GitHub
+                    description: GitHub represents the GitHub provider
                     properties:
-                      caSecretRef:
-                        description: SecretRef represents a reference to an item within
-                          a Secret
+                      caSecret:
+                        description: CaSecret is a reference to a secret containing
+                          a CA certificate to communicate to the GitHub server
                         properties:
                           key:
+                            description: Key represents the specific key to reference
+                              from the secret
                             type: string
                           name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
                             type: string
                         required:
                         - name
+                        - namespace
                         type: object
-                      credentialsSecretName:
-                        type: string
+                      credentialsSecret:
+                        description: CredentialsSecret is a reference to a secret
+                          containing authentication details for the GitHub server
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
                       insecure:
+                        description: Insecure specifies whether to allow for unverified
+                          certificates to be used when communicating to GitHab
                         type: boolean
                       organization:
+                        description: Organization represents the location to source
+                          teams to synchronize
                         type: string
                       teams:
+                        description: Teams represents a filtered list of teams to
+                          synchronize
                         items:
                           type: string
                         type: array
                       url:
+                        description: URL is the location of the GitHub server
                         type: string
                     required:
-                    - credentialsSecretName
+                    - credentialsSecret
                     type: object
                   gitlab:
-                    description: GitLabProvider represents integration with GitLab
+                    description: GitLab represents the GitLab provider
                     properties:
-                      caSecretRef:
-                        description: SecretRef represents a reference to an item within
-                          a Secret
+                      caSecret:
+                        description: CaSecret is a reference to a secret containing
+                          a CA certificate to communicate to the GitLab server
                         properties:
                           key:
+                            description: Key represents the specific key to reference
+                              from the secret
                             type: string
                           name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
                             type: string
                         required:
                         - name
+                        - namespace
                         type: object
-                      credentialsSecretName:
-                        type: string
+                      credentialsSecret:
+                        description: CredentialsSecret is a reference to a secret
+                          containing authentication details for the GitLab server
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
                       groups:
+                        description: Groups represents a filtered list of groups to
+                          synchronize
                         items:
                           type: string
                         type: array
                       insecure:
+                        description: Insecure specifies whether to allow for unverified
+                          certificates to be used when communicating to GitLab
                         type: boolean
                       url:
+                        description: URL is the location of the GitLub server
                         type: string
                     required:
-                    - credentialsSecretName
+                    - credentialsSecret
                     type: object
                   keycloak:
-                    description: KeycloakProvider represents integration with Keycloak
+                    description: Keycloak represents the Keycloak provider
                     properties:
-                      caSecretRef:
-                        description: SecretRef represents a reference to an item within
-                          a Secret
+                      caSecret:
+                        description: CaSecret is a reference to a secret containing
+                          a CA certificate to communicate to the Keycloak server
                         properties:
                           key:
+                            description: Key represents the specific key to reference
+                              from the secret
                             type: string
                           name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
                             type: string
                         required:
                         - name
+                        - namespace
                         type: object
-                      credentialsSecretName:
-                        type: string
+                      credentialsSecret:
+                        description: CredentialsSecret is a reference to a secret
+                          containing authentication details for the Keycloak server
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
                       groups:
+                        description: Groups represents a filtered list of groups to
+                          synchronize
                         items:
                           type: string
                         type: array
                       insecure:
+                        description: Insecure specifies whether to allow for unverified
+                          certificates to be used when communicating to Keycloak
                         type: boolean
                       loginRealm:
+                        description: LoginRealm is the Keycloak realm to authenticate
+                          against
                         type: string
                       realm:
+                        description: Realm is the realm containing the groups to synchronize
+                          against
                         type: string
                       scope:
+                        description: Scope represents the depth for which groups will
+                          be synchronized
                         enum:
                         - one
                         - sub
                         type: string
                       url:
+                        description: URL is the location of the Keycloak server
                         type: string
                     required:
-                    - credentialsSecretName
+                    - credentialsSecret
                     - realm
                     - url
                     type: object
                   name:
+                    description: Name represents the name of the provider
                     type: string
-                required:
-                - name
                 type: object
               type: array
             schedule:

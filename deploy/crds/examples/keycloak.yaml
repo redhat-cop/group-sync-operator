@@ -8,4 +8,7 @@ spec:
       keycloak:
         realm: ocp
         url: "https://keycloak.apps.openshift.com"
-        credentialsSecretName: keycloak-group-sync
+        insecure: true
+        credentialsSecret:
+          name: keycloak-group-sync
+          namespace: group-sync-operator

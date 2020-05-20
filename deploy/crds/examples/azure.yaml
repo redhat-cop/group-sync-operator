@@ -6,4 +6,6 @@ spec:
   providers:
     - name: azure
       azure:
-        credentialsSecretName: azure-group-sync
+        credentialsSecret:
+          name: azure-group-sync
+          namespace: group-sync-operator
