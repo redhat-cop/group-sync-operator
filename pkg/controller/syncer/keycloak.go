@@ -72,7 +72,7 @@ func (k *KeycloakSyncer) Validate() error {
 
 	// Verify Secret Containing Username and Password Exists with Valid Keys
 	credentialsSecret := &corev1.Secret{}
-	err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CredentialsSecretName, Namespace: k.GroupSync.Namespace}, credentialsSecret)
+	err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CredentialsSecret.Name, Namespace: k.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
@@ -80,12 +80,12 @@ func (k *KeycloakSyncer) Validate() error {
 
 		// Username key validation
 		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
 		}
 
 		// Password key validation
 		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecretName, k.GroupSync.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
 		}
 
 		k.CredentialsSecret = credentialsSecret
@@ -96,24 +96,24 @@ func (k *KeycloakSyncer) Validate() error {
 		validationErrors = append(validationErrors, err)
 	}
 
-	if k.Provider.CaSecretRef != nil {
+	if k.Provider.CaSecret != nil {
 		caSecret := &corev1.Secret{}
-		err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CaSecretRef.Name, Namespace: k.GroupSync.Namespace}, caSecret)
+		err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CaSecret.Name, Namespace: k.Provider.CaSecret.Namespace}, caSecret)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		}
 
 		var secretCaKey string
-		if k.Provider.CaSecretRef.Key != "" {
-			secretCaKey = k.Provider.CaSecretRef.Key
+		if k.Provider.CaSecret.Key != "" {
+			secretCaKey = k.Provider.CaSecret.Key
 		} else {
 			secretCaKey = defaultSecretCaKey
 		}
 
 		// Password key validation
 		if _, found := caSecret.Data[secretCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, k.Provider.CaSecretRef.Name, k.GroupSync.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, k.Provider.CaSecret.Name, k.Provider.CaSecret.Namespace))
 		}
 
 		k.CaCertificate = caSecret.Data[secretCaKey]

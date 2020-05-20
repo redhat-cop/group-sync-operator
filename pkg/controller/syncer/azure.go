@@ -68,7 +68,7 @@ func (a *AzureSyncer) Validate() error {
 	validationErrors := []error{}
 
 	credentialsSecret := &corev1.Secret{}
-	err := a.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: a.Provider.CredentialsSecretName, Namespace: a.GroupSync.Namespace}, credentialsSecret)
+	err := a.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: a.Provider.CredentialsSecret.Name, Namespace: a.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
@@ -81,7 +81,7 @@ func (a *AzureSyncer) Validate() error {
 		_, clientSecretSecretFound := credentialsSecret.Data[ClientSecret]
 
 		if !subscriptionIDSecretFound || !tenantIDSecretFound || !clientIDSecretFound || !clientSecretSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'AZURE_SUBSCRIPTION_ID' or `AZURE_TENANT_ID` or `AZURE_CLIENT_ID` or `AZURE_CLIENT_SECRET` key in secret '%s' in namespace '%s", a.Provider.CredentialsSecretName, a.GroupSync.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'AZURE_SUBSCRIPTION_ID' or `AZURE_TENANT_ID` or `AZURE_CLIENT_ID` or `AZURE_CLIENT_SECRET` key in secret '%s' in namespace '%s", a.Provider.CredentialsSecret.Name, a.Provider.CredentialsSecret.Namespace))
 		}
 
 		a.CredentialsSecret = credentialsSecret
