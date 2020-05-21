@@ -1,8 +1,8 @@
 Group Sync Operator
 ===================
 
-[![Build Status](https://github.com/redhat-cop/quay-operator/workflows/CI/CD/badge.svg?branch=master)](https://github.com/redhat-cop/quay-operator/actions?workflow=group-sync-operator)
- [![Docker Repository on Quay](https://quay.io/repository/redhat-cop/quay-operator/status "Docker Repository on Quay")](https://quay.io/repository/sabre1041/group-sync-operator)
+[![Build Status](https://github.com/redhat-cop/group-sync-operator/workflows/group-sync-operator/badge.svg?branch=master)](https://github.com/redhat-cop/group-sync-operator/actions?workflow=group-sync-operator)
+ [![Docker Repository on Quay](https://quay.io/repository/redhat-cop/group-sync-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-cop/group-sync-operator)
 
 Synchronizes groups from external providers into OpenShift
 
@@ -42,6 +42,16 @@ cd group-sync-operator
 oc apply -n group-sync-operator --recursive=true -f deploy
 ```
 
+## Authentication
+
+In most cases, authentication details must be provided in order to communicate with providers. Authentication details are provider specific with regards to the required values. In supported providers, the secret can be referenced in the `credentialsSecret` by name and namespace where it has been created as shown below:
+
+```
+credentialsSecret:
+  name: <secret_name>
+  namespace: <secret_namespace>
+```
+
 ## Providers
 
 Integration with external systems is made possible through a set of pluggable external providers. The following providers are currently supported:
@@ -60,7 +70,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
-| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
 | `groups` | List of groups to filter against | | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
@@ -75,7 +85,9 @@ spec:
   providers:
   - name: azure
     azure:
-      credentialsSecretName: azure-group-sync
+      credentialsSecret:
+        name: azure-group-sync
+        namespace: group-sync-operator
 ```
 
 #### Authenticating to Azure
@@ -101,8 +113,8 @@ Teams stored within a GitHub organization can be synchronized into OpenShift. Th
 
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
-| `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
-| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `insecure` | Ignore SSL verification | `false` | No |
 | `organization` | Organization to synchronize against | | Yes |
 | `teams` | List of teams to filter against | | No |
@@ -122,7 +134,9 @@ spec:
   - name: github
     github:
       organization: ocp
-      credentialsSecretName: github-group-sync
+      credentialsSecret: 
+        name: github-group-sync
+        namespace: group-sync-operator
 ```
 
 #### Authenticating to GitHub
@@ -157,8 +171,8 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
-| `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
-| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `insecure` | Ignore SSL verification | 'false' | No |
 | `groups` | List of groups to filter against | | No |
 | `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
@@ -176,7 +190,9 @@ spec:
   providers:
   - name: gitlab
     gitlab:
-      credentialsSecretName: gitlab-group-sync
+      credentialsSecret:
+        name: gitlab-group-sync
+        namespace: group-sync-operator
 ```
 
 #### Authenticating to GitLab
@@ -211,8 +227,8 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
-| `caSecretRef` | Reference  to a secret containing a SSL certificate to use for communication (See below) | | No |
-| `credentialsSecretName` | Name of the secret containing authentication details (See below) | | Yes |
+| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `groups` | List of groups to filter against | | No |
 | `insecure` | Ignore SSL verification | 'false' | No |
 | `loginRealm` | Realm to authenticate against | `master` | No |
@@ -234,7 +250,9 @@ spec:
   - name: keycloak
     keycloak:
       realm: ocp
-      credentialsSecretName: keycloak-group-sync
+      credentialsSecret:
+        name: keycloak-group-sync
+        namespace: group-sync-operator
       url: https://keycloak-keycloak-operator.apps.openshift.com
 ```
 
@@ -260,11 +278,13 @@ spec:
   providers:
   - keycloak:
       realm: ocp
-      credentialsSecretName: keycloak-group-sync
-      url: https://keycloak-keycloak-operator.apps.openshift.com
-      caSecretRef:
+      credentialsSecret:
+        name: keycloak-group-sync
+        namespace: group-sync-operator
+      caSecret:
         name: keycloak-certs
         key: tls.crt
+      url: https://keycloak-keycloak-operator.apps.openshift.com
 ```
 
 

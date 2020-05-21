@@ -6,5 +6,7 @@ spec:
   providers:
     - name: github
       github:
-        credentialsSecretName: github-group-sync
+        credentialsSecret:
+          name: github-group-sync
+          namespace: group-sync-operator
         organization: redhat-cop

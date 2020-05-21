@@ -48,7 +48,7 @@ func (g *GitLabSyncer) Validate() error {
 	validationErrors := []error{}
 
 	credentialsSecret := &corev1.Secret{}
-	err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CredentialsSecretName, Namespace: g.GroupSync.Namespace}, credentialsSecret)
+	err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
@@ -60,31 +60,31 @@ func (g *GitLabSyncer) Validate() error {
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 
 		if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecretName, g.GroupSync.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
 
 	}
 
-	if g.Provider.CaSecretRef != nil {
+	if g.Provider.CaSecret != nil {
 		caSecret := &corev1.Secret{}
-		err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CaSecretRef.Name, Namespace: g.GroupSync.Namespace}, caSecret)
+		err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		}
 
 		var secretCaKey string
-		if g.Provider.CaSecretRef.Key != "" {
-			secretCaKey = g.Provider.CaSecretRef.Key
+		if g.Provider.CaSecret.Key != "" {
+			secretCaKey = g.Provider.CaSecret.Key
 		} else {
 			secretCaKey = defaultSecretCaKey
 		}
 
 		// Certificate key validation
 		if _, found := caSecret.Data[secretCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, g.Provider.CaSecretRef.Name, g.GroupSync.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, g.Provider.CaSecret.Name, g.Provider.CaSecret.Namespace))
 		}
 
 		g.CaCertificate = caSecret.Data[secretCaKey]
@@ -156,7 +156,7 @@ func (g *GitLabSyncer) Bind() error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("Could not locate credentials in Secret: '%s", g.Provider.CredentialsSecretName)
+		return fmt.Errorf("Could not locate credentials in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace)
 	}
 
 	g.Client = gitlabClient
