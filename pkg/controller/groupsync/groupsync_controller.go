@@ -119,7 +119,7 @@ func (r *ReconcileGroupSync) Reconcile(request reconcile.Request) (reconcile.Res
 		reqLogger.Info("Beginning Sync", "Provider", groupSyncer.GetProviderName())
 
 		// Provider Label
-		providerLabel := fmt.Sprintf("%s_%s_%s", instance.Namespace, instance.Name, groupSyncer.GetProviderName())
+		providerLabel := fmt.Sprintf("%s_%s", instance.Name, groupSyncer.GetProviderName())
 
 		// Initialize Connection
 		if err := groupSyncer.Bind(); err != nil {
