@@ -196,11 +196,20 @@ func serveCRMetrics(cfg *rest.Config, operatorNs string) error {
 	// The function below returns a list of filtered operator/CR specific GVKs. For more control, override the GVK list below
 	// with your own custom logic. Note that if you are adding third party API schemas, probably you will need to
 	// customize this implementation to avoid permissions issues.
-	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(apis.AddToScheme)
-	if err != nil {
-		return err
-	}
+	//filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(apis.AddToScheme)
+	//if err != nil {
+	//	return err
+	//}
 
+	filteredGVK := []schema.GroupVersionKind{
+		{
+			Group:   "redhatcop.redhat.io",
+			Version: "v1alpha1",
+			Kind:    "GroupSync",
+		},
+	}
+	
+	
 	// The metrics will be generated from the namespaces which are returned here.
 	// NOTE that passing nil or an empty list of namespaces in GenerateAndServeCRMetrics will result in an error.
 	ns, err := kubemetrics.GetNamespacesForMetrics(operatorNs)
