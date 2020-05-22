@@ -26,6 +26,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -208,8 +209,7 @@ func serveCRMetrics(cfg *rest.Config, operatorNs string) error {
 			Kind:    "GroupSync",
 		},
 	}
-	
-	
+
 	// The metrics will be generated from the namespaces which are returned here.
 	// NOTE that passing nil or an empty list of namespaces in GenerateAndServeCRMetrics will result in an error.
 	ns, err := kubemetrics.GetNamespacesForMetrics(operatorNs)

@@ -28,6 +28,7 @@ rules:
     resources:
       - groupsyncs
       - groupsyncs/status
+      - groupsyncs/finalizers
     verbs:
       - create
       - delete
