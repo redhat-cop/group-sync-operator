@@ -39,7 +39,13 @@ oc new-project group-sync-operator
 ```shell
 git clone https://github.com/redhat-cop/group-sync-operator.git
 cd group-sync-operator
-oc apply -n group-sync-operator --recursive=true -f deploy
+oc apply -f deploy/crds/redhatcop.redhat.io_groupsyncs_crd.yaml
+oc apply -n group-sync-operator -f deploy/service_account.yaml
+oc apply -n group-sync-operator -f deploy/clusterrole.yaml
+oc apply -n group-sync-operator -f deploy/clusterrole_binding.yaml
+oc apply -n group-sync-operator -f deploy/role.yaml
+oc apply -n group-sync-operator -f deploy/role_binding.yaml
+oc apply -n group-sync-operator -f deploy/operator.yaml
 ```
 
 ## Authentication
