@@ -212,13 +212,15 @@ func serveCRMetrics(cfg *rest.Config, operatorNs string) error {
 
 	// The metrics will be generated from the namespaces which are returned here.
 	// NOTE that passing nil or an empty list of namespaces in GenerateAndServeCRMetrics will result in an error.
-	ns, err := kubemetrics.GetNamespacesForMetrics(operatorNs)
-	if err != nil {
-		return err
-	}
+	//ns, err := kubemetrics.GetNamespacesForMetrics(operatorNs)
+	//if err != nil {
+	//	return err
+	//}
+
+	ns := []string{""}
 
 	// Generate and serve custom resource specific metrics.
-	err = kubemetrics.GenerateAndServeCRMetrics(cfg, ns, filteredGVK, metricsHost, operatorMetricsPort)
+	err := kubemetrics.GenerateAndServeCRMetrics(cfg, ns, filteredGVK, metricsHost, operatorMetricsPort)
 	if err != nil {
 		return err
 	}
