@@ -761,7 +761,7 @@ spec:
                             fieldPath: metadata.name
                       - name: OPERATOR_NAME
                         value: group-sync-operator
-                    image: quay.io/redhat-cop/group-sync-operator:latest
+                    image: quay.io/redhat-cop/group-sync-operator:v0.0.1
                     imagePullPolicy: Always
                     name: group-sync-operator
                     resources: {}
