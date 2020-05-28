@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"crypto/x509"
 
@@ -182,6 +183,12 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	for _, cachedGroup := range k.CachedGroups {
 
+		groupAttributes := map[string]string{}
+
+		for key, value := range cachedGroup.Attributes {
+			groupAttributes[key] = strings.Join(value, "'")
+		}
+
 		ocpGroup := userv1.Group{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Group",
@@ -189,7 +196,7 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			},
 			ObjectMeta: v1.ObjectMeta{
 				Name:        *cachedGroup.Name,
-				Annotations: map[string]string{},
+				Annotations: groupAttributes,
 				Labels:      map[string]string{},
 			},
 			Users: []string{},
@@ -201,9 +208,34 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			return nil, err
 		}
 
+		chidlrenGroups := []string{}
+
+		for _, subgroup := range cachedGroup.SubGroups {
+			chidlrenGroups = append(chidlrenGroups, *subgroup.Name)
+		}
+
+		parentGroups := []string{}
+
+		for _, group := range k.CachedGroups {
+			for _, subgroup := range group.SubGroups {
+				if subgroup.Name == cachedGroup.Name {
+					parentGroups = append(parentGroups, *group.Name)
+				}
+			}
+		}
+
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = url.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *cachedGroup.ID
+		if len(chidlrenGroups) > 0 {
+			ocpGroup.GetAnnotations()["hierarchy_children"] = strings.Join(chidlrenGroups, ",")
+		}
+		if len(parentGroups) == 1 {
+			ocpGroup.GetAnnotations()["hierarchy_parent"] = parentGroups[0]
+		}
+		if len(parentGroups) > 1 {
+			ocpGroup.GetAnnotations()["hierarchy_parents"] = strings.Join(parentGroups, ",")
+		}
 
 		for _, user := range k.CachedGroupMembers[*cachedGroup.ID] {
 			ocpGroup.Users = append(ocpGroup.Users, *user.Username)
