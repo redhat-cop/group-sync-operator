@@ -16,9 +16,9 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-
 	"k8s.io/apimachinery/pkg/types"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/validation"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -164,7 +164,10 @@ func (k *KeycloakSyncer) Bind() error {
 func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	// Get Groups
-	groupParams := gocloak.GetGroupsParams{}
+	full := true
+	groupParams := gocloak.GetGroupsParams{
+		Full: &full,
+	}
 	groups, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupParams)
 
 	if err != nil {
@@ -186,7 +189,12 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 		groupAttributes := map[string]string{}
 
 		for key, value := range cachedGroup.Attributes {
-			groupAttributes[key] = strings.Join(value, "'")
+			// we add the annotation that qualify for OCP annotations and log for the ones that don't
+			if errs := validation.IsQualifiedName(key); len(errs) == 0 {
+				groupAttributes[key] = strings.Join(value, "'")
+			} else {
+				keycloakLogger.Info("unable to add annotation to", "group", cachedGroup.Name, "key", key, "value", value)
+			}
 		}
 
 		ocpGroup := userv1.Group{
@@ -228,13 +236,13 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = url.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *cachedGroup.ID
 		if len(chidlrenGroups) > 0 {
-			ocpGroup.GetAnnotations()["hierarchy_children"] = strings.Join(chidlrenGroups, ",")
+			ocpGroup.GetAnnotations()[constants.HierarchyChildren] = strings.Join(chidlrenGroups, ",")
 		}
 		if len(parentGroups) == 1 {
-			ocpGroup.GetAnnotations()["hierarchy_parent"] = parentGroups[0]
+			ocpGroup.GetAnnotations()[constants.HierarchyParent] = parentGroups[0]
 		}
 		if len(parentGroups) > 1 {
-			ocpGroup.GetAnnotations()["hierarchy_parents"] = strings.Join(parentGroups, ",")
+			ocpGroup.GetAnnotations()[constants.HierarchyParents] = strings.Join(parentGroups, ",")
 		}
 
 		for _, user := range k.CachedGroupMembers[*cachedGroup.ID] {
