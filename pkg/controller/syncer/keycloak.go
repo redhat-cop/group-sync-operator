@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"crypto/x509"
 
@@ -15,9 +16,9 @@ import (
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-
 	"k8s.io/apimachinery/pkg/types"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/validation"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -163,7 +164,9 @@ func (k *KeycloakSyncer) Bind() error {
 func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	// Get Groups
-	groupParams := gocloak.GetGroupsParams{}
+	groupParams := gocloak.GetGroupsParams{
+		Full: &truthy,
+	}
 	groups, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupParams)
 
 	if err != nil {
@@ -182,6 +185,17 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	for _, cachedGroup := range k.CachedGroups {
 
+		groupAttributes := map[string]string{}
+
+		for key, value := range cachedGroup.Attributes {
+			// we add the annotation that qualify for OCP annotations and log for the ones that don't
+			if errs := validation.IsQualifiedName(key); len(errs) == 0 {
+				groupAttributes[key] = strings.Join(value, "'")
+			} else {
+				keycloakLogger.Info("unable to add annotation to", "group", cachedGroup.Name, "key", key, "value", value)
+			}
+		}
+
 		ocpGroup := userv1.Group{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Group",
@@ -189,7 +203,7 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			},
 			ObjectMeta: v1.ObjectMeta{
 				Name:        *cachedGroup.Name,
-				Annotations: map[string]string{},
+				Annotations: groupAttributes,
 				Labels:      map[string]string{},
 			},
 			Users: []string{},
@@ -201,9 +215,34 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			return nil, err
 		}
 
+		chidlrenGroups := []string{}
+
+		for _, subgroup := range cachedGroup.SubGroups {
+			chidlrenGroups = append(chidlrenGroups, *subgroup.Name)
+		}
+
+		parentGroups := []string{}
+
+		for _, group := range k.CachedGroups {
+			for _, subgroup := range group.SubGroups {
+				if subgroup.Name == cachedGroup.Name {
+					parentGroups = append(parentGroups, *group.Name)
+				}
+			}
+		}
+
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = url.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *cachedGroup.ID
+		if len(chidlrenGroups) > 0 {
+			ocpGroup.GetAnnotations()[constants.HierarchyChildren] = strings.Join(chidlrenGroups, ",")
+		}
+		if len(parentGroups) == 1 {
+			ocpGroup.GetAnnotations()[constants.HierarchyParent] = parentGroups[0]
+		}
+		if len(parentGroups) > 1 {
+			ocpGroup.GetAnnotations()[constants.HierarchyParents] = strings.Join(parentGroups, ",")
+		}
 
 		for _, user := range k.CachedGroupMembers[*cachedGroup.ID] {
 			ocpGroup.Users = append(ocpGroup.Users, *user.Username)
