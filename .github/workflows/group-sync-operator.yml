@@ -16,6 +16,19 @@ jobs:
         run: make
       - name: Golang Test
         run: make test
+      - name: Get the version
+        id: get_version
+        run: |
+          # Version is based on a semantic version tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          # Publish to latest, minor, and patch tags
+          TAGS=('latest')
+          # Add Tag is Exists
+          if [ "$VERSION" != "$GITHUB_REF" ]; then
+            TAGS=('latest' "${VERSION}")
+          fi
+          # Set IMAGE_TAGS output for use in next step
+          ( IFS=$','; echo "::set-output name=IMAGE_TAGS::${TAGS[*]}" )
       - name: "Build and Push Image"
         uses: docker/build-push-action@v1
         with:
@@ -24,5 +37,5 @@ jobs:
           password: ${{ secrets.OPERATOR_REGISTRY_PASSWORD }}
           registry: ${{ secrets.OPERATOR_REGISTRY_SERVER }}
           repository: ${{ secrets.OPERATOR_REGISTRY_REPOSITORY }}
-          push: ${{ github.ref == 'refs/heads/master' && secrets.OPERATOR_REGISTRY_PUSH == 'true'  }}
-          tags: latest
+          push: ${{ (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) && secrets.OPERATOR_REGISTRY_PUSH == 'true'  }}
+          tags: "${{ steps.get_version.outputs.IMAGE_TAGS }}"
