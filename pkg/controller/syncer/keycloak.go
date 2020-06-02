@@ -164,9 +164,8 @@ func (k *KeycloakSyncer) Bind() error {
 func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	// Get Groups
-	full := true
 	groupParams := gocloak.GetGroupsParams{
-		Full: &full,
+		Full: &truthy,
 	}
 	groups, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupParams)
 
