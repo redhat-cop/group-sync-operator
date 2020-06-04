@@ -225,7 +225,7 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 		for _, group := range k.CachedGroups {
 			for _, subgroup := range group.SubGroups {
-				if subgroup.Name == cachedGroup.Name {
+				if *subgroup.Name == *cachedGroup.Name {
 					parentGroups = append(parentGroups, *group.Name)
 				}
 			}
