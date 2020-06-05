@@ -8,6 +8,6 @@ const (
 	SyncSourceUID     = AnnotationBase + "/sync.source.uid"
 	SyncProvider      = AnnotationBase + "/sync-provider"
 	HierarchyChildren = "hierarchy_children"
-	HierarchyParent   = "hierarchy_children"
-	HierarchyParents  = "hierarchy_childrens"
+	HierarchyParent   = "hierarchy_parent"
+	HierarchyParents  = "hierarchy_parents"
 )
