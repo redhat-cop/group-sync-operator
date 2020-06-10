@@ -269,6 +269,19 @@ A secret must be created in the same namespace that contains the `GroupSync` res
 * `username` - Username for authenticating with Keycloak
 * `password` - Password for authenticating with Keycloak
 
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic keycloak-group-sync --from-literal=username=<username> --from-literal=password=<password>
+```
+
+### Support for Additional Metadata (Beta)
+
+Additional metadata based on Keycloak group are also added to the OpenShift groups as Annotations including:
+
+* Parent/child relationship between groups and their subgroups
+* Group attributes
+
 ## CA Certificates
 
 Each provider allows for certificates to be provided in a secret to communicate to the target host. The secret must be placed in the same namespace as the `GroupSync`. An example of how a CA certificate for the Keycloak provider can be found below:
