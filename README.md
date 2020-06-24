@@ -10,14 +10,13 @@ Synchronizes groups from external providers into OpenShift
 
 The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, this functionality is limited to LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
 
-Group Synchronization is facilitated by creating a `GroupSync` resource within a namespace. The following describes the high level schema for this resource:
+Group Synchronization is facilitated by creating a `GroupSync` resource. The following describes the high level schema for this resource:
 
 ```shell
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: example-groupsync
-  namespace: group-sync-operator
 spec:
   providers:
     - <One or more providers to synchronize>
@@ -86,7 +85,6 @@ apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: azure-groupsync
-  namespace: group-sync-operator
 spec:
   providers:
   - name: azure
@@ -134,7 +132,6 @@ apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: github-groupsync
-  namespace: group-sync-operator
 spec:
   providers:
   - name: github
@@ -191,7 +188,6 @@ apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: gitlab-groupsync
-  namespace: group-sync-operator
 spec:
   providers:
   - name: gitlab
@@ -317,7 +313,6 @@ apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: keycloak-groupsync
-  namespace: group-sync-operator
 spec:
   schedule: "0 3 * * *"
   providers:
