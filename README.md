@@ -246,7 +246,6 @@ apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: keycloak-groupsync
-  namespace: group-sync-operator
 spec:
   providers:
   - name: keycloak
@@ -288,7 +287,6 @@ apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
   name: keycloak-groupsync
-  namespace: group-sync-operator
 spec:
   providers:
   - keycloak:
