@@ -215,10 +215,10 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			return nil, err
 		}
 
-		chidlrenGroups := []string{}
+		childrenGroups := []string{}
 
 		for _, subgroup := range cachedGroup.SubGroups {
-			chidlrenGroups = append(chidlrenGroups, *subgroup.Name)
+			childrenGroups = append(childrenGroups, *subgroup.Name)
 		}
 
 		parentGroups := []string{}
@@ -234,8 +234,8 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = url.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *cachedGroup.ID
-		if len(chidlrenGroups) > 0 {
-			ocpGroup.GetAnnotations()[constants.HierarchyChildren] = strings.Join(chidlrenGroups, ",")
+		if len(childrenGroups) > 0 {
+			ocpGroup.GetAnnotations()[constants.HierarchyChildren] = strings.Join(childrenGroups, ",")
 		}
 		if len(parentGroups) == 1 {
 			ocpGroup.GetAnnotations()[constants.HierarchyParent] = parentGroups[0]
