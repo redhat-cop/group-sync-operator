@@ -30,7 +30,7 @@ type GroupSyncSpec struct {
 
 // GroupSyncStatus defines the observed state of GroupSync
 type GroupSyncStatus struct {
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
 	Conditions status.Conditions `json:"conditions"`
 
@@ -270,14 +270,6 @@ type SecretRef struct {
 	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
 	// +kubebuilder:validation:Optional
 	Key string `json:"key,omitempty"`
-}
-
-func (s *GroupSync) GetReconcileStatus() status.Conditions {
-	return s.Status.Conditions
-}
-
-func (s *GroupSync) SetReconcileStatus(reconcileStatus status.Conditions) {
-	s.Status.Conditions = reconcileStatus
 }
 
 func init() {
