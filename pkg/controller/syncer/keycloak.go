@@ -85,7 +85,7 @@ func (k *KeycloakSyncer) Validate() error {
 		}
 
 		// Password key validation
-		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
+		if _, found := credentialsSecret.Data[secretPasswordKey]; !found {
 			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
 		}
 
