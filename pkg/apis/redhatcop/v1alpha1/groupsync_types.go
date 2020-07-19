@@ -272,6 +272,14 @@ type SecretRef struct {
 	Key string `json:"key,omitempty"`
 }
 
+func (s *GroupSync) GetReconcileStatus() status.Conditions {
+	return s.Status.Conditions
+}
+
+func (s *GroupSync) SetReconcileStatus(reconcileStatus status.Conditions) {
+	s.Status.Conditions = reconcileStatus
+}
+
 func init() {
 	SchemeBuilder.Register(&GroupSync{}, &GroupSyncList{})
 }
