@@ -30,7 +30,7 @@ type GroupSyncSpec struct {
 
 // GroupSyncStatus defines the observed state of GroupSync
 type GroupSyncStatus struct {
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +operator-sdk:gen-csv:customresourcedefinitions.statusDescriptors=true
 	Conditions status.Conditions `json:"conditions"`
 
