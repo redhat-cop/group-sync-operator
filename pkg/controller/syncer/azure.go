@@ -183,7 +183,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *cachedGroup.ObjectID
 
 		for _, user := range a.CachedGroupUsers[*cachedGroup.ObjectID] {
-			ocpGroup.Users = append(ocpGroup.Users, *user.DisplayName)
+			ocpGroup.Users = append(ocpGroup.Users, *user.UserPrincipalName)
 		}
 
 		ocpGroups = append(ocpGroups, ocpGroup)
