@@ -200,7 +200,7 @@ func (a *AzureSyncer) GetProviderName() string {
 
 func (a *AzureSyncer) processGroupsAndMembers(groupsClient graphrbac.GroupsClient, group, parentGroup *graphrbac.ADGroup) error {
 
-	if parentGroup == nil && !isGroupAllowed(*group.DisplayName, []string{}) {
+	if parentGroup == nil && !isGroupAllowed(*group.DisplayName, a.Provider.Groups) {
 		return nil
 	}
 
