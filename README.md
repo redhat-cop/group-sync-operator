@@ -64,6 +64,7 @@ Integration with external systems is made possible through a set of pluggable ex
 * [Azure](https://azure.microsoft.com/)
 * [GitHub](https://github.com)
 * [GitLab](https://gitlab.com)
+* [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol)
 * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
 
 The following sections describe the configuration options available for each provider
@@ -223,6 +224,113 @@ The secret can be created by executing the following command:
 oc create secret generic gitlab-group-sync --from-literal=username=<username> --from-literal=password=<password>
 ```
 
+### LDAP
+
+Groups stored within an [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol) server can be synchronized into OpenShift. The LDAP provider implements the included features of the [Syncing LDAP groups](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html) feature and makes use of the libraries from the [OpenShift Command Line](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html) tool to streamline the migration to this operator based implementation. 
+
+The configurations of the three primary schemas (`rfc2307`, `activeDirectory` and `augmentedActiveDirectory`) can be directly migrated as is without any modification.
+
+| Name | Description | Defaults | Required | 
+| ----- | ---------- | -------- | ----- |
+| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
+| `insecure` | Ignore SSL verification | 'false' | No |
+| `groupUIDNameMapping` | User defined name mapping | | No |
+| `rfc2307` | Configuration using the [rfc2307](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html#ldap-syncing-rfc2307_ldap-syncing-groups) schema | | No |
+| `activeDirectory` | Configuration using the [activeDirectory](https://docs.openshift.com/container-platform/4.5/authentication/ldap-syncing.html#ldap-syncing-activedir_ldap-syncing-groups) schema | | No |
+| `augmentedActiveDirectory` | Configuration using the [activeDirectory](https://docs.openshift.com/container-platform/4.5/authentication/ldap-syncing.html#ldap-syncing-augmented-activedir_ldap-syncing-groups) schema | | No |
+| `url` | Connection URL for the LDAP server | `https://gitlab.cldap://ldapserver:389om` | No |
+| `whitelist` | Explicit list of groups to synchronize |  | No |
+| `blacklist` | Explicit list of groups to not synchronize |  | No |
+
+The following is an example using the `rfc2307` schema:
+
+```
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: ldap-groupsync
+spec:
+  providers:
+  - ldap:
+      credentialsSecret:
+        name: ldap-group-sync
+        namespace: group-sync-operator
+      insecure: true
+      rfc2307:
+        groupMembershipAttributes:
+        - member
+        groupNameAttributes:
+        - cn
+        groupUIDAttribute: dn
+        groupsQuery:
+          baseDN: ou=Groups,dc=example,dc=com
+          derefAliases: never
+          filter: (objectClass=groupofnames)
+          scope: sub
+        tolerateMemberNotFoundErrors: true
+        tolerateMemberOutOfScopeErrors: true
+        userNameAttributes:
+        - cn
+        userUIDAttribute: dn
+        usersQuery:
+          baseDN: ou=Users,dc=example,dc=com
+          derefAliases: never
+          scope: sub
+      url: ldap://ldapserver:389
+    name: ldap
+```
+
+The examples provided in the OpenShift documented referenced previously can be used to construct the schemas for the other LDAP synchronization types.
+
+#### Authenticating to LDAP
+
+A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys:
+
+* `username` - Username (Bind DN) for authenticating with the LDAP server
+* `password` - Password for authenticating with the LDAP server
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic ldap-group-sync --from-literal=username=<username> --from-literal=password=<password>
+```
+
+
+#### Whitelists and Blacklists
+
+Groups can be explicitly whitelisted or blacklisted in order to control the groups that are eligible to be synchronized into OpenShift. When running LDAP group synchronization using the command line, this configuration is referenced via separate files, but these are instead specified in the `blacklist` and `whitelist` properties as shown below:
+
+```
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: ldap-groupsync
+spec:
+  providers:
+  - ldap:
+...
+      whitelist:
+      - cn=Online Corporate Banking,ou=Groups,dc=example,dc=com
+...
+    name: ldap
+```
+
+```
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: ldap-groupsync
+spec:
+  providers:
+  - ldap:
+...
+      blacklist:
+      - cn=Finance,ou=Groups,dc=example,dc=com
+...
+    name: ldap
+```
+
 ### Keycloak
 
 Groups stored within Keycloak can be synchronized into OpenShift. The following table describes the set of configuration options for the Keycloak provider:
@@ -296,6 +404,7 @@ spec:
         namespace: group-sync-operator
       caSecret:
         name: keycloak-certs
+        namespace: group-sync-operator
         key: tls.crt
       url: https://keycloak-keycloak-operator.apps.openshift.com
 ```

@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	secretUsernameKey = "username"
-	secretPasswordKey = "password"
-	secretTokenKey    = "token"
+	secretUsernameKey  = "username"
+	secretPasswordKey  = "password"
+	secretTokenKey     = "token"
+	defaultSecretCaKey = "ca.crt"
 )
 
 type GroupSyncer interface {
@@ -68,6 +69,10 @@ func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider 
 	case provider.Azure != nil:
 		{
 			return &AzureSyncer{GroupSync: groupSync, Provider: provider.Azure, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
+		}
+	case provider.Ldap != nil:
+		{
+			return &LdapSyncer{GroupSync: groupSync, Provider: provider.Ldap, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
 		}
 	}
 
