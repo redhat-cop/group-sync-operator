@@ -267,6 +267,426 @@ spec:
                     - realm
                     - url
                     type: object
+                  ldap:
+                    description: Ldap represents the LDAP provider
+                    properties:
+                      activeDirectory:
+                        description: ActiveDirectoryConfig represents the configuration
+                          for Active Directory
+                        properties:
+                          groupMembershipAttributes:
+                            description: GroupMembershipAttributes defines which attributes
+                              on an LDAP user entry will be interpreted as the groups
+                              it is a member of
+                            items:
+                              type: string
+                            type: array
+                          userNameAttributes:
+                            description: UserNameAttributes defines which attributes
+                              on an LDAP user entry will be interpreted as its OpenShift
+                              user name.
+                            items:
+                              type: string
+                            type: array
+                          usersQuery:
+                            description: AllUsersQuery holds the template for an LDAP
+                              query that returns user entries.
+                            properties:
+                              baseDN:
+                                description: The DN of the branch of the directory
+                                  where all searches should start from
+                                type: string
+                              derefAliases:
+                                description: 'The (optional) behavior of the search
+                                  with regards to alisases. Can be: never:  never
+                                  dereference aliases, search: only dereference in
+                                  searching, base:   only dereference in finding the
+                                  base object, always: always dereference Defaults
+                                  to always dereferencing if not set'
+                                type: string
+                              filter:
+                                description: Filter is a valid LDAP search filter
+                                  that retrieves all relevant entries from the LDAP
+                                  server with the base DN
+                                type: string
+                              pageSize:
+                                description: PageSize is the maximum preferred page
+                                  size, measured in LDAP entries. A page size of 0
+                                  means no paging will be done.
+                                type: integer
+                              scope:
+                                description: 'The (optional) scope of the search.
+                                  Can be: base: only the base object, one:  all object
+                                  on the base level, sub:  the entire subtree Defaults
+                                  to the entire subtree if not set'
+                                type: string
+                              timeout:
+                                description: TimeLimit holds the limit of time in
+                                  seconds that any request to the server can remain
+                                  outstanding before the wait for a response is given
+                                  up. If this is 0, no client-side limit is imposed
+                                type: integer
+                            required:
+                            - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
+                            type: object
+                        required:
+                        - groupMembershipAttributes
+                        - userNameAttributes
+                        - usersQuery
+                        type: object
+                      augmentedActiveDirectory:
+                        description: ActiveDirectoryConfig represents the configuration
+                          for Augmented Active Directory
+                        properties:
+                          groupMembershipAttributes:
+                            description: GroupMembershipAttributes defines which attributes
+                              on an LDAP user entry will be interpreted as the groups
+                              it is a member of
+                            items:
+                              type: string
+                            type: array
+                          groupNameAttributes:
+                            description: GroupNameAttributes defines which attributes
+                              on an LDAP group entry will be interpreted as its name
+                              to use for an OpenShift group
+                            items:
+                              type: string
+                            type: array
+                          groupUIDAttribute:
+                            description: GroupUIDAttributes defines which attribute
+                              on an LDAP group entry will be interpreted as its unique
+                              identifier. (ldapGroupUID)
+                            type: string
+                          groupsQuery:
+                            description: AllGroupsQuery holds the template for an
+                              LDAP query that returns group entries.
+                            properties:
+                              baseDN:
+                                description: The DN of the branch of the directory
+                                  where all searches should start from
+                                type: string
+                              derefAliases:
+                                description: 'The (optional) behavior of the search
+                                  with regards to alisases. Can be: never:  never
+                                  dereference aliases, search: only dereference in
+                                  searching, base:   only dereference in finding the
+                                  base object, always: always dereference Defaults
+                                  to always dereferencing if not set'
+                                type: string
+                              filter:
+                                description: Filter is a valid LDAP search filter
+                                  that retrieves all relevant entries from the LDAP
+                                  server with the base DN
+                                type: string
+                              pageSize:
+                                description: PageSize is the maximum preferred page
+                                  size, measured in LDAP entries. A page size of 0
+                                  means no paging will be done.
+                                type: integer
+                              scope:
+                                description: 'The (optional) scope of the search.
+                                  Can be: base: only the base object, one:  all object
+                                  on the base level, sub:  the entire subtree Defaults
+                                  to the entire subtree if not set'
+                                type: string
+                              timeout:
+                                description: TimeLimit holds the limit of time in
+                                  seconds that any request to the server can remain
+                                  outstanding before the wait for a response is given
+                                  up. If this is 0, no client-side limit is imposed
+                                type: integer
+                            required:
+                            - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
+                            type: object
+                          userNameAttributes:
+                            description: UserNameAttributes defines which attributes
+                              on an LDAP user entry will be interpreted as its OpenShift
+                              user name.
+                            items:
+                              type: string
+                            type: array
+                          usersQuery:
+                            description: AllUsersQuery holds the template for an LDAP
+                              query that returns user entries.
+                            properties:
+                              baseDN:
+                                description: The DN of the branch of the directory
+                                  where all searches should start from
+                                type: string
+                              derefAliases:
+                                description: 'The (optional) behavior of the search
+                                  with regards to alisases. Can be: never:  never
+                                  dereference aliases, search: only dereference in
+                                  searching, base:   only dereference in finding the
+                                  base object, always: always dereference Defaults
+                                  to always dereferencing if not set'
+                                type: string
+                              filter:
+                                description: Filter is a valid LDAP search filter
+                                  that retrieves all relevant entries from the LDAP
+                                  server with the base DN
+                                type: string
+                              pageSize:
+                                description: PageSize is the maximum preferred page
+                                  size, measured in LDAP entries. A page size of 0
+                                  means no paging will be done.
+                                type: integer
+                              scope:
+                                description: 'The (optional) scope of the search.
+                                  Can be: base: only the base object, one:  all object
+                                  on the base level, sub:  the entire subtree Defaults
+                                  to the entire subtree if not set'
+                                type: string
+                              timeout:
+                                description: TimeLimit holds the limit of time in
+                                  seconds that any request to the server can remain
+                                  outstanding before the wait for a response is given
+                                  up. If this is 0, no client-side limit is imposed
+                                type: integer
+                            required:
+                            - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
+                            type: object
+                        required:
+                        - groupMembershipAttributes
+                        - groupNameAttributes
+                        - groupUIDAttribute
+                        - groupsQuery
+                        - userNameAttributes
+                        - usersQuery
+                        type: object
+                      blacklist:
+                        description: Black represents a list of groups to not synchronize
+                        items:
+                          type: string
+                        type: array
+                      caSecret:
+                        description: CaSecret is a reference to a secret containing
+                          a CA certificate to communicate to the GitLab server
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
+                      credentialsSecret:
+                        description: CredentialsSecret is a reference to a secret
+                          containing authentication details for communicating to LDAP
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
+                      groupUIDNameMapping:
+                        additionalProperties:
+                          type: string
+                        description: / LDAPGroupUIDToOpenShiftGroupNameMapping is
+                          an optional direct mapping of LDAP group UIDs to OpenShift
+                          group names
+                        type: object
+                      insecure:
+                        description: Insecure specifies whether to allow for unverified
+                          certificates to be used when communicating to LDAP
+                        type: boolean
+                      rfc2307:
+                        description: RFC2307Config represents the configuration for
+                          a RFC2307 schema
+                        properties:
+                          groupMembershipAttributes:
+                            description: GroupMembershipAttributes defines which attributes
+                              on an LDAP group entry will be interpreted  as its members.
+                              The values contained in those attributes must be queryable
+                              by your UserUIDAttribute
+                            items:
+                              type: string
+                            type: array
+                          groupNameAttributes:
+                            description: GroupNameAttributes defines which attributes
+                              on an LDAP group entry will be interpreted as its name
+                              to use for an OpenShift group
+                            items:
+                              type: string
+                            type: array
+                          groupUIDAttribute:
+                            description: GroupUIDAttributes defines which attribute
+                              on an LDAP group entry will be interpreted as its unique
+                              identifier. (ldapGroupUID)
+                            type: string
+                          groupsQuery:
+                            description: AllGroupsQuery holds the template for an
+                              LDAP query that returns group entries.
+                            properties:
+                              baseDN:
+                                description: The DN of the branch of the directory
+                                  where all searches should start from
+                                type: string
+                              derefAliases:
+                                description: 'The (optional) behavior of the search
+                                  with regards to alisases. Can be: never:  never
+                                  dereference aliases, search: only dereference in
+                                  searching, base:   only dereference in finding the
+                                  base object, always: always dereference Defaults
+                                  to always dereferencing if not set'
+                                type: string
+                              filter:
+                                description: Filter is a valid LDAP search filter
+                                  that retrieves all relevant entries from the LDAP
+                                  server with the base DN
+                                type: string
+                              pageSize:
+                                description: PageSize is the maximum preferred page
+                                  size, measured in LDAP entries. A page size of 0
+                                  means no paging will be done.
+                                type: integer
+                              scope:
+                                description: 'The (optional) scope of the search.
+                                  Can be: base: only the base object, one:  all object
+                                  on the base level, sub:  the entire subtree Defaults
+                                  to the entire subtree if not set'
+                                type: string
+                              timeout:
+                                description: TimeLimit holds the limit of time in
+                                  seconds that any request to the server can remain
+                                  outstanding before the wait for a response is given
+                                  up. If this is 0, no client-side limit is imposed
+                                type: integer
+                            type: object
+                          tolerateMemberNotFoundErrors:
+                            description: TolerateMemberNotFoundErrors determines the
+                              behavior of the LDAP sync job when missing user entries
+                              are encountered. If 'true', an LDAP query for users
+                              that doesn't find any will be tolerated and an only
+                              and error will be logged. If 'false', the LDAP sync
+                              job will fail if a query for users doesn't find any.
+                              The default value is 'false'. Misconfigured LDAP sync
+                              jobs with this flag set to 'true' can cause group membership
+                              to be removed, so it is recommended to use this flag
+                              with caution.
+                            type: boolean
+                          tolerateMemberOutOfScopeErrors:
+                            description: TolerateMemberOutOfScopeErrors determines
+                              the behavior of the LDAP sync job when out-of-scope
+                              user entries are encountered. If 'true', an LDAP query
+                              for a user that falls outside of the base DN given for
+                              the all user query will be tolerated and only an error
+                              will be logged. If 'false', the LDAP sync job will fail
+                              if a user query would search outside of the base DN
+                              specified by the all user query. Misconfigured LDAP
+                              sync jobs with this flag set to 'true' can result in
+                              groups missing users, so it is recommended to use this
+                              flag with caution.
+                            type: boolean
+                          userNameAttributes:
+                            description: UserNameAttributes defines which attributes
+                              on an LDAP user entry will be used, in order, as its
+                              OpenShift user name. The first attribute with a non-empty
+                              value is used. This should match your PreferredUsername
+                              setting for your LDAPPasswordIdentityProvider
+                            items:
+                              type: string
+                            type: array
+                          userUIDAttribute:
+                            description: UserUIDAttribute defines which attribute
+                              on an LDAP user entry will be interpreted as its unique
+                              identifier. It must correspond to values that will be
+                              found from the GroupMembershipAttributes
+                            type: string
+                          usersQuery:
+                            description: AllUsersQuery holds the template for an LDAP
+                              query that returns user entries.
+                            properties:
+                              baseDN:
+                                description: The DN of the branch of the directory
+                                  where all searches should start from
+                                type: string
+                              derefAliases:
+                                description: 'The (optional) behavior of the search
+                                  with regards to alisases. Can be: never:  never
+                                  dereference aliases, search: only dereference in
+                                  searching, base:   only dereference in finding the
+                                  base object, always: always dereference Defaults
+                                  to always dereferencing if not set'
+                                type: string
+                              filter:
+                                description: Filter is a valid LDAP search filter
+                                  that retrieves all relevant entries from the LDAP
+                                  server with the base DN
+                                type: string
+                              pageSize:
+                                description: PageSize is the maximum preferred page
+                                  size, measured in LDAP entries. A page size of 0
+                                  means no paging will be done.
+                                type: integer
+                              scope:
+                                description: 'The (optional) scope of the search.
+                                  Can be: base: only the base object, one:  all object
+                                  on the base level, sub:  the entire subtree Defaults
+                                  to the entire subtree if not set'
+                                type: string
+                              timeout:
+                                description: TimeLimit holds the limit of time in
+                                  seconds that any request to the server can remain
+                                  outstanding before the wait for a response is given
+                                  up. If this is 0, no client-side limit is imposed
+                                type: integer
+                            type: object
+                        required:
+                        - groupMembershipAttributes
+                        - groupNameAttributes
+                        - groupUIDAttribute
+                        - groupsQuery
+                        - tolerateMemberNotFoundErrors
+                        - tolerateMemberOutOfScopeErrors
+                        - userNameAttributes
+                        - userUIDAttribute
+                        - usersQuery
+                        type: object
+                      url:
+                        description: URL is the location of the LDAP Server
+                        type: string
+                      whitelist:
+                        description: Whitelist represents a list of groups to synchronize
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - url
+                    type: object
                   name:
                     description: Name represents the name of the provider
                     type: string
