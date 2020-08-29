@@ -326,14 +326,8 @@ spec:
                                   outstanding before the wait for a response is given
                                   up. If this is 0, no client-side limit is imposed
                                 type: integer
-                            required:
-                            - baseDN
-                            - derefAliases
-                            - filter
-                            - pageSize
-                            - scope
-                            - timeout
                             type: object
+                          groupsQuery:
                         required:
                         - groupMembershipAttributes
                         - userNameAttributes
@@ -400,13 +394,6 @@ spec:
                                   outstanding before the wait for a response is given
                                   up. If this is 0, no client-side limit is imposed
                                 type: integer
-                            required:
-                            - baseDN
-                            - derefAliases
-                            - filter
-                            - pageSize
-                            - scope
-                            - timeout
                             type: object
                           userNameAttributes:
                             description: UserNameAttributes defines which attributes
@@ -453,13 +440,6 @@ spec:
                                   outstanding before the wait for a response is given
                                   up. If this is 0, no client-side limit is imposed
                                 type: integer
-                            required:
-                            - baseDN
-                            - derefAliases
-                            - filter
-                            - pageSize
-                            - scope
-                            - timeout
                             type: object
                         required:
                         - groupMembershipAttributes
