@@ -57,7 +57,7 @@ func (l *LdapSyncer) Init() bool {
 	if l.Provider.Blacklist == nil {
 		l.Blacklist = []string{}
 	} else {
-		l.Blacklist = *l.Provider.Whitelist
+		l.Blacklist = *l.Provider.Blacklist
 	}
 
 	return false

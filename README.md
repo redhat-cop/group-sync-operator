@@ -387,7 +387,15 @@ Additional metadata based on Keycloak group are also added to the OpenShift grou
 
 ## CA Certificates
 
-Each provider allows for certificates to be provided in a secret to communicate to the target host. The secret must be placed in the same namespace as the `GroupSync`. An example of how a CA certificate for the Keycloak provider can be found below:
+Each provider allows for certificates to be provided in a secret to communicate securely to the target host through the use of a property called `caSecret`.
+
+The certificate can be added to a secret called _keycloak-certs_ using the key `ca.crt` representing the certificate using the following command.
+
+```
+$ oc create secret generic keycloak-certs --from-file=ca.crt=<file>
+```
+
+An example of how the CA certificate can be added to the Keycloak provider is shown below:
 
 
 ```shell
