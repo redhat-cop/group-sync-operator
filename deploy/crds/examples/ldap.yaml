@@ -1,0 +1,30 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: ldap-groupsync
+spec:
+  providers:
+    - name: ldap
+      ldap:
+        credentialsSecret:
+          name: ldap-group-sync
+          namespace: group-sync-operator
+        url: "ldap://localhost:389"
+        insecure: true
+        rfc2307:
+          groupsQuery:
+            baseDN: "ou=Groups,dc=example,dc=com"
+            scope: sub
+            filter: (objectClass=groupofnames)
+            derefAliases: never
+          groupUIDAttribute: dn
+          groupNameAttributes: [cn]
+          groupMembershipAttributes: [member]
+          usersQuery:
+            baseDN: "ou=Users,dc=example,dc=com"
+            scope: sub
+            derefAliases: never
+          userUIDAttribute: dn
+          userNameAttributes: [cn]
+          tolerateMemberNotFoundErrors: true
+          tolerateMemberOutOfScopeErrors: true
