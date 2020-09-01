@@ -23,8 +23,7 @@ import (
 )
 
 const (
-	masterRealm        = "master"
-	defaultSecretCaKey = "ca.crt"
+	masterRealm = "master"
 )
 
 var (
