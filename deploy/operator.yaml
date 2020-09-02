@@ -15,7 +15,7 @@ spec:
       serviceAccountName: group-sync-operator
       containers:
         - name: group-sync-operator
-          image: quay.io/redhat-cop/group-sync-operator:v0.0.5
+          image: quay.io/redhat-cop/group-sync-operator:v0.0.6
           command:
             - group-sync-operator
           imagePullPolicy: Always
