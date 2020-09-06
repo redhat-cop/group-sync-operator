@@ -1,0 +1,20 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: quay.io
+  repository: redhat-cop/group-sync-operator
+  pullPolicy: Always
+  tag: ""
+
+imagePullSecrets: []
+
+securityContext: {}
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

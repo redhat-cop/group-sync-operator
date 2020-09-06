@@ -1,0 +1,15 @@
+apiVersion: v2
+name: group-sync-operator
+description: Synchronizes groups from external providers into OpenShift
+version: 0.0.1
+appVersion: 0.0.6
+keywords:
+  - openshift
+  - operator
+  - security
+  - identity
+home: https://github.com/redhat-cop/group-sync-operator
+sources:
+  - https://github.com/redhat-cop/group-sync-operator
+maintainers:
+  - name: sabre1041
