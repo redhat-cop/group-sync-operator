@@ -11,6 +11,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/google/go-github/v31 v31.0.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/okta/okta-sdk-golang/v2 v2.1.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/library-go v0.0.0-20200527213645-a9b77f5402e3
 	github.com/operator-framework/operator-sdk v0.18.1

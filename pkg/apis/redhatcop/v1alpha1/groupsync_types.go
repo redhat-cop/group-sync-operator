@@ -154,6 +154,56 @@ type KeycloakProvider struct {
 	URL string `json:"url"`
 }
 
+// OktaProvider represents integration with Okta
+type OktaProvider struct {
+	// CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:io.kubernetes:Secret"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Secret Containing the CA Certificate"
+	// +kubebuilder:validation:Optional
+	CaSecret *SecretRef `json:"caSecret,omitempty"`
+	// CredentialsSecret is a reference to a secret containing authentication details for the Keycloak server
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:io.kubernetes:Secret"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Secret Containing the Credentials"
+	// +kubebuilder:validation:Required
+	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	// Groups represents a filtered list of groups to synchronize
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Groups to Synchronize"
+	// +kubebuilder:validation:Optional
+	Groups []string `json:"groups,omitempty"`
+	// Insecure specifies whether to allow for unverified certificates to be used when communicating to Keycloak
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Ignore SSL Verification"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:booleanSwitch"
+	// +kubebuilder:validation:Optional
+	Insecure bool `json:"insecure,omitempty"`
+	// LoginRealm is the Keycloak realm to authenticate against
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Realm to Login Against"
+	// +kubebuilder:validation:Optional
+	LoginRealm string `json:"loginRealm,omitempty"`
+	// Realm is the realm containing the groups to synchronize against
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Realm to Synchronize"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
+	// +kubebuilder:validation:Required
+	Realm string `json:"realm"`
+	// Scope represents the depth for which groups will be synchronized
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Scope to synchronize against"
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=one;sub
+	Scope SyncScope `json:"scope,omitempty"`
+	// URL is the location of the Okta domain server
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Keycloak URL"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
+	// +kubebuilder:validation:Required
+	URL string `json:"url"`
+}
+
 // GitHubProvider represents integration with GitHub
 type GitHubProvider struct {
 	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
