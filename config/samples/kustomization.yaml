@@ -1,0 +1,8 @@
+## Append samples you want in your CSV to this file as resources ##
+resources:
+  - azure.yaml
+  - github.yaml
+  - gitlab.yaml
+  - keycloak.yaml
+  - ldap.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
