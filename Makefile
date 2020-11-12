@@ -51,17 +51,13 @@ test: generate fmt vet manifests
 
 BUILD_TOOLS_DIR=$(shell pwd)/buildtools
 yq:
-ifeq (, $(shell which yq))
     ifeq ("$(wildcard $(BUILD_TOOLS_DIR)/yq)","")
 	@{ \
 	set -e ;\
 	mkdir -p $(BUILD_TOOLS_DIR) ;\
 	curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_$(PLATFORM)_amd64 --output $(BUILD_TOOLS_DIR)/yq && chmod +x $(BUILD_TOOLS_DIR)/yq ;\
 	}
-endif
 YQ=$(BUILD_TOOLS_DIR)/yq
-else
-YQ=$(shell which yq)
 endif
 
 # Build manager binary
