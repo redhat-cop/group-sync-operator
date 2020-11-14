@@ -57,8 +57,8 @@ yq:
 	mkdir -p $(BUILD_TOOLS_DIR) ;\
 	curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_$(PLATFORM)_amd64 --output $(BUILD_TOOLS_DIR)/yq && chmod +x $(BUILD_TOOLS_DIR)/yq ;\
 	}
+    endif
 YQ=$(BUILD_TOOLS_DIR)/yq
-endif
 
 # Build manager binary
 manager: generate fmt vet
