@@ -77,6 +77,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
 | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
+| `filter` | Graph API filter | | No |
 | `groups` | List of groups to filter against | | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
@@ -101,7 +102,6 @@ Authentication to Azure can be performed using Service Principal with access to 
 
 The following keys must be defined in the secret
 
-* `AZURE_SUBSCRIPTION_ID` - Subscription ID
 * `AZURE_TENANT_ID` - Tenant ID
 * `AZURE_CLIENT_ID` - Client ID
 * `AZURE_CLIENT_SECRET` - Client Secret
@@ -109,7 +109,7 @@ The following keys must be defined in the secret
 The secret can be created by executing the following command:
 
 ```shell
-oc create secret generic azure-group-sync --from-literal=AZURE_SUBSCRIPTION_ID=<AZURE_SUBSCRIPTION_ID> --from-literal=AZURE_TENANT_ID=<AZURE_TENANT_ID> --from-literal=AZURE_CLIENT_ID=<AZURE_CLIENT_ID> --from-literal=AZURE_CLIENT_SECRET=<AZURE_CLIENT_SECRET>
+oc create secret generic azure-group-sync --from-literal=AZURE_TENANT_ID=<AZURE_TENANT_ID> --from-literal=AZURE_CLIENT_ID=<AZURE_CLIENT_ID> --from-literal=AZURE_CLIENT_SECRET=<AZURE_CLIENT_SECRET>
 ```
 
 ### GitHub

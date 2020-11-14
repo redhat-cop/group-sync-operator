@@ -32,7 +32,7 @@ jobs:
       - name: "Build and Push Image"
         uses: docker/build-push-action@v1
         with:
-          dockerfile: build/Dockerfile
+          dockerfile: Dockerfile
           username: ${{ secrets.OPERATOR_REGISTRY_USERNAME }}
           password: ${{ secrets.OPERATOR_REGISTRY_PASSWORD }}
           registry: ${{ secrets.OPERATOR_REGISTRY_SERVER }}
