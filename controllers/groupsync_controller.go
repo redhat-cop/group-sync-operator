@@ -147,8 +147,8 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if group.GetLabels() != nil {
 				ocpGroupLabels = group.GetLabels()
 			}
-			ocpGroup.SetLabels(ocpGroupLabels)
-			ocpGroup.SetAnnotations(ocpGroupAnnotations)
+			ocpGroup.SetLabels(mergeMap(ocpGroup.GetLabels(), ocpGroupLabels))
+			ocpGroup.SetAnnotations(mergeMap(ocpGroup.GetAnnotations(), ocpGroupAnnotations))
 
 			// Add Label for new resource
 			ocpGroup.Labels[constants.SyncProvider] = providerLabel
@@ -244,4 +244,19 @@ func ISO8601(t time.Time) string {
 	}
 	return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%02d%s",
 		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), tz)
+}
+
+func mergeMap(m1, m2 map[string]string) map[string]string {
+
+	if m1 != nil {
+		for mKey, mValue := range m2 {
+			m1[mKey] = mValue
+		}
+
+		return m1
+
+	} else {
+		return m2
+	}
+
 }
