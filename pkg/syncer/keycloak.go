@@ -29,6 +29,7 @@ const (
 var (
 	keycloakLogger = logf.Log.WithName("syncer_keycloak")
 	truthy         = true
+	iterationMax   = 100
 )
 
 type KeycloakSyncer struct {
@@ -163,10 +164,7 @@ func (k *KeycloakSyncer) Bind() error {
 func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 	// Get Groups
-	groupParams := gocloak.GetGroupsParams{
-		Full: &truthy,
-	}
-	groups, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupParams)
+	groups, err := k.getGroups()
 
 	if err != nil {
 		keycloakLogger.Error(err, "Failed to get Groups", "Provider", k.Name)
@@ -262,8 +260,7 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 
 	k.CachedGroups[*group.ID] = group
 
-	groupParams := gocloak.GetGroupsParams{}
-	groupMembers, err := k.GoCloak.GetGroupMembers(k.Token.AccessToken, k.Provider.Realm, *group.ID, groupParams)
+	groupMembers, err := k.getGroupMembers(*group.ID)
 
 	if err != nil {
 		return err
@@ -309,6 +306,60 @@ func (k *KeycloakSyncer) singleDiff(lhsSlice, rhsSlice []*gocloak.User) (lhsOnly
 	}
 
 	return lhsOnly
+}
+
+func (k *KeycloakSyncer) getGroups() ([]*gocloak.Group, error) {
+	groups := []*gocloak.Group{}
+
+	iteration := 0
+
+	for {
+
+		gIteration := iteration * iterationMax
+		groupsParams := gocloak.GetGroupsParams{First: &gIteration, Max: &iterationMax, BriefRepresentation: &truthy}
+		groupsResponse, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupsParams)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(groupsResponse) == 0 {
+			break
+		}
+
+		groups = append(groups, groupsResponse...)
+		iteration = iteration + 1
+
+	}
+
+	return groups, nil
+}
+
+func (k *KeycloakSyncer) getGroupMembers(groupId string) ([]*gocloak.User, error) {
+	members := []*gocloak.User{}
+
+	iteration := 0
+
+	for {
+
+		uIteration := iteration * iterationMax
+		groupMemberParams := gocloak.GetGroupsParams{First: &uIteration, Max: &iterationMax, BriefRepresentation: &truthy}
+		groupMembers, err := k.GoCloak.GetGroupMembers(k.Token.AccessToken, k.Provider.Realm, groupId, groupMemberParams)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(groupMembers) == 0 {
+			break
+		}
+
+		members = append(members, groupMembers...)
+		iteration = iteration + 1
+
+	}
+
+	return members, nil
 }
 
 func (k *KeycloakSyncer) GetProviderName() string {
