@@ -7,6 +7,10 @@ buildtools/*
 #EnvTest
 testbin/*
 
+#Bundle
+bundle
+bundle.Dockerfile
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
