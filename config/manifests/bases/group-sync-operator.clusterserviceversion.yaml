@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.1.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
   name: group-sync-operator.vX.Y.Z
   namespace: placeholder
@@ -419,13 +419,7 @@ spec:
     ```shell
     git clone https://github.com/redhat-cop/group-sync-operator.git
     cd group-sync-operator
-    oc apply -f deploy/crds/redhatcop.redhat.io_groupsyncs_crd.yaml
-    oc apply -n group-sync-operator -f deploy/service_account.yaml
-    oc apply -n group-sync-operator -f deploy/clusterrole.yaml
-    oc apply -n group-sync-operator -f deploy/clusterrole_binding.yaml
-    oc apply -n group-sync-operator -f deploy/role.yaml
-    oc apply -n group-sync-operator -f deploy/role_binding.yaml
-    oc apply -n group-sync-operator -f deploy/operator.yaml
+    make deploy
     ```
 
     ## Authentication

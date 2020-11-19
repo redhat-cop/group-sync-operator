@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # Current Operator version
-VERSION ?= 0.0.7
+VERSION ?= latest
 # Operator SDK
 OPERATOR_SDK ?= operator-sdk
 # YQ Version
@@ -18,7 +18,7 @@ else
   endif
 endif
 # Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+BUNDLE_IMG ?= quay.io/redhat-cop/group-sync-operator-bundle:$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -29,7 +29,7 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= quay.io/redhat-cop/group-sync-operator:$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,crdVersions=v1beta1"
 
