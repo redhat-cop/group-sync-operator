@@ -3,9 +3,16 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: '[]'
-    capabilities: Basic Install
+    capabilities: Full Lifecycle
+    categories: Security
+    certified: "false"
+    containerImage: quay.io/redhat-cop/group-sync-operator:latest
+    createdAt: "2020-12-17T13:26:12Z"
+    description: Synchronize groups and users from external providers
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    repository: https://github.com/redhat-cop/group-sync-operator
+    support: Red Hat Community of Practice
   name: group-sync-operator.vX.Y.Z
   namespace: placeholder
 spec:
@@ -389,7 +396,7 @@ spec:
 
     ## Overview
 
-    The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, this functionality is limited to LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
+    The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, the functionality that is included in OpenShift to limited to synchronizing LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
 
     Group Synchronization is facilitated by creating a `GroupSync` resource. The following describes the high level schema for this resource:
 
@@ -809,6 +816,53 @@ spec:
     mediatype: image/png
   install:
     spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - patch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - user.openshift.io
+          resources:
+          - groups
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - redhatcop.redhat.io
+          resources:
+          - groupsyncs
+          - groupsyncs/status
+          - groupsyncs/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: controller-manager
       deployments: null
     strategy: ""
   installModes:
@@ -834,6 +888,5 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat Community of Practice
-    url: https://redhat-cop.github.io/
   replaces: 0.0.6
   version: 0.0.0

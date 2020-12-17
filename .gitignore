@@ -11,6 +11,9 @@ testbin/*
 bundle
 bundle.Dockerfile
 
+#Packagemanifests
+packagemanifests
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
