@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/redhat-cop/group-sync-operator
-  newTag: v0.0.7
+  newTag: v0.0.8
