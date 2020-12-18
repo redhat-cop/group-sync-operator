@@ -8,7 +8,7 @@ Synchronizes groups from external providers into OpenShift
 
 ## Overview
 
-The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, this functionality is limited to LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
+The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, the functionality that is included in OpenShift to limited to synchronizing LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
 
 Group Synchronization is facilitated by creating a `GroupSync` resource. The following describes the high level schema for this resource:
 
@@ -448,6 +448,6 @@ go mod vendor
 Using the [operator-sdk](https://github.com/operator-framework/operator-sdk), run the operator locally:
 
 ```shell
-oc apply -f deploy/crds/redhatcop.redhat.io_groupsyncs_crd.yaml
-OPERATOR_NAME='group-sync-operator' operator-sdk run --local --watch-namespace ""
+make install
+OPERATOR_NAME='group-sync-operator' make run ENABLE_WEBHOOKS=false
 ```
