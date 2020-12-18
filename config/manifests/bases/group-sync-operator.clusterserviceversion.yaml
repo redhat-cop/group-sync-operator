@@ -816,53 +816,6 @@ spec:
     mediatype: image/png
   install:
     spec:
-      clusterPermissions:
-      - rules:
-        - apiGroups:
-          - ""
-          resources:
-          - events
-          verbs:
-          - get
-          - list
-          - watch
-          - create
-          - patch
-        - apiGroups:
-          - ""
-          resources:
-          - secrets
-          verbs:
-          - get
-          - list
-          - watch
-        - apiGroups:
-          - user.openshift.io
-          resources:
-          - groups
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - redhatcop.redhat.io
-          resources:
-          - groupsyncs
-          - groupsyncs/status
-          - groupsyncs/finalizers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        serviceAccountName: controller-manager
       deployments: null
     strategy: ""
   installModes:
