@@ -301,6 +301,11 @@ type AzureProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced","urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	URL *string `json:"url,omitempty"`
+
+	// UserNameAttributes are the fields to consider on the User object containing the username
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure UserName Attributes",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced","urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	UserNameAttributes *[]string `json:"userNameAttributes,omitempty"`
 }
 
 // SecretRef represents a reference to an item within a Secret
