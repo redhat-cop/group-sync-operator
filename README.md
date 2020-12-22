@@ -73,6 +73,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
 | `filter` | Graph API filter | | No |
 | `groups` | List of groups to filter against | | No |
+| `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
 
@@ -449,5 +450,5 @@ Using the [operator-sdk](https://github.com/operator-framework/operator-sdk), ru
 
 ```shell
 make install
-OPERATOR_NAME='group-sync-operator' make run ENABLE_WEBHOOKS=false
+OPERATOR_NAME='group-sync-operator' WATCH_NAMESPACE='group-sync-operator' make run ENABLE_WEBHOOKS=false
 ```

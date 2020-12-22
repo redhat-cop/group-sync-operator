@@ -26,13 +26,12 @@ var (
 )
 
 const (
-	TenantID                   = "AZURE_TENANT_ID"
-	ClientID                   = "AZURE_CLIENT_ID"
-	ClientSecret               = "AZURE_CLIENT_SECRET"
-	GraphUserType              = "#microsoft.graph.user"
-	GraphOdataType             = "@odata.type"
-	GraphUserUserPrincipalName = "userPrincipalName"
-	GraphID                    = "id"
+	TenantID                 = "AZURE_TENANT_ID"
+	ClientID                 = "AZURE_CLIENT_ID"
+	ClientSecret             = "AZURE_CLIENT_SECRET"
+	GraphUserType            = "#microsoft.graph.user"
+	GraphOdataType           = "@odata.type"
+	DefaultUserNameAttribute = "userPrincipalName"
 )
 
 type AzureSyncer struct {
@@ -199,11 +198,10 @@ func (a *AzureSyncer) listGroupMembers(groupID string) ([]string, error) {
 		directoryType := directoryObject[GraphOdataType]
 
 		if directoryType == GraphUserType {
-
-			if username, ok := directoryObject[GraphUserUserPrincipalName]; ok {
+			if username, found := a.getUsernameForUser(directoryObject); found {
 				groupMembers = append(groupMembers, fmt.Sprintf("%v", username))
 			} else {
-				azureLogger.Info("Warning: Username field '%s' not found for User ID %s", GraphUserUserPrincipalName, directoryObject[GraphID])
+				azureLogger.Info(fmt.Sprintf("Warning: Username for user cannot be found in Group ID '%s'", groupID))
 			}
 		}
 
@@ -211,4 +209,30 @@ func (a *AzureSyncer) listGroupMembers(groupID string) ([]string, error) {
 
 	return groupMembers, nil
 
+}
+
+func (a *AzureSyncer) getUsernameForUser(user map[string]interface{}) (string, bool) {
+
+	if a.Provider.UserNameAttributes == nil {
+		return a.isUsernamePresent(user, DefaultUserNameAttribute)
+	}
+
+	for _, usernameAttribute := range *a.Provider.UserNameAttributes {
+
+		username, found := a.isUsernamePresent(user, usernameAttribute)
+
+		if found {
+			return username, true
+		}
+	}
+
+	return "", false
+
+}
+
+func (a *AzureSyncer) isUsernamePresent(user map[string]interface{}, field string) (string, bool) {
+
+	value, ok := user[field]
+
+	return fmt.Sprintf("%v", value), ok
 }
