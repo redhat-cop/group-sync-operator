@@ -12,6 +12,7 @@ spec:
     listKind: GroupSyncList
     plural: groupsyncs
     singular: groupsync
+  preserveUnknownFields: false
   scope: Namespaced
   subresources:
     status: {}
