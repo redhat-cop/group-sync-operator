@@ -7,7 +7,7 @@ metadata:
     categories: Security
     certified: "false"
     containerImage: quay.io/redhat-cop/group-sync-operator:latest
-    createdAt: "2020-12-17T13:26:12Z"
+    createdAt: "2020-12-23T19:02:23Z"
     description: Synchronize groups and users from external providers
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
@@ -73,6 +73,12 @@ spec:
       - description: URL is the location of the Azure platform
         displayName: Azure URL
         path: providers[0].azure.url
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:advanced
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: UserNameAttributes are the fields to consider on the User object containing the username
+        displayName: Azure UserName Attributes
+        path: providers[0].azure.userNameAttributes
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -481,11 +487,18 @@ spec:
 
     #### Authenticating to Azure
 
-    Authentication to Azure can be performed using Service Principal with access to query group information in Azure Active Directory. A secret must be created in the same namespace that contains the `GroupSync` resource:
+    Authentication to Azure can be performed using Application Registration with access to query group information in Azure Active Directory.
+
+    The App Registration must be granted access to the following Microsoft Graph API's:
+
+    * Group.Read.All
+    * GroupMember.Read.All
+    * User.Read.All
+
+    A secret must be created in the same namespace that contains the `GroupSync` resource:
 
     The following keys must be defined in the secret
 
-    * `AZURE_SUBSCRIPTION_ID` - Subscription ID
     * `AZURE_TENANT_ID` - Tenant ID
     * `AZURE_CLIENT_ID` - Client ID
     * `AZURE_CLIENT_SECRET` - Client Secret
@@ -745,7 +758,12 @@ spec:
 
     #### Authenticating to Keycloak
 
-    A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys:
+    A user with rights to query for Keycloak groups must be available. The following permissions must be associated to the user:
+
+    * Password must be set (Temporary option unselected) on the _Credentials_ tab
+    * On the _Role Mappings_ tab, select _master-realm_ or _realm-management_ next to the _Client Roles_ dropdown and then select **Query Groups** and **Query Users**.
+
+    A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys for the user previously created:
 
     * `username` - Username for authenticating with Keycloak
     * `password` - Password for authenticating with Keycloak
@@ -842,5 +860,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat Community of Practice
-  replaces: 0.0.6
   version: 0.0.0
