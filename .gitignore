@@ -11,8 +11,8 @@ testbin/*
 bundle
 bundle.Dockerfile
 
-#Packagemanifests
-packagemanifests
+#Helm
+charts/
 
 # Binaries for programs and plugins
 *.exe

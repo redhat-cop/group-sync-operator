@@ -444,24 +444,123 @@ spec:
 
 If a schedule is not provided, synchronization will occur only when the object is reconciled by the platform.
 
+## Deploying the Operator
 
-## Local Development
+This is a namespace level operator that you can deploy in any namespace. However, `group-sync-operator` is recommended.
 
-Execute the following steps to develop the functionality locally. It is recommended that development be done using a cluster with `cluster-admin` permissions.
+It is recommended to deploy this operator via [`OperatorHub`](https://operatorhub.io/), but you can also deploy it using [`Helm`](https://helm.sh/).
+
+### Deploying from OperatorHub
+
+If you want to utilize the Operator Lifecycle Manager (OLM) to install this operator, you can do so in two ways: from the UI or the CLI.
+
+#### Deploying from OperatorHub UI
+
+* If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console. Before starting, make sure you've created the namespace that you want to install this operator to with the following:
 
 ```shell
-go mod download
+oc new-project group-sync-operator
 ```
 
-optionally:
+* Once there, you can search for this operator by name: `group sync operator`. This will then return an item for our operator and you can select it to get started. Once you've arrived here, you'll be presented with an option to install, which will begin the process.
+* After clicking the install button, you can then select the namespace that you would like to install this to as well as the installation strategy you would like to proceed with (`Automatic` or `Manual`).
+* Once you've made your selection, you can select `Subscribe` and the installation will begin. After a few moments you can go ahead and check your namespace and you should see the operator running.
+
+#### Deploying from OperatorHub using CLI
+
+If you'd like to launch this operator from the command line, you can use the manifests contained in this repository by running the following:
 
 ```shell
-go mod vendor
+oc new-project group-sync-operator
+oc apply -f config/operatorhub -n group-sync-operator
 ```
 
-Using the [operator-sdk](https://github.com/operator-framework/operator-sdk), run the operator locally:
+This will create the appropriate OperatorGroup and Subscription and will trigger OLM to launch the operator in the specified namespace.
+
+### Deploying with Helm
+
+Here are the instructions to install the latest release with Helm.
+
+```shell
+oc new-project group-sync-operator
+helm repo add group-sync-operator https://redhat-cop.github.io/group-sync-operator
+helm repo update
+helm install group-sync-operator group-sync-operator/group-sync-operator
+```
+
+This can later be updated with the following commands:
+
+```shell
+helm repo update
+helm upgrade group-sync-operator group-sync-operator/group-sync-operator
+```
+
+## Development
+
+### Running the operator locally
 
 ```shell
 make install
-OPERATOR_NAME='group-sync-operator' WATCH_NAMESPACE='group-sync-operator' make run ENABLE_WEBHOOKS=false
+export repo=redhatcopuser #replace with yours
+docker login quay.io/$repo/group-sync-operator
+make docker-build IMG=quay.io/$repo/group-sync-operator:latest
+make docker-push IMG=quay.io/$repo/group-sync-operator:latest
+oc new-project group-sync-operator-local
+kustomize build ./config/local-development | oc apply -f - -n must-gather-operator-local
+export token=$(oc serviceaccounts get-token 'default' -n group-sync-operator-local)
+oc login --token ${token}
+make run ENABLE_WEBHOOKS=false
+```
+
+### Building/Pushing the operator image
+
+```shell
+export repo=redhatcopuser #replace with yours
+docker login quay.io/$repo/must-gather-operator
+make docker-build IMG=quay.io/$repo/group-sync-operator:latest
+make docker-push IMG=quay.io/$repo/group-sync-operator:latest
+```
+
+### Deploy to OLM via bundle
+
+```shell
+make manifests
+make bundle IMG=quay.io/$repo/group-sync-operator:latest
+operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+make bundle-build BUNDLE_IMG=quay.io/$repo/group-sync-operator-bundle:latest
+docker login quay.io/$repo/group-sync-operator-bundle
+docker push quay.io/$repo/group-sync-operator-bundle:latest
+operator-sdk bundle validate quay.io/$repo/group-sync-operator-bundle:latest --select-optional name=operatorhub
+oc new-project group-sync-operator
+operator-sdk cleanup group-sync-operator -n group-sync-operator
+operator-sdk run bundle -n group-sync-operator quay.io/$repo/group-sync-operator-bundle:latest
+```
+
+### Releasing
+
+```shell
+git tag -a "<tagname>" -m "<commit message>"
+git push upstream <tagname>
+```
+
+If you need to remove a release:
+
+```shell
+git tag -d <tagname>
+git push upstream --delete <tagname>
+```
+
+If you need to "move" a release to the current master
+
+```shell
+git tag -f <tagname>
+git push upstream -f <tagname>
+```
+
+### Cleaning up
+
+```shell
+operator-sdk cleanup group-sync-operator -n group-sync-operator
+oc delete operatorgroup operator-sdk-og
+oc delete catalogsource group-sync-operator-catalog
 ```

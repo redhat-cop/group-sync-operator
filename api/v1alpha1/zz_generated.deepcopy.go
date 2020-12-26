@@ -21,8 +21,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/openshift/api/legacyconfig/v1"
-	"github.com/operator-framework/operator-lib/status"
+	legacyconfigv1 "github.com/openshift/api/legacyconfig/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -221,7 +221,7 @@ func (in *GroupSyncStatus) DeepCopyInto(out *GroupSyncStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(status.Conditions, len(*in))
+		*out = make([]v1.Condition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -294,17 +294,17 @@ func (in *LdapProvider) DeepCopyInto(out *LdapProvider) {
 	}
 	if in.RFC2307Config != nil {
 		in, out := &in.RFC2307Config, &out.RFC2307Config
-		*out = new(v1.RFC2307Config)
+		*out = new(legacyconfigv1.RFC2307Config)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ActiveDirectoryConfig != nil {
 		in, out := &in.ActiveDirectoryConfig, &out.ActiveDirectoryConfig
-		*out = new(v1.ActiveDirectoryConfig)
+		*out = new(legacyconfigv1.ActiveDirectoryConfig)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.AugmentedActiveDirectoryConfig != nil {
 		in, out := &in.AugmentedActiveDirectoryConfig, &out.AugmentedActiveDirectoryConfig
-		*out = new(v1.AugmentedActiveDirectoryConfig)
+		*out = new(legacyconfigv1.AugmentedActiveDirectoryConfig)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.URL != nil {

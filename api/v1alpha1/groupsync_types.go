@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	legacyconfigv1 "github.com/openshift/api/legacyconfig/v1"
-	"github.com/operator-framework/operator-lib/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -46,9 +45,13 @@ type GroupSyncSpec struct {
 
 // GroupSyncStatus defines the observed state of GroupSync
 type GroupSyncStatus struct {
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
 	// +kubebuilder:validation:Optional
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Conditions",xDescriptors="urn:alm:descriptor:io.kubernetes.conditions"
-	Conditions status.Conditions `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
 	// LastSyncSuccessTime represents the time last synchronization completed successfully
 	// +kubebuilder:validation:Optional
@@ -324,6 +327,14 @@ type SecretRef struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Key within the secret",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced","urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	Key string `json:"key,omitempty"`
+}
+
+func (g *GroupSync) GetConditions() []metav1.Condition {
+	return g.Status.Conditions
+}
+
+func (g *GroupSync) SetConditions(conditions []metav1.Condition) {
+	g.Status.Conditions = conditions
 }
 
 func init() {
