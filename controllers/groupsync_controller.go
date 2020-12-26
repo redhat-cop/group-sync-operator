@@ -23,13 +23,11 @@ import (
 
 	"github.com/go-logr/logr"
 	userv1 "github.com/openshift/api/user/v1"
-	"github.com/operator-framework/operator-lib/status"
 	"github.com/prometheus/common/log"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/group-sync-operator/pkg/syncer"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/robfig/cron"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,13 +51,12 @@ type GroupSyncReconciler struct {
 // +kubebuilder:rbac:groups=user.openshift.io,resources=groups,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
-func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("groupsync", req.NamespacedName)
 
 	// Fetch the GroupSync instance
 	instance := &redhatcopv1alpha1.GroupSync{}
-	err := r.GetClient().Get(context.TODO(), req.NamespacedName, instance)
+	err := r.GetClient().Get(context, req.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -75,22 +72,22 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	groupSyncMgr, err := syncer.GetGroupSyncMgr(instance, r.ReconcilerBase)
 
 	if err != nil {
-		return r.manageError(instance, err, logger)
+		return r.ManageError(context, instance, err)
 	}
 
 	// Set Defaults
 	if changed := groupSyncMgr.SetDefaults(); changed {
-		err := r.GetClient().Update(context.TODO(), instance)
+		err := r.GetClient().Update(context, instance)
 		if err != nil {
 			log.Error(err, "unable to update instance", "instance", instance)
-			return r.manageError(instance, err, logger)
+			return r.ManageError(context, instance, err)
 		}
 		return reconcile.Result{}, nil
 	}
 
 	// Validate Providers
 	if err := groupSyncMgr.Validate(); err != nil {
-		return r.manageError(instance, err, logger)
+		return r.ManageError(context, instance, err)
 	}
 
 	// Execute Each Provider Syncer
@@ -103,7 +100,7 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		// Initialize Connection
 		if err := groupSyncer.Bind(); err != nil {
-			return r.manageError(instance, err, logger)
+			return r.ManageError(context, instance, err)
 		}
 
 		// Perform Sync
@@ -111,7 +108,7 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		if err != nil {
 			logger.Error(err, "Failed to Complete Sync", "Provider", groupSyncer.GetProviderName())
-			return r.manageError(instance, err, logger)
+			return r.ManageError(context, instance, err)
 		}
 
 		updatedGroups := 0
@@ -119,15 +116,20 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		for _, group := range groups {
 
 			ocpGroup := &userv1.Group{}
-			err := r.GetClient().Get(context.TODO(), types.NamespacedName{Name: group.Name, Namespace: ""}, ocpGroup)
+			err := r.GetClient().Get(context, types.NamespacedName{Name: group.Name, Namespace: ""}, ocpGroup)
 
 			if apierrors.IsNotFound(err) {
 
-				ocpGroup = &userv1.Group{}
+				ocpGroup = &userv1.Group{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Group",
+						APIVersion: userv1.SchemeGroupVersion.String(),
+					},
+				}
 				ocpGroup.Name = group.Name
 
 			} else if err != nil {
-				return r.manageError(instance, err, logger)
+				return r.ManageError(context, instance, err)
 			} else {
 				// Verify this group is not managed by another provider
 				if groupProviderLabel, exists := ocpGroup.Labels[constants.SyncProvider]; !exists || (groupProviderLabel != providerLabel) {
@@ -157,12 +159,11 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			ocpGroup.Annotations[constants.SyncTimestamp] = ISO8601(time.Now())
 
 			ocpGroup.Users = group.Users
-
-			err = r.CreateOrUpdateResource(instance, "", ocpGroup)
+			err = r.CreateOrUpdateResource(context, nil, "", ocpGroup)
 
 			if err != nil {
 				log.Error(err, "Failed to Create or Update OpenShift Group")
-				return r.manageError(instance, err, logger)
+				return r.ManageError(context, instance, err)
 			}
 
 			updatedGroups++
@@ -175,7 +176,7 @@ func (r *GroupSyncReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	instance.Status.LastSyncSuccessTime = &metav1.Time{Time: clock.Now()}
 
-	successResult, err := r.manageSuccess(instance, logger)
+	successResult, err := r.ManageSuccess(context, instance)
 
 	if err == nil && instance.Spec.Schedule != "" {
 		sched, _ := cron.ParseStandard(instance.Spec.Schedule)
@@ -193,46 +194,6 @@ func (r *GroupSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&redhatcopv1alpha1.GroupSync{}).
 		WithEventFilter(util.ResourceGenerationOrFinalizerChangedPredicate{}).
 		Complete(r)
-}
-
-func (r *GroupSyncReconciler) manageSuccess(instance *redhatcopv1alpha1.GroupSync, logger logr.Logger) (ctrl.Result, error) {
-	condition := status.Condition{
-		Type:    status.ConditionType("groupsync"),
-		Status:  corev1.ConditionTrue,
-		Reason:  status.ConditionReason("synchronization succeeded"),
-		Message: "group synchronization has succeeded",
-	}
-
-	instance.Status.Conditions.SetCondition(condition)
-
-	err := r.GetClient().Status().Update(context.Background(), instance)
-	if err != nil {
-		log.Error(err, "unable to update status")
-		return reconcile.Result{}, err
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *GroupSyncReconciler) manageError(instance *redhatcopv1alpha1.GroupSync, err error, logger logr.Logger) (ctrl.Result, error) {
-	r.GetRecorder().Event(instance, "Warning", "GroupSyncError", err.Error())
-
-	condition := status.Condition{
-		Type:    status.ConditionType("groupsync"),
-		Status:  corev1.ConditionTrue,
-		Reason:  status.ConditionReason("synchronization error"),
-		Message: err.Error(),
-	}
-
-	instance.Status.Conditions.SetCondition(condition)
-
-	updateErr := r.GetClient().Status().Update(context.Background(), instance)
-	if err != nil {
-		log.Error(updateErr, "unable to update status")
-		return reconcile.Result{}, err
-	}
-
-	return reconcile.Result{}, err
 }
 
 func ISO8601(t time.Time) string {
