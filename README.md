@@ -93,7 +93,15 @@ spec:
 
 #### Authenticating to Azure
 
-Authentication to Azure can be performed using Service Principal with access to query group information in Azure Active Directory. A secret must be created in the same namespace that contains the `GroupSync` resource:
+Authentication to Azure can be performed using Application Registration with access to query group information in Azure Active Directory.
+
+The App Registration must be granted access to the following Microsoft Graph API's:
+
+* Group.Read.All
+* GroupMember.Read.All
+* User.Read.All
+
+A secret must be created in the same namespace that contains the `GroupSync` resource:
 
 The following keys must be defined in the secret
 
@@ -362,7 +370,12 @@ spec:
 
 #### Authenticating to Keycloak
 
-A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys:
+A user with rights to query for Keycloak groups must be available. The following permissions must be associated to the user:
+
+* Password must be set (Temporary option unselected) on the _Credentials_ tab
+* On the _Role Mappings_ tab, select _master-realm_ or _realm-management_ next to the _Client Roles_ dropdown and then select **Query Groups** and **Query Users**.
+
+A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys for the user previously created:
 
 * `username` - Username for authenticating with Keycloak
 * `password` - Password for authenticating with Keycloak
