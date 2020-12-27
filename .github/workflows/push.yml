@@ -14,8 +14,12 @@ jobs:
     steps:
       - name: set repo name
         shell: bash
+        env:
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
         run: |
+          DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
@@ -62,8 +66,8 @@ jobs:
         shell: bash
         run: |
           echo "OPERATOR_IMAGE_TAG=latest" >> $GITHUB_ENV
-          echo "BUNDLE_IMAGE_TAG=v0.0.0" >> $GITHUB_ENV
-          echo "BUNDLE_VERSION=0.0.0" >> $GITHUB_ENV
+          echo "BUNDLE_IMAGE_TAG=v0.0.1" >> $GITHUB_ENV
+          echo "BUNDLE_VERSION=0.0.1" >> $GITHUB_ENV
 
       - name: build code
         run: make
@@ -72,7 +76,7 @@ jobs:
       - name: build bundle
         shell: bash
         run: |
-          make bundle IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):${OPERATOR_IMAGE_TAG} VERSION=${BUNDLE_VERSION} DEFAULT_CHANNEL=alpha
+          make bundle IMG=quay.io/${QUAY_REGISTRY}:${OPERATOR_IMAGE_TAG} VERSION=${BUNDLE_VERSION} DEFAULT_CHANNEL=alpha
 
       - name: verify bundle
         shell: bash
@@ -80,7 +84,7 @@ jobs:
 
       - name: build chart
         shell: bash
-        run: make helmchart VERSION=${BUNDLE_VERSION} IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):${OPERATOR_IMAGE_TAG}
+        run: make helmchart VERSION=${BUNDLE_VERSION} IMG=quay.io/${QUAY_REGISTRY}:${OPERATOR_IMAGE_TAG}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -91,7 +95,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          registry: quay.io/${{ github.repository_owner }}
+          registry: quay.io/${{ env.QUAY_REGISTRY }}
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
 
@@ -101,7 +105,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: "quay.io/${{ github.repository_owner }}/${{ env.REPOSITORY_NAME }}:${{ env.OPERATOR_IMAGE_TAG }}"
+          tags: "quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"
 
       - name: "Build and Push Bundle Image"
         uses: docker/build-push-action@v2
@@ -109,11 +113,11 @@ jobs:
           context: .
           file: ./bundle.Dockerfile
           push: true
-          tags: "quay.io/${{ github.repository_owner }}/${{ env.REPOSITORY_NAME }}-bundle:${{ env.BUNDLE_IMAGE_TAG }}"
+          tags: "quay.io/${{ env.QUAY_REGISTRY }}-bundle:${{ env.BUNDLE_IMAGE_TAG }}"
 
       - name: "Verify bundle image"
         shell: bash
-        run: operator-sdk bundle validate quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)-bundle:${BUNDLE_IMAGE_TAG} --select-optional name=operatorhub
+        run: operator-sdk bundle validate quay.io/${QUAY_REGISTRY}-bundle:${BUNDLE_IMAGE_TAG} --select-optional name=operatorhub
 
   release-helm-chart:
     name: Helm Chart Release
@@ -123,8 +127,13 @@ jobs:
     steps:
       - name: set repo name
         shell: bash
+        env:
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
         run: |
+          DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -145,11 +154,11 @@ jobs:
 
       - name: Build helm chart repo
         shell: bash
-        run: make helmchart-repo VERSION=${VERSION} IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):${version} CHART_REPO_URL=https://${{ github.repository_owner }}.github.io/$(basename $GITHUB_REPOSITORY) HELM_REPO_DEST=./tmp/gh-pages
+        run: make helmchart-repo VERSION=${VERSION} IMG=quay.io/${QUAY_REGISTRY}:${version} CHART_REPO_URL=https://${{ github.repository_owner }}.github.io/$(basename $GITHUB_REPOSITORY) HELM_REPO_DEST=./tmp/gh-pages
 
       - name: push helm repo to gh-pages
         shell: bash
-        run: make helmchart-repo-push VERSION=${VERSION} IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):${version} CHART_REPO_URL=https://${{ github.repository_owner }}.github.io/$(basename $GITHUB_REPOSITORY) HELM_REPO_DEST=./tmp/gh-pages
+        run: make helmchart-repo-push VERSION=${VERSION} IMG=quay.io/${QUAY_REGISTRY}:${version} CHART_REPO_URL=https://${{ github.repository_owner }}.github.io/$(basename $GITHUB_REPOSITORY) HELM_REPO_DEST=./tmp/gh-pages
 
   release-github:
     name: GitHub Release
@@ -197,8 +206,12 @@ jobs:
     steps:
       - name: set repo name
         shell: bash
+        env:
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
         run: |
+          DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -236,7 +249,7 @@ jobs:
       - name: create and copy bundle to community operators
         shell: bash
         run: |
-          make bundle IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):v${VERSION} VERSION=${VERSION} DEFAULT_CHANNEL=alpha
+          make bundle IMG=quay.io/${QUAY_REGISTRY}:v${VERSION} VERSION=${VERSION} DEFAULT_CHANNEL=alpha
           sed  's/bundle\///g' bundle.Dockerfile > bundle/Dockerfile
           sed -i '/replaces: '"$(basename $GITHUB_REPOSITORY)"'/d' ./bundle/manifests/$(basename $GITHUB_REPOSITORY).clusterserviceversion.yaml
           mkdir -p ./tmp/community-operators/community-operators/$(basename $GITHUB_REPOSITORY)/${VERSION}
@@ -248,8 +261,8 @@ jobs:
         with:
           path: ./tmp/community-operators
           commit-message: ${{ env.REPOSITORY_NAME }} release ${{ env.VERSION }}
-          committer: ${{ github.actor }} <raffaele.spazzoli@gmail.com>
-          author: ${{ github.actor }} <raffaele.spazzoli@gmail.com>
+          committer: ${{ github.actor }} <andy.block@gmail.com>
+          author: ${{ github.actor }} <andy.block@gmail.com>
           signoff: true
           branch: ${{ env.REPOSITORY_NAME }}-${{ env.VERSION }}
           delete-branch: true
@@ -312,8 +325,8 @@ jobs:
         with:
           path: ./tmp/community-operators
           commit-message: ${{ env.REPOSITORY_NAME }} release ${{ env.VERSION }}
-          committer: ${{ github.actor }} <raffaele.spazzoli@gmail.com>
-          author: ${{ github.actor }} <raffaele.spazzoli@gmail.com>
+          committer: ${{ github.actor }} <andy.block@gmail.com>
+          author: ${{ github.actor }} <andy.block@gmail.com>
           signoff: true
           branch: ${{ env.REPOSITORY_NAME }}-${{ env.VERSION }}
           delete-branch: true
