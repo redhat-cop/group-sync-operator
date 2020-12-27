@@ -137,6 +137,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Download compatible Helm version
+        shell: bash
+        env:
+          HELM_VERSION: v3.3.0
+        run: |
+          curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar vxz \
+              && sudo mv -v linux-amd64/helm /usr/local/bin/helm \
+              && rm -vrf linux-amd64
+
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
