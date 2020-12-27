@@ -19,7 +19,7 @@ jobs:
         run: |
           DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
-          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-$DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
@@ -132,7 +132,7 @@ jobs:
         run: |
           DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
-          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-$DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -211,7 +211,7 @@ jobs:
         run: |
           DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
-          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-$DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v2
