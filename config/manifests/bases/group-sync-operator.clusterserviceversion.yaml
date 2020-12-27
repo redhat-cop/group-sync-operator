@@ -13,7 +13,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/redhat-cop/group-sync-operator
     support: Red Hat Community of Practice
-  name: group-sync-operator.vX.Y.Z
+  name: group-sync-operator.v0.0.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
