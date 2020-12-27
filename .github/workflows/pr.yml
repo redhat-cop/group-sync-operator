@@ -11,8 +11,12 @@ jobs:
     steps:
       - name: set repo name
         shell: bash
+        env:
+          QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
         run: |
+          DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
@@ -47,7 +51,7 @@ jobs:
 
       - name: build bundle
         shell: bash
-        run: make bundle IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):0.0.1 VERSION=0.0.1 DEFAULT_CHANNEL=alpha
+        run: make bundle IMG=quay.io/${QUAY_REGISTRY}:0.0.1 VERSION=0.0.1 DEFAULT_CHANNEL=alpha
 
       - name: verify bundle
         shell: bash
@@ -55,4 +59,4 @@ jobs:
 
       - name: build chart
         shell: bash
-        run: make helmchart VERSION=0.0.1 IMG=quay.io/${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY):0.0.1
+        run: make helmchart VERSION=0.0.1 IMG=quay.io/${QUAY_REGISTRY}:0.0.1
