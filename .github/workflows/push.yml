@@ -105,7 +105,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: "quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"
+          tags: "quay.io/${{ env.QUAY_REGISTRY }}:latest,quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"
 
       - name: "Build and Push Bundle Image"
         uses: docker/build-push-action@v2
@@ -113,7 +113,7 @@ jobs:
           context: .
           file: ./bundle.Dockerfile
           push: true
-          tags: "quay.io/${{ env.QUAY_REGISTRY }}-bundle:${{ env.BUNDLE_IMAGE_TAG }}"
+          tags: "quay.io/${{ env.QUAY_REGISTRY }}-bundle:latest,quay.io/${{ env.QUAY_REGISTRY }}-bundle:${{ env.BUNDLE_IMAGE_TAG }}"
 
       - name: "Verify bundle image"
         shell: bash
