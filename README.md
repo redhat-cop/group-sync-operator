@@ -1,7 +1,7 @@
 Group Sync Operator
 ===================
 
-[![Build Status](https://github.com/redhat-cop/group-sync-operator/workflows/group-sync-operator/badge.svg?branch=master)](https://github.com/redhat-cop/group-sync-operator/actions?workflow=group-sync-operator)
+[![Build Status](https://github.com/redhat-cop/group-sync-operator/workflows/push/badge.svg?branch=master)](https://github.com/redhat-cop/group-sync-operator/actions?workflow=push)
  [![Docker Repository on Quay](https://quay.io/repository/redhat-cop/group-sync-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-cop/group-sync-operator)
 
 Synchronizes groups from external providers into OpenShift
