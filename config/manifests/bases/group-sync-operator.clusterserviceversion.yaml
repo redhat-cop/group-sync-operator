@@ -7,7 +7,7 @@ metadata:
     categories: Security
     certified: "false"
     containerImage: quay.io/redhat-cop/group-sync-operator:latest
-    createdAt: "2020-12-23T19:02:23Z"
+    createdAt: "2020-12-31T06:43:02Z"
     description: Synchronize groups and users from external providers
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
