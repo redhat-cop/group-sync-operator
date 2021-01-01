@@ -506,7 +506,7 @@ docker login quay.io/$repo/group-sync-operator
 make docker-build IMG=quay.io/$repo/group-sync-operator:latest
 make docker-push IMG=quay.io/$repo/group-sync-operator:latest
 oc new-project group-sync-operator-local
-kustomize build ./config/local-development | oc apply -f - -n must-gather-operator-local
+kustomize build ./config/local-development | oc apply -f - -n group-sync-operator-local
 export token=$(oc serviceaccounts get-token 'default' -n group-sync-operator-local)
 oc login --token ${token}
 make run ENABLE_WEBHOOKS=false
@@ -516,7 +516,7 @@ make run ENABLE_WEBHOOKS=false
 
 ```shell
 export repo=redhatcopuser #replace with yours
-docker login quay.io/$repo/must-gather-operator
+docker login quay.io/$repo/group-sync-operator
 make docker-build IMG=quay.io/$repo/group-sync-operator:latest
 make docker-push IMG=quay.io/$repo/group-sync-operator:latest
 ```
