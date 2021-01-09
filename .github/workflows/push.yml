@@ -60,14 +60,29 @@ jobs:
           export SEMVER_COMPLIANT=$(echo ${TAG:1} | egrep '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-])(?:\.(?:0|[1-9]\d|\d*[a-zA-Z-][0-9a-zA-Z-]))))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$')
           if [ -z "$SEMVER_COMPLIANT" ]; then   echo "invalid semver tag ${GITHUB_REF/refs\/tags\//}"; exit 1; fi
 
-      - name: Get the version for merge
+      - name: Get most recent tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+        if: "! startsWith(github.ref, 'refs/tags')"
+        with:
+          semver_only: true
+
+      - uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        if: "! startsWith(github.ref, 'refs/tags')"
+        with:
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: patch
+
+      - name: Get the version for push
         id: get_version2
         if: "! startsWith(github.ref, 'refs/tags')"
         shell: bash
         run: |
+          export BUNDLE_VERSION=${{ steps.bump-semver.outputs.new_version }}
           echo "OPERATOR_IMAGE_TAG=latest" >> $GITHUB_ENV
-          echo "BUNDLE_IMAGE_TAG=v0.0.1" >> $GITHUB_ENV
-          echo "BUNDLE_VERSION=0.0.1" >> $GITHUB_ENV
+          echo "BUNDLE_IMAGE_TAG=latest" >> $GITHUB_ENV
+          echo "BUNDLE_VERSION=${BUNDLE_VERSION:1}" >> $GITHUB_ENV
 
       - name: build code
         run: make
