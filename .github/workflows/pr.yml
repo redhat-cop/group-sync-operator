@@ -15,8 +15,8 @@ jobs:
           QUAY_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
         run: |
           DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
-          echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
-          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" >> $GITHUB_ENV
+          echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" |tee -a $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" |tee -a $GITHUB_ENV
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
@@ -34,7 +34,7 @@ jobs:
           chmod +x operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
           mkdir ${HOME}/bin
           mv operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu ${HOME}/bin/operator-sdk 
-          echo "${HOME}/bin" >> $GITHUB_PATH
+          echo "${HOME}/bin" |tee -a $GITHUB_PATH
 
       - name: Download compatible Helm version
         shell: bash
