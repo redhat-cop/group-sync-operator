@@ -10,7 +10,6 @@ import (
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	msgraph "github.com/yaegashi/msgraph.go/beta"
-	"github.com/yaegashi/msgraph.go/jsonx"
 	"github.com/yaegashi/msgraph.go/msauth"
 	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
@@ -26,12 +25,15 @@ var (
 )
 
 const (
-	TenantID                 = "AZURE_TENANT_ID"
-	ClientID                 = "AZURE_CLIENT_ID"
-	ClientSecret             = "AZURE_CLIENT_SECRET"
-	GraphUserType            = "#microsoft.graph.user"
-	GraphOdataType           = "@odata.type"
-	DefaultUserNameAttribute = "userPrincipalName"
+	TenantID               = "AZURE_TENANT_ID"
+	ClientID               = "AZURE_CLIENT_ID"
+	ClientSecret           = "AZURE_CLIENT_SECRET"
+	GraphGroupType         = "#microsoft.graph.group"
+	GraphUserType          = "#microsoft.graph.user"
+	GraphOdataType         = "@odata.type"
+	GraphID                = "id"
+	GraphDisplayName       = "displayName"
+	GraphUserNameAttribute = "userPrincipalName"
 )
 
 type AzureSyncer struct {
@@ -60,7 +62,7 @@ func (a *AzureSyncer) Validate() error {
 	validationErrors := []error{}
 
 	credentialsSecret := &corev1.Secret{}
-	err := a.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: a.Provider.CredentialsSecret.Name, Namespace: a.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+	err := a.ReconcilerBase.GetClient().Get(a.Context, types.NamespacedName{Name: a.Provider.CredentialsSecret.Name, Namespace: a.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
@@ -104,31 +106,92 @@ func (a *AzureSyncer) Bind() error {
 func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 	ocpGroups := []userv1.Group{}
+	aadGroups := []msgraph.Group{}
 
-	groupRequest := a.Client.Groups().Request()
+	if a.Provider.BaseGroups != nil && len(a.Provider.BaseGroups) > 0 {
 
-	if a.Provider.Filter != "" {
-		groupRequest.Filter(a.Provider.Filter)
+		for _, baseGroup := range a.Provider.BaseGroups {
+
+			baseGroupRequest := a.Client.Groups().Request()
+			baseGroupRequest.Filter(fmt.Sprintf("displayName eq '%s'", baseGroup))
+			baseGroupResult, err := baseGroupRequest.Get(a.Context)
+
+			if err != nil {
+				azureLogger.Error(err, "Failed to get base group", "Provider", a.Name, "Base Group", baseGroup)
+				return nil, err
+			}
+
+			// Check that only 1 group was found
+			if len(baseGroupResult) != 1 {
+				azureLogger.Info("Failed to find a single base group to search from", "Provider", a.Name, "Base Group", baseGroup)
+				continue
+			}
+
+			// Add Base Group
+			aadGroups = append(aadGroups, baseGroupResult[0])
+
+			baseGroupMembersRequest := a.Client.Groups().ID(*baseGroupResult[0].ID).Members().Request()
+
+			if a.Provider.Filter != "" {
+				baseGroupMembersRequest.Filter(a.Provider.Filter)
+			}
+
+			baseGroupMembersResult, err := baseGroupMembersRequest.Get(a.Context)
+
+			if err != nil {
+				azureLogger.Error(err, "Failed to get base group members", "Provider", a.Name, "Base Group", baseGroup)
+				return nil, err
+			}
+
+			for _, baseGroupMember := range baseGroupMembersResult {
+
+				baseGroupMemberODataType, _ := baseGroupMember.GetAdditionalData(GraphOdataType)
+
+				// Add base groups
+				if GraphGroupType == baseGroupMemberODataType {
+
+					baseGroupDisplayNameRaw, _ := baseGroupMember.GetAdditionalData(GraphDisplayName)
+					baseGroupDisplayName := baseGroupDisplayNameRaw.(string)
+
+					aadGroups = append(aadGroups, msgraph.Group{
+						DirectoryObject: baseGroupMember,
+						DisplayName:     &baseGroupDisplayName,
+					})
+				}
+			}
+
+		}
+
+	} else {
+
+		groupRequest := a.Client.Groups().Request()
+
+		if a.Provider.Filter != "" {
+			groupRequest.Filter(a.Provider.Filter)
+		}
+
+		groupResult, err := groupRequest.Get(a.Context)
+
+		if err != nil {
+			azureLogger.Error(err, "Failed to get base group", "Provider", a.Name)
+			return nil, err
+		}
+
+		aadGroups = append(aadGroups, groupResult...)
+
 	}
 
-	groups, err := groupRequest.Get(a.Context)
-
+	azureURL, err := url.Parse(a.Client.URL())
 	if err != nil {
-		azureLogger.Error(err, "Failed to get Groups", "Provider", a.Name)
+		azureLogger.Error(err, "Failed to parse Azure URL", "URL", a.Client.URL())
 		return nil, err
 	}
 
-	azureURL, err := url.Parse(groupRequest.URL())
-	if err != nil {
-		azureLogger.Error(err, "Failed to parse Azure URL", "URL", groupRequest.URL())
-		return nil, err
-	}
+	for _, group := range aadGroups {
 
-	for _, group := range groups {
+		groupName := group.DisplayName
 
-		groupName := *group.DisplayName
-
-		if !isGroupAllowed(groupName, a.Provider.Groups) {
+		if !isGroupAllowed(*groupName, a.Provider.Groups) {
 			continue
 		}
 
@@ -138,7 +201,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 				APIVersion: userv1.SchemeGroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:        groupName,
+				Name:        *groupName,
 				Annotations: map[string]string{},
 				Labels:      map[string]string{},
 			},
@@ -147,9 +210,9 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = azureURL.Host
-		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *group.ID
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *group.DirectoryObject.ID
 
-		groupMembers, err := a.listGroupMembers(*group.ID)
+		groupMembers, err := a.listGroupMembers(group.DirectoryObject.ID)
 
 		if err != nil {
 			azureLogger.Error(err, "Failed to get Group members for Group", "Group", group.DisplayName, "Provider", a.Name)
@@ -172,9 +235,9 @@ func (a *AzureSyncer) GetProviderName() string {
 	return a.Name
 }
 
-func (a *AzureSyncer) listGroupMembers(groupID string) ([]string, error) {
+func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 	groupMembers := []string{}
-	memberRequest := a.Client.Groups().ID(groupID).TransitiveMembers().Request()
+	memberRequest := a.Client.Groups().ID(*groupID).TransitiveMembers().Request()
 
 	members, err := memberRequest.Get(a.Context)
 
@@ -183,25 +246,13 @@ func (a *AzureSyncer) listGroupMembers(groupID string) ([]string, error) {
 	}
 	for _, member := range members {
 
-		//TODO: Make this a lot better!
-		marshalledDirectoryObject, err := jsonx.Marshal(member.Object)
-		if err != nil {
-			return nil, err
-		}
+		memberODataType, _ := member.GetAdditionalData(GraphOdataType)
 
-		var directoryObject map[string]interface{}
-		err = jsonx.Unmarshal(marshalledDirectoryObject, &directoryObject)
-
-		if err != nil {
-			return nil, err
-		}
-		directoryType := directoryObject[GraphOdataType]
-
-		if directoryType == GraphUserType {
-			if username, found := a.getUsernameForUser(directoryObject); found {
+		if memberODataType == GraphUserType {
+			if username, found := a.getUsernameForUser(member); found {
 				groupMembers = append(groupMembers, fmt.Sprintf("%v", username))
 			} else {
-				azureLogger.Info(fmt.Sprintf("Warning: Username for user cannot be found in Group ID '%s'", groupID))
+				azureLogger.Info(fmt.Sprintf("Warning: Username for user cannot be found in Group ID '%v'", *groupID))
 			}
 		}
 
@@ -211,10 +262,10 @@ func (a *AzureSyncer) listGroupMembers(groupID string) ([]string, error) {
 
 }
 
-func (a *AzureSyncer) getUsernameForUser(user map[string]interface{}) (string, bool) {
+func (a *AzureSyncer) getUsernameForUser(user msgraph.DirectoryObject) (string, bool) {
 
 	if a.Provider.UserNameAttributes == nil {
-		return a.isUsernamePresent(user, DefaultUserNameAttribute)
+		return a.isUsernamePresent(user, GraphUserNameAttribute)
 	}
 
 	for _, usernameAttribute := range *a.Provider.UserNameAttributes {
@@ -230,9 +281,9 @@ func (a *AzureSyncer) getUsernameForUser(user map[string]interface{}) (string, b
 
 }
 
-func (a *AzureSyncer) isUsernamePresent(user map[string]interface{}, field string) (string, bool) {
+func (a *AzureSyncer) isUsernamePresent(user msgraph.DirectoryObject, field string) (string, bool) {
 
-	value, ok := user[field]
+	value, ok := user.GetAdditionalData(field)
 
 	return fmt.Sprintf("%v", value), ok
 }

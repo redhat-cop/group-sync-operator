@@ -7,8 +7,11 @@ metadata:
     categories: Security
     certified: "false"
     containerImage: quay.io/redhat-cop/group-sync-operator:latest
-    createdAt: "2020-12-31T06:43:02Z"
+    createdAt: "2021-03-03T03:22:01Z"
     description: Synchronize groups and users from external providers
+    olm.operatorNamespace: group-sync-operator
+    olm.targetNamespaces: group-sync-operator
+    operatorframework.io/suggested-namespace: group-sync-operator
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/redhat-cop/group-sync-operator
@@ -30,6 +33,11 @@ spec:
       - description: Azure represents the Azure provider
         displayName: Azure Provider
         path: providers[0].azure
+      - description: BaseGroups allows for a set of groups to be specified to start searching from instead of searching all groups in the directory
+        displayName: Base Groups
+        path: providers[0].azure.baseGroups
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
         displayName: Secret Containing the Credentials
         path: providers[0].azure.credentialsSecret
@@ -39,31 +47,26 @@ spec:
         displayName: Key within the secret
         path: providers[0].azure.credentialsSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].azure.credentialsSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].azure.credentialsSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Filter allows for limiting the results from the groups response using the Filter feature of the Azure Graph API
         displayName: Filter
         path: providers[0].azure.filter
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Groups represents a filtered list of groups to synchronize
         displayName: Groups to Synchronize
         path: providers[0].azure.groups
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to Azure
         displayName: Ignore SSL Verification
@@ -74,13 +77,11 @@ spec:
         displayName: Azure URL
         path: providers[0].azure.url
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: UserNameAttributes are the fields to consider on the User object containing the username
         displayName: Azure UserName Attributes
         path: providers[0].azure.userNameAttributes
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: GitHub represents the GitHub provider
         displayName: GitHub Provider
@@ -94,19 +95,16 @@ spec:
         displayName: Key within the secret
         path: providers[0].github.caSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].github.caSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].github.caSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication details for the GitHub server
         displayName: Secret Containing the Credentials
@@ -117,19 +115,16 @@ spec:
         displayName: Key within the secret
         path: providers[0].github.credentialsSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].github.credentialsSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].github.credentialsSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitHab
         displayName: Ignore SSL Verification
@@ -140,19 +135,16 @@ spec:
         displayName: Organization to Synchronize
         path: providers[0].github.organization
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Teams represents a filtered list of teams to synchronize
         displayName: Teams to Synchronize
         path: providers[0].github.teams
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: URL is the location of the GitHub server
         displayName: GitHub URL
         path: providers[0].github.url
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: GitLab represents the GitLab provider
         displayName: GitLab Provider
@@ -166,19 +158,16 @@ spec:
         displayName: Key within the secret
         path: providers[0].gitlab.caSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].gitlab.caSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].gitlab.caSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication details for the GitLab server
         displayName: Secret Containing the Credentials
@@ -189,25 +178,21 @@ spec:
         displayName: Key within the secret
         path: providers[0].gitlab.credentialsSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].gitlab.credentialsSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].gitlab.credentialsSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Groups represents a filtered list of groups to synchronize
         displayName: Groups to Synchronize
         path: providers[0].gitlab.groups
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
         displayName: Ignore SSL Verification
@@ -218,7 +203,6 @@ spec:
         displayName: GitLab URL
         path: providers[0].gitlab.url
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
@@ -232,19 +216,16 @@ spec:
         displayName: Key within the secret
         path: providers[0].keycloak.caSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].keycloak.caSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].keycloak.caSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication details for the Keycloak server
         displayName: Secret Containing the Credentials
@@ -255,19 +236,16 @@ spec:
         displayName: Key within the secret
         path: providers[0].keycloak.credentialsSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].keycloak.credentialsSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].keycloak.credentialsSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Groups represents a filtered list of groups to synchronize
         displayName: Groups to Synchronize
@@ -284,7 +262,6 @@ spec:
         displayName: Realm to Synchronize
         path: providers[0].keycloak.realm
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Scope represents the depth for which groups will be synchronized
         displayName: Scope to synchronize against
@@ -293,7 +270,6 @@ spec:
         displayName: Keycloak URL
         path: providers[0].keycloak.url
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Ldap represents the LDAP provider
         displayName: LDAP Provider
@@ -308,7 +284,6 @@ spec:
         displayName: Blacklisted groups to not synchronize
         path: providers[0].ldap.blacklist
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
         displayName: Secret Containing the CA Certificate
@@ -319,42 +294,36 @@ spec:
         displayName: Key within the secret
         path: providers[0].ldap.caSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].ldap.caSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].ldap.caSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication details for communicating to LDAP
         displayName: Secret Containing the Credentials
         path: providers[0].ldap.credentialsSecret
         x-descriptors:
-        - urn:alm:descriptor:io.kubernetes:Secret
+        - '{urn:alm:descriptor:io.kubernetes:Secret}'
       - description: Key represents the specific key to reference from the secret
         displayName: Key within the secret
         path: providers[0].ldap.credentialsSecret.key
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the secret
         displayName: Name of the secret
         path: providers[0].ldap.credentialsSecret.name
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].ldap.credentialsSecret.namespace
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: / LDAPGroupUIDToOpenShiftGroupNameMapping is an optional direct mapping of LDAP group UIDs to OpenShift group names
         displayName: LDAP group UID's to OpenShift group name mapping
@@ -363,7 +332,7 @@ spec:
         displayName: Ignore SSL Verification
         path: providers[0].ldap.insecure
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - '{urn:alm:descriptor:com.tectonic.ui:booleanSwitch}'
       - description: RFC2307Config represents the configuration for a RFC2307 schema
         displayName: RFC2307 configuration
         path: providers[0].ldap.rfc2307
@@ -371,13 +340,11 @@ spec:
         displayName: Azure URL
         path: providers[0].ldap.url
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Whitelist represents a list of groups to synchronize
         displayName: Whitelisted groups to synchronize
         path: providers[0].ldap.whitelist
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Name represents the name of the provider
         displayName: Name of the Provider
@@ -386,7 +353,6 @@ spec:
         displayName: Schedule
         path: schedule
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:advanced
         - urn:alm:descriptor:com.tectonic.ui:text
       statusDescriptors:
       - displayName: Conditions
@@ -414,25 +380,6 @@ spec:
     spec:
       providers:
         - <One or more providers to synchronize>
-    ```
-
-    ## Deploying the Operator
-
-    Use the following steps to deploy the operator to an OpenShift cluster
-
-    1. Assuming that you are authenticated to the cluster, create a new project called `group-sync-operator`
-    .
-    ```shell
-    oc new-project group-sync-operator
-    ```
-    .
-    2. Clone the project locally and changed into the project
-    .
-    .
-    ```shell
-    git clone https://github.com/redhat-cop/group-sync-operator.git
-    cd group-sync-operator
-    make deploy
     ```
 
     ## Authentication
@@ -464,6 +411,7 @@ spec:
 
     | Name | Description | Defaults | Required |
     | ----- | ---------- | -------- | ----- |
+    | `baseGroups` | List of groups to start searching from instead of listing all groups in the directory | | No |
     | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
     | `filter` | Graph API filter | | No |
     | `groups` | List of groups to filter against | | No |
