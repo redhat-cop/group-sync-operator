@@ -3,9 +3,9 @@ entries:
   group-sync-operator:
   - apiVersion: v1
     appVersion: v0.0.10
-    created: "2021-02-04T14:25:57.942069923Z"
+    created: "2021-02-09T01:36:44.428184393Z"
     description: Helm chart that deploys the group-sync-operator
-    digest: b6b71df374a9c44d87892a1a4e3c122323f3c7014303c53d4303f0160293f134
+    digest: 33d1ee12b8b1f9eabc9ccd9da24ea5c4aa3a5e30e3cf9c8ff520389c68cd392d
     keywords:
     - authorization
     - security
@@ -17,7 +17,7 @@ entries:
     version: v0.0.10
   - apiVersion: v1
     appVersion: v0.0.9
-    created: "2021-02-04T14:25:57.942359626Z"
+    created: "2021-02-09T01:36:44.428547195Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 9a2fed700d978e42a1fd38e8258b096e282dc9e58e1746e9522a4b9eb902ca2a
     keywords:
@@ -29,4 +29,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.9.tgz
     version: v0.0.9
-generated: "2021-02-04T14:25:57.941659721Z"
+generated: "2021-02-09T01:36:44.427566091Z"
