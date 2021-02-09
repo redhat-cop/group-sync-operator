@@ -9,8 +9,6 @@ metadata:
     containerImage: quay.io/redhat-cop/group-sync-operator:latest
     createdAt: "2021-03-03T03:22:01Z"
     description: Synchronize groups and users from external providers
-    olm.operatorNamespace: group-sync-operator
-    olm.targetNamespaces: group-sync-operator
     operatorframework.io/suggested-namespace: group-sync-operator
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
