@@ -38,8 +38,10 @@ oc new-project group-sync-operator
 ```shell
 git clone https://github.com/redhat-cop/group-sync-operator.git
 cd group-sync-operator
-make deploy
+make deploy IMG=quay.io/redhat-cop/group-sync-operator:latest
 ```
+
+_Note:_ The `make deploy` command will execute the `manifests` target that will require additional build tools to be made available. This target can be skipped by including the `-o manifests` in the command above.
 
 ## Authentication
 
