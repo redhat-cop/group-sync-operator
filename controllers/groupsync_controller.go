@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	userv1 "github.com/openshift/api/user/v1"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/group-sync-operator/pkg/syncer"
@@ -33,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	kubeclock "k8s.io/apimachinery/pkg/util/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
@@ -95,12 +97,14 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 
 		logger.Info("Beginning Sync", "Provider", groupSyncer.GetProviderName())
 
+		prometheusLabels := prometheus.Labels{METRICS_CR_NAMESPACE_LABEL: instance.GetNamespace(), METRICS_CR_NAME_LABEL: instance.GetName(), METRICS_PROVIDER_LABEL: groupSyncer.GetProviderName()}
+
 		// Provider Label
 		providerLabel := fmt.Sprintf("%s_%s", instance.Name, groupSyncer.GetProviderName())
 
 		// Initialize Connection
 		if err := groupSyncer.Bind(); err != nil {
-			return r.ManageError(context, instance, err)
+			return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 		}
 
 		// Perform Sync
@@ -108,7 +112,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 
 		if err != nil {
 			logger.Error(err, "Failed to Complete Sync", "Provider", groupSyncer.GetProviderName())
-			return r.ManageError(context, instance, err)
+			return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 		}
 
 		updatedGroups := 0
@@ -129,7 +133,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 				ocpGroup.Name = group.Name
 
 			} else if err != nil {
-				return r.ManageError(context, instance, err)
+				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 			} else {
 				// Verify this group is not managed by another provider
 				if groupProviderLabel, exists := ocpGroup.Labels[constants.SyncProvider]; !exists || (groupProviderLabel != providerLabel) {
@@ -163,7 +167,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 
 			if err != nil {
 				log.Error(err, "Failed to Create or Update OpenShift Group")
-				return r.ManageError(context, instance, err)
+				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 			}
 
 			updatedGroups++
@@ -171,6 +175,12 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		}
 
 		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
+
+		// Add Metrics
+
+		successfulGroupSyncs.With(prometheusLabels).Inc()
+		groupsSynchronized.With(prometheusLabels).Set(float64(updatedGroups))
+		groupSyncError.With(prometheusLabels).Set(0)
 
 	}
 
@@ -183,6 +193,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 
 		currentTime := time.Now()
 		nextScheduledTime := sched.Next(currentTime)
+		nextScheduledSynchronization.With(prometheus.Labels{METRICS_CR_NAMESPACE_LABEL: instance.GetNamespace(), METRICS_CR_NAME_LABEL: instance.GetName()}).Set(float64(nextScheduledTime.UTC().Unix()))
 		successResult.RequeueAfter = nextScheduledTime.Sub(currentTime)
 	}
 
@@ -194,6 +205,14 @@ func (r *GroupSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&redhatcopv1alpha1.GroupSync{}).
 		WithEventFilter(util.ResourceGenerationOrFinalizerChangedPredicate{}).
 		Complete(r)
+}
+
+func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prometheus.Labels, context context.Context, obj client.Object, issue error) (ctrl.Result, error) {
+
+	unsuccessfulGroupSyncs.With(prometheusLabels).Inc()
+	groupSyncError.With(prometheusLabels).Set(1)
+
+	return r.ManageError(context, obj, issue)
 }
 
 func ISO8601(t time.Time) string {
