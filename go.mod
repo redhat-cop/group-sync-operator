@@ -11,6 +11,7 @@ require (
 	github.com/onsi/gomega v1.10.2
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/library-go v0.0.0-20200527213645-a9b77f5402e3
+	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/common v0.10.0
 	github.com/redhat-cop/operator-utils v1.0.0
 	github.com/robfig/cron v0.0.0-20170526150127-736158dc09e1
