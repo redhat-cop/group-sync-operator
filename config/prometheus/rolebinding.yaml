@@ -1,0 +1,16 @@
+apiVersion: authorization.openshift.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-k8s
+  namespace: system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: $(ROLE_NAME)
+  namespace: $(ROLE_NAMESPACE)
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: openshift-monitoring
+userNames:
+  - system:serviceaccount:openshift-monitoring:prometheus-k8s
