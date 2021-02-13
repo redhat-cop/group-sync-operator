@@ -26,20 +26,22 @@ spec:
 
 Use the following steps to deploy the operator to an OpenShift cluster
 
-1. Assuming that you are authenticated to the cluster, create a new project called `group-sync-operator`
-.
-```shell
-oc new-project group-sync-operator
-```
-.
-2. Clone the project locally and changed into the project
+1. Clone the project locally and changed into the project
 .
 .
 ```shell
 git clone https://github.com/redhat-cop/group-sync-operator.git
 cd group-sync-operator
-make deploy
 ```
+
+2. Deploy the Operator
+
+```shell
+make deploy IMG=quay.io/redhat-cop/group-sync-operator:latest
+```
+
+_Note:_ The `make deploy` command will execute the `manifests` target that will require additional build tools to be made available. This target can be skipped by including the `-o manifests` in the command above.
+
 
 ## Authentication
 
@@ -457,14 +459,10 @@ If you want to utilize the Operator Lifecycle Manager (OLM) to install this oper
 
 #### Deploying from OperatorHub UI
 
-* If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console. Before starting, make sure you've created the namespace that you want to install this operator to with the following:
-
-```shell
-oc new-project group-sync-operator
-```
-
-* Once there, you can search for this operator by name: `group sync operator`. This will then return an item for our operator and you can select it to get started. Once you've arrived here, you'll be presented with an option to install, which will begin the process.
-* After clicking the install button, you can then select the namespace that you would like to install this to as well as the installation strategy you would like to proceed with (`Automatic` or `Manual`).
+* If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console.
+* Search for this operator by name: `group sync operator`. This will then return an item for our operator and you can select it to get started. Once you've arrived here, you'll be presented with an option to install, which will begin the process.
+* After clicking the install button, you are presented with the namespace that the operator will be installed in. A suggested name of `group-sync-operator` is presented and can be created automatically at installation time.
+* Select the installation strategy you would like to proceed with (`Automatic` or `Manual`).
 * Once you've made your selection, you can select `Subscribe` and the installation will begin. After a few moments you can go ahead and check your namespace and you should see the operator running.
 
 #### Deploying from OperatorHub using CLI
@@ -494,6 +492,14 @@ This can later be updated with the following commands:
 ```shell
 helm repo update
 helm upgrade group-sync-operator group-sync-operator/group-sync-operator
+```
+
+## Metrics
+
+Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
+
+```shell
+oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ```
 
 ## Development
@@ -533,6 +539,7 @@ docker login quay.io/$repo/group-sync-operator-bundle
 docker push quay.io/$repo/group-sync-operator-bundle:latest
 operator-sdk bundle validate quay.io/$repo/group-sync-operator-bundle:latest --select-optional name=operatorhub
 oc new-project group-sync-operator
+oc label namespace group-sync-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup group-sync-operator -n group-sync-operator
 operator-sdk run bundle -n group-sync-operator quay.io/$repo/group-sync-operator-bundle:latest
 ```

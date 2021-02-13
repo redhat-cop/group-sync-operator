@@ -3,12 +3,14 @@ kind: Service
 metadata:
   labels:
     control-plane: controller-manager
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: group-sync-operator-certs
   name: controller-manager-metrics-service
   namespace: system
 spec:
   ports:
-  - name: https
-    port: 8443
-    targetPort: https
+    - name: https
+      port: 8443
+      targetPort: https
   selector:
     control-plane: controller-manager
