@@ -39,6 +39,14 @@ jobs:
           mv operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu ${HOME}/bin/operator-sdk
           echo "${HOME}/bin" |tee -a $GITHUB_PATH
 
+      - name: Install yq
+        shell: bash
+        env:
+          YQ_VERSION: 3.4.0
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
       - name: Download compatible Helm version
         shell: bash
         env:
@@ -122,6 +130,17 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: "quay.io/${{ env.QUAY_REGISTRY }}:latest,quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"
+
+      - name: Set Operator Digests
+        env:
+          QUAY_REGISTRY: "${{ env.QUAY_REGISTRY }}"
+          REPOSITORY_NAME: "${{ env.REPOSITORY_NAME }}"
+          OPERATOR_IMAGE_TAG: "${{ env.OPERATOR_IMAGE_TAG }}"
+        run: ./hack/attach_image_digests.sh
+
+      - name: Verify bundle after digests
+        shell: bash
+        run: operator-sdk bundle validate ./bundle --select-optional name=operatorhub
 
       - name: "Build and Push Bundle Image"
         uses: docker/build-push-action@v2
@@ -254,6 +273,15 @@ jobs:
           mkdir ${HOME}/bin
           mv operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu ${HOME}/bin/operator-sdk
           echo "${HOME}/bin" |tee -a $GITHUB_PATH
+
+      - name: Install yq
+        shell: bash
+        env:
+          YQ_VERSION: 3.4.0
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
       - name: Get the version
         id: get_version
         run: |
@@ -273,8 +301,13 @@ jobs:
 
       - name: create and copy bundle to community operators
         shell: bash
+        env:
+          QUAY_REGISTRY: "${{ env.QUAY_REGISTRY }}"
+          REPOSITORY_NAME: "${{ env.REPOSITORY_NAME }}"
+          OPERATOR_IMAGE_TAG: "v${{ env.VERSION }}"
         run: |
           make bundle IMG=quay.io/${QUAY_REGISTRY}:v${VERSION} VERSION=${VERSION} DEFAULT_CHANNEL=alpha
+          ./hack/attach_image_digests.sh
           sed  's/bundle\///g' bundle.Dockerfile > bundle/Dockerfile
           sed -i '/replaces: '"$(basename $GITHUB_REPOSITORY)"'/d' ./bundle/manifests/$(basename $GITHUB_REPOSITORY).clusterserviceversion.yaml
           mkdir -p ./tmp/community-operators/community-operators/$(basename $GITHUB_REPOSITORY)/${VERSION}
