@@ -62,6 +62,7 @@ Integration with external systems is made possible through a set of pluggable ex
 * [GitLab](https://gitlab.com)
 * [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol)
 * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
+* [Okta](https://www.okta.com/)
 
 The following sections describe the configuration options available for each provider
 
@@ -387,6 +388,52 @@ The secret can be created by executing the following command:
 
 ```shell
 oc create secret generic keycloak-group-sync --from-literal=username=<username> --from-literal=password=<password>
+```
+
+### Okta
+
+Groups assigned to Okta applications can be synchronized into OpenShift. The following table describes the set of configuration options for the Okta provider:
+
+| Name | Description | Defaults | Required | 
+| ----- | ---------- | -------- | ----- |
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
+| `groups` | List of groups to filter against | | No |
+| `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
+| `url` | URL Location for Okta | | Yes |
+| `appId` | Application ID of App Groups are assigned to | | Yes |
+| `extractLoginUsername` | Bool to determine if you should extract username from okta login | | No |
+| `profileKey` | Attribute field on Okta User Profile you would like to use as identity | | No |
+
+
+
+The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
+
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: okta-sync
+spec:
+  providers:
+    - name: okta
+      okta:
+        credentialsSecret:
+          name: okta-api-token
+          namespace: group-sync-operator
+        url: "example.okta.com"
+        appId: okta-sync-app-id
+```
+
+#### Authenticating to Okta
+
+A secret must be created in the same namespace as the group-sync-operator pod. It must contain the following key:
+
+* `okta-api-token` - Okta API Token for interacting with Okta
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic okta-api-token --from-literal=okta-api-token=<OKTA_API_TOKEN> -n group-sync-operator
 ```
 
 ### Support for Additional Metadata (Beta)

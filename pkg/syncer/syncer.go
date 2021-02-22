@@ -54,6 +54,10 @@ func GetGroupSyncMgr(groupSync *redhatcopv1alpha1.GroupSync, reconcilerBase util
 func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider *redhatcopv1alpha1.Provider, reconcilerBase util.ReconcilerBase) (GroupSyncer, error) {
 
 	switch {
+	case provider.Okta != nil:
+		{
+			return &OktaSyncer{GroupSync: groupSync, Provider: provider.Okta, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
+		}
 	case provider.Keycloak != nil:
 		{
 			return &KeycloakSyncer{GroupSync: groupSync, Provider: provider.Keycloak, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil

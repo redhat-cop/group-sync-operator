@@ -348,6 +348,21 @@ spec:
       - description: Name represents the name of the provider
         displayName: Name of the Provider
         path: providers[0].name
+      - description: Key represents the specific key to reference from the secret
+        displayName: Key within the secret
+        path: providers[0].okta.credentialsSecret.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Name represents the name of the secret
+        displayName: Name of the secret
+        path: providers[0].okta.credentialsSecret.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the secret
+        displayName: Namespace containing the secret
+        path: providers[0].okta.credentialsSecret.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Schedule represents a cron based configuration for synchronization
         displayName: Schedule
         path: schedule

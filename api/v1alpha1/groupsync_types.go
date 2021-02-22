@@ -118,6 +118,12 @@ type ProviderType struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Keycloak Provider"
 	// +kubebuilder:validation:Optional
 	Keycloak *KeycloakProvider `json:"keycloak,omitempty"`
+
+	// Okta represents the Okta provider
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Okta Provider"
+	// +kubebuilder:validation:Optional
+	Okta *OktaProvider `json:"okta,omitempty"`
 }
 
 // KeycloakProvider represents integration with Keycloak
@@ -315,6 +321,51 @@ type AzureProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure UserName Attributes",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	UserNameAttributes *[]string `json:"userNameAttributes,omitempty"`
+}
+
+// OktaProvider represents integration with Okta
+type OktaProvider struct {
+	// CredentialsSecret is a reference to a secret containing authentication details for the Okta server
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:io.kubernetes:Secret"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Secret Containing the Credentials"
+	// +kubebuilder:validation:Required
+	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	// Groups represents a filtered list of groups to synchronize
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Groups to Synchronize"
+	// +kubebuilder:validation:Optional
+	Groups []string `json:"groups,omitempty"`
+	// Scope represents the the Okta OAuth2 Scopes
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Scope to synchronize against"
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=one;sub
+	Scope SyncScope `json:"scope,omitempty"`
+	// URL is the location of the Okta domain server
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Okta URL"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
+	// +kubebuilder:validation:Required
+	URL string `json:"url"`
+	// AppId is the id of the application we are syncing groups for
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="App Id"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
+	// +kubebuilder:validation:Optional
+	AppId string `json:"appId"`
+	// ExtractLoginUsername is true if Okta username's are defaulted to emails and you would like the username only
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Extract Login Username
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
+	// +kubebuilder:validation:Optional
+	ExtractLoginUsername bool `json:"extractLoginUsername"`
+	// ProfileKey the attribute from Okta you would like to use as the user identifier.  Default is "login"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors=true
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.displayName="Profile Key"
+	// +operator-sdk:gen-csv:customresourcedefinitions.specDescriptors.x-descriptors="urn:alm:descriptor:com.tectonic.ui:advanced,urn:alm:descriptor:com.tectonic.ui:text"
+	// +kubebuilder:validation:Optional
+	ProfileKey string `json:"profileKey"`
 }
 
 // SecretRef represents a reference to an item within a Secret

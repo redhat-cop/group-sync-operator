@@ -700,6 +700,60 @@ spec:
                   name:
                     description: Name represents the name of the provider
                     type: string
+                  okta:
+                    description: Okta represents the Okta provider
+                    properties:
+                      appId:
+                        description: AppId is the id of the application we are syncing
+                          groups for
+                        type: string
+                      credentialsSecret:
+                        description: CredentialsSecret is a reference to a secret
+                          containing authentication details for the Okta server
+                        properties:
+                          key:
+                            description: Key represents the specific key to reference
+                              from the secret
+                            type: string
+                          name:
+                            description: Name represents the name of the secret
+                            type: string
+                          namespace:
+                            description: Namespace represents the namespace containing
+                              the secret
+                            type: string
+                        required:
+                        - name
+                        - namespace
+                        type: object
+                      extractLoginUsername:
+                        description: ExtractLoginUsername is true if Okta username's
+                          are defaulted to emails and you would like the username
+                          only
+                        type: boolean
+                      groups:
+                        description: Groups represents a filtered list of groups to
+                          synchronize
+                        items:
+                          type: string
+                        type: array
+                      profileKey:
+                        description: ProfileKey the attribute from Okta you would
+                          like to use as the user identifier.  Default is "login"
+                        type: string
+                      scope:
+                        description: Scope represents the the Okta OAuth2 Scopes
+                        enum:
+                        - one
+                        - sub
+                        type: string
+                      url:
+                        description: URL is the location of the Okta domain server
+                        type: string
+                    required:
+                    - credentialsSecret
+                    - url
+                    type: object
                 type: object
               type: array
             schedule:
