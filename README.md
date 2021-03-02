@@ -392,18 +392,17 @@ oc create secret generic keycloak-group-sync --from-literal=username=<username> 
 
 ### Okta
 
-Groups assigned to Okta applications can be synchronized into OpenShift. The following table describes the set of configuration options for the Okta provider:
+[Okta Groups](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) assigned to [Okta Applications](https://help.okta.com/en/prod/Content/Topics/Apps/Apps_Apps.htm) can be synchronized into OpenShift. The developer docs for the Okta API that the Okta Syncer uses can be found [here](https://developer.okta.com/docs/reference/api/apps/#list-groups-assigned-to-application).
+The following table describes the set of configuration options for the Okta provider:
 
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
-| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
-| `groups` | List of groups to filter against | | No |
-| `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
-| `url` | URL Location for Okta | | Yes |
-| `appId` | Application ID of App Groups are assigned to | | Yes |
-| `extractLoginUsername` | Bool to determine if you should extract username from okta login | | No |
-| `profileKey` | Attribute field on Okta User Profile you would like to use as identity | | No |
-
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | `''`  | Yes |
+| `groups` | List of groups to filter against | `nil`  | No |
+| `url` | Okta organization URL (Must contain a trailing slash) | `''`  | Yes |
+| `appId` | Application ID of App Groups are assigned to | `''`  | Yes |
+| `extractLoginUsername` | Bool to determine if you should extract username from okta login | `false`  | No |
+| `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `'login'` | No |
 
 
 The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
@@ -420,7 +419,7 @@ spec:
         credentialsSecret:
           name: okta-api-token
           namespace: group-sync-operator
-        url: "example.okta.com"
+        url: "https://example.okta.com/"
         appId: okta-sync-app-id
 ```
 

@@ -741,16 +741,11 @@ spec:
                         description: ProfileKey the attribute from Okta you would
                           like to use as the user identifier.  Default is "login"
                         type: string
-                      scope:
-                        description: Scope represents the the Okta OAuth2 Scopes
-                        enum:
-                        - one
-                        - sub
-                        type: string
                       url:
                         description: URL is the location of the Okta domain server
                         type: string
                     required:
+                    - appId
                     - credentialsSecret
                     - url
                     type: object

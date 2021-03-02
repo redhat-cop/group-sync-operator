@@ -348,6 +348,19 @@ spec:
       - description: Name represents the name of the provider
         displayName: Name of the Provider
         path: providers[0].name
+      - description: Okta represents the Okta provider
+        displayName: Okta Provider
+        path: providers[0].okta
+      - description: AppId is the id of the application we are syncing groups for
+        displayName: App ID
+        path: providers[0].okta.appId
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: CredentialsSecret is a reference to a secret containing authentication details for the Okta server
+        displayName: Secret Containing the Credentials
+        path: providers[0].okta.credentialsSecret
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
       - description: Key represents the specific key to reference from the secret
         displayName: Key within the secret
         path: providers[0].okta.credentialsSecret.key
@@ -361,6 +374,26 @@ spec:
       - description: Namespace represents the namespace containing the secret
         displayName: Namespace containing the secret
         path: providers[0].okta.credentialsSecret.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ExtractLoginUsername is true if Okta username's are defaulted to emails and you would like the username only
+        displayName: Extract Login Username
+        path: providers[0].okta.extractLoginUsername
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Groups represents a filtered list of groups to synchronize
+        displayName: Groups to Synchronize
+        path: providers[0].okta.groups
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ProfileKey the attribute from Okta you would like to use as the user identifier.  Default is "login"
+        displayName: Profile Key
+        path: providers[0].okta.profileKey
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: URL is the location of the Okta domain server
+        displayName: Okta URL
+        path: providers[0].okta.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Schedule represents a cron based configuration for synchronization
@@ -735,6 +768,51 @@ spec:
     ```shell
     oc create secret generic keycloak-group-sync --from-literal=username=<username> --from-literal=password=<password>
     ```
+
+    ### Okta
+
+    [Okta Groups](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) assigned to [Okta Applications](https://help.okta.com/en/prod/Content/Topics/Apps/Apps_Apps.htm) can be synchronized into OpenShift. The developer docs for the Okta API that the Okta Syncer uses can be found [here](https://developer.okta.com/docs/reference/api/apps/#list-groups-assigned-to-application).
+    The following table describes the set of configuration options for the Okta provider:
+
+      | Name | Description | Defaults | Required |
+      | ----- | ---------- | -------- | ----- |
+      | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
+      | `groups` | List of groups to filter against | | No |
+      | `url` | Okta organization URL (Must contain a trailing slash) | | Yes |
+      | `appId` | Application ID of App Groups are assigned to | | Yes |
+      | `extractLoginUsername` | Bool to determine if you should extract username from okta login | | No |
+      | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `login` | No |
+
+
+    The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
+
+      ```shell
+    apiVersion: redhatcop.redhat.io/v1alpha1
+    kind: GroupSync
+    metadata:
+      name: okta-sync
+    spec:
+      providers:
+        - name: okta
+          okta:
+            credentialsSecret:
+              name: okta-api-token
+              namespace: group-sync-operator
+            url: "https://example.okta.com/"
+            appId: okta-sync-app-id
+      ```
+
+    #### Authenticating to Okta
+
+    A secret must be created in the same namespace as the group-sync-operator pod. It must contain the following key:
+
+      * `okta-api-token` - Okta API Token for interacting with Okta
+
+    The secret can be created by executing the following command:
+
+      ```shell
+      oc create secret generic okta-api-token --from-literal=okta-api-token=<OKTA_API_TOKEN> -n group-sync-operator
+      ```
 
     ### Support for Additional Metadata (Beta)
 

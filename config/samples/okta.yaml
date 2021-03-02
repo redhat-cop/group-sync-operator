@@ -9,7 +9,7 @@ spec:
         credentialsSecret:
           name: okta-api-token
           namespace: group-sync-operator
-        url: "example.okta.com"
+        url: "https://example.okta.com/"
         appId: okta-sync-app-id
-        emailUsernameSplit: true
+        extractLoginUsername: true
         profileKey: login
