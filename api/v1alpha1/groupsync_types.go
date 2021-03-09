@@ -118,6 +118,11 @@ type ProviderType struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Keycloak Provider"
 	// +kubebuilder:validation:Optional
 	Keycloak *KeycloakProvider `json:"keycloak,omitempty"`
+
+	// Okta represents the Okta provider
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Okta Provider"
+	// +kubebuilder:validation:Optional
+	Okta *OktaProvider `json:"okta,omitempty"`
 }
 
 // KeycloakProvider represents integration with Keycloak
@@ -315,6 +320,34 @@ type AzureProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure UserName Attributes",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	UserNameAttributes *[]string `json:"userNameAttributes,omitempty"`
+}
+
+// OktaProvider represents integration with Okta
+type OktaProvider struct {
+	// CredentialsSecret is a reference to a secret containing authentication details for the Okta server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Required
+	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	// Groups represents a filtered list of groups to synchronize
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Groups to Synchronize",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	Groups []string `json:"groups,omitempty"`
+	// URL is the location of the Okta domain server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Okta URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Required
+	URL string `json:"url"`
+	// AppId is the id of the application we are syncing groups for
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="App ID",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Required
+	AppId string `json:"appId"`
+	// ExtractLoginUsername is true if Okta username's are defaulted to emails and you would like the username only
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Extract Login Username",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	ExtractLoginUsername bool `json:"extractLoginUsername"`
+	// ProfileKey the attribute from Okta you would like to use as the user identifier.  Default is "login"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Profile Key",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	ProfileKey string `json:"profileKey"`
 }
 
 // SecretRef represents a reference to an item within a Secret

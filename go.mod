@@ -7,6 +7,7 @@ require (
 	github.com/go-logr/logr v0.3.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/okta/okta-sdk-golang/v2 v2.3.0
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
