@@ -1,0 +1,15 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: okta-sync
+spec:
+  providers:
+    - name: okta
+      okta:
+        credentialsSecret:
+          name: okta-api-token
+          namespace: group-sync-operator
+        url: "https://example.okta.com/"
+        appId: okta-sync-app-id
+        extractLoginUsername: true
+        profileKey: login
