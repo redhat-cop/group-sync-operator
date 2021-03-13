@@ -269,7 +269,7 @@ type LdapProvider struct {
 	AugmentedActiveDirectoryConfig *legacyconfigv1.AugmentedActiveDirectoryConfig `json:"augmentedActiveDirectory,omitempty"`
 
 	// URL is the location of the LDAP Server
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="LDAP URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
 	URL *string `json:"url"`
 

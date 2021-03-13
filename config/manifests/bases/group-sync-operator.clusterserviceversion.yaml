@@ -337,7 +337,7 @@ spec:
         displayName: RFC2307 configuration
         path: providers[0].ldap.rfc2307
       - description: URL is the location of the LDAP Server
-        displayName: Azure URL
+        displayName: LDAP URL
         path: providers[0].ldap.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
