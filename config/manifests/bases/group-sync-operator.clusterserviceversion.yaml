@@ -309,7 +309,7 @@ spec:
         displayName: Secret Containing the Credentials
         path: providers[0].ldap.credentialsSecret
         x-descriptors:
-        - '{urn:alm:descriptor:io.kubernetes:Secret}'
+        - urn:alm:descriptor:io.kubernetes:Secret
       - description: Key represents the specific key to reference from the secret
         displayName: Key within the secret
         path: providers[0].ldap.credentialsSecret.key
@@ -332,7 +332,7 @@ spec:
         displayName: Ignore SSL Verification
         path: providers[0].ldap.insecure
         x-descriptors:
-        - '{urn:alm:descriptor:com.tectonic.ui:booleanSwitch}'
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: RFC2307Config represents the configuration for a RFC2307 schema
         displayName: RFC2307 configuration
         path: providers[0].ldap.rfc2307
