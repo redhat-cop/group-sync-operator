@@ -7,11 +7,11 @@ metadata:
     categories: Security
     certified: "false"
     containerImage: quay.io/redhat-cop/group-sync-operator:latest
-    createdAt: "2021-02-13T15:17:25Z"
+    createdAt: "2021-03-13T11:59:05Z"
     description: Synchronize groups and users from external providers
-    operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operatorframework.io/cluster-monitoring: "true"
     operatorframework.io/suggested-namespace: group-sync-operator
+    operators.openshift.io/infrastructure-features: '["Disconnected"]'
     operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/redhat-cop/group-sync-operator
@@ -309,7 +309,7 @@ spec:
         displayName: Secret Containing the Credentials
         path: providers[0].ldap.credentialsSecret
         x-descriptors:
-        - '{urn:alm:descriptor:io.kubernetes:Secret}'
+        - urn:alm:descriptor:io.kubernetes:Secret
       - description: Key represents the specific key to reference from the secret
         displayName: Key within the secret
         path: providers[0].ldap.credentialsSecret.key
@@ -332,7 +332,7 @@ spec:
         displayName: Ignore SSL Verification
         path: providers[0].ldap.insecure
         x-descriptors:
-        - '{urn:alm:descriptor:com.tectonic.ui:booleanSwitch}'
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: RFC2307Config represents the configuration for a RFC2307 schema
         displayName: RFC2307 configuration
         path: providers[0].ldap.rfc2307
