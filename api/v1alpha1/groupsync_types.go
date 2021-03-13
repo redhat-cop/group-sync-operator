@@ -239,12 +239,12 @@ type LdapProvider struct {
 	CaSecret *SecretRef `json:"caSecret,omitempty"`
 
 	// CredentialsSecret is a reference to a secret containing authentication details for communicating to LDAP
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors="{urn:alm:descriptor:io.kubernetes:Secret}"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Optional
 	CredentialsSecret *SecretRef `json:"credentialsSecret,omitempty"`
 
 	// Insecure specifies whether to allow for unverified certificates to be used when communicating to LDAP
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors="{urn:alm:descriptor:com.tectonic.ui:booleanSwitch}"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	// +kubebuilder:validation:Optional
 	Insecure bool `json:"insecure,omitempty"`
 
