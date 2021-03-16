@@ -5,4 +5,5 @@ resources:
   - gitlab.yaml
   - keycloak.yaml
   - ldap.yaml
+  - okta.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
