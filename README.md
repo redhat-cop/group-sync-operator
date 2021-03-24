@@ -565,6 +565,29 @@ oc login --token ${token}
 make run ENABLE_WEBHOOKS=false
 ```
 
+### Test helm chart locally
+
+Define an image and tag. For example...
+
+```shell
+export imageRepository="quay.io/redhat-cop/group-sync-operator"
+export imageTag="v0.0.11"
+```
+
+Deploy chart...
+
+```shell
+make helmchart IMG=${imageRepository} VERSION=${imageTag}
+helm upgrade -i group-sync-operator-local charts/group-sync-operator -n group-sync-operator-local --create-namespace
+```
+
+Delete...
+
+```shell
+helm delete group-sync-operator-local -n group-sync-operator-local
+kubectl delete -f charts/group-sync-operator/crds/crds.yaml
+```
+
 ### Building/Pushing the operator image
 
 ```shell

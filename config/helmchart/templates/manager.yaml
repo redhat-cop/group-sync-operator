@@ -22,7 +22,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "group-sync-operator.serviceAccountName" . }}    
       containers:
       - command:
         - /manager
