@@ -31,9 +31,6 @@ spec:
           image: controller:latest
           name: manager
           resources:
-            limits:
-              cpu: 300m
-              memory: 200Mi
             requests:
               cpu: 300m
               memory: 200Mi
