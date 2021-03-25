@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: ${image_repo}
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: ${version}
 
