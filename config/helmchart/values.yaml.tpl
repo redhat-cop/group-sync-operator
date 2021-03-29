@@ -28,5 +28,5 @@ tolerations: []
 affinity: {}
 
 env: 
-  #  - name: VAR_NAME
-  #    value: var-value
+  # - name: VAR_NAME
+  #   value: var-value
