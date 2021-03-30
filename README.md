@@ -588,6 +588,14 @@ helm delete group-sync-operator-local -n group-sync-operator-local
 kubectl delete -f charts/group-sync-operator/crds/crds.yaml
 ```
 
+### Test metrics
+
+```sh
+oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
+curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://group-sync-operator-controller-manager-metrics-service.group-sync-operator-local.svc.cluster.local:8443/metrics
+exit
+```
+
 ### Building/Pushing the operator image
 
 ```shell

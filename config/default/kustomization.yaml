@@ -63,15 +63,9 @@ vars:
   - name: ROLE_NAME
     objref:
       kind: Role
-      apiVersion: authorization.openshift.io/v1
+      apiVersion: rbac.authorization.k8s.io/v1
       name: prometheus-k8s
-  - name: ROLE_NAMESPACE
-    objref:
-      kind: Role
-      apiVersion: authorization.openshift.io/v1
-      name: prometheus-k8s
-    fieldref:
-      fieldpath: metadata.namespace
+
 # [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
 #- name: CERTIFICATE_NAMESPACE # namespace of the certificate CR
 #  objref:
