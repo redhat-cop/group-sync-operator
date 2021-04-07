@@ -449,6 +449,7 @@ spec:
     * [GitLab](https://gitlab.com)
     * [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol)
     * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
+    * [Okta](https://www.okta.com/)
 
     The following sections describe the configuration options available for each provider
 
@@ -622,7 +623,7 @@ spec:
     | Name | Description | Defaults | Required |
     | ----- | ---------- | -------- | ----- |
     | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
-    | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
+    | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | No |
     | `insecure` | Ignore SSL verification | 'false' | No |
     | `groupUIDNameMapping` | User defined name mapping | | No |
     | `rfc2307` | Configuration using the [rfc2307](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html#ldap-syncing-rfc2307_ldap-syncing-groups) schema | | No |
@@ -674,7 +675,7 @@ spec:
 
     #### Authenticating to LDAP
 
-    A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys:
+    If authentication is required in order to communicate with the LDAP server, a secret should be created in the same namespace that contains the `GroupSync` resource. The following keys can be defined:
 
     * `username` - Username (Bind DN) for authenticating with the LDAP server
     * `password` - Password for authenticating with the LDAP server
@@ -787,7 +788,7 @@ spec:
 
     The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 
-      ```shell
+    ```shell
     apiVersion: redhatcop.redhat.io/v1alpha1
     kind: GroupSync
     metadata:
@@ -801,7 +802,7 @@ spec:
               namespace: group-sync-operator
             url: "https://example.okta.com/"
             appId: okta-sync-app-id
-      ```
+    ```
 
     #### Authenticating to Okta
 

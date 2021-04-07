@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/Nerzal/gocloak/v5 v5.1.0
 	github.com/go-logr/logr v0.3.0
+	github.com/go-openapi/spec v0.19.3
 	github.com/google/go-github/v32 v32.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/okta/okta-sdk-golang/v2 v2.3.0
@@ -24,5 +25,6 @@ require (
 	k8s.io/api v0.20.1
 	k8s.io/apimachinery v0.20.1
 	k8s.io/client-go v0.20.0
+	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
 	sigs.k8s.io/controller-runtime v0.7.0
 )
