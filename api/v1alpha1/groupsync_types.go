@@ -29,6 +29,7 @@ const (
 )
 
 // GroupSyncSpec defines the desired state of GroupSync
+// +k8s:openapi-gen=true
 type GroupSyncSpec struct {
 
 	// List of Providers that can be mounted by containers belonging to the pod.
@@ -44,6 +45,7 @@ type GroupSyncSpec struct {
 }
 
 // GroupSyncStatus defines the observed state of GroupSync
+// +k8s:openapi-gen=true
 type GroupSyncStatus struct {
 	// +patchMergeKey=type
 	// +patchStrategy=merge
@@ -65,6 +67,7 @@ type GroupSyncStatus struct {
 // GroupSync is the Schema for the groupsyncs API
 // +operator-sdk:csv:customresourcedefinitions:displayName="Group Sync"
 // +kubebuilder:resource:path=groupsyncs,scope=Namespaced
+// +k8s:openapi-gen=true
 type GroupSync struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -76,6 +79,7 @@ type GroupSync struct {
 // +kubebuilder:object:root=true
 
 // GroupSyncList contains a list of GroupSync
+// +k8s:openapi-gen=true
 type GroupSyncList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -83,6 +87,7 @@ type GroupSyncList struct {
 }
 
 // Provider represents the container for a single provider
+// +k8s:openapi-gen=true
 type Provider struct {
 	// Name represents the name of the provider
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Name of the Provider"
@@ -93,6 +98,7 @@ type Provider struct {
 }
 
 // ProviderType represents the provider to synchronize against
+// +k8s:openapi-gen=true
 type ProviderType struct {
 	// Azure represents the Azure provider
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure Provider"
@@ -126,6 +132,7 @@ type ProviderType struct {
 }
 
 // KeycloakProvider represents integration with Keycloak
+// +k8s:openapi-gen=true
 type KeycloakProvider struct {
 
 	// CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
@@ -171,6 +178,7 @@ type KeycloakProvider struct {
 }
 
 // GitHubProvider represents integration with GitHub
+// +k8s:openapi-gen=true
 type GitHubProvider struct {
 	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
@@ -204,6 +212,7 @@ type GitHubProvider struct {
 }
 
 // GitLabProvider represents integration with GitLab
+// +k8s:openapi-gen=true
 type GitLabProvider struct {
 	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
@@ -232,6 +241,7 @@ type GitLabProvider struct {
 }
 
 // LdapProvider represents integration with an LDAP server
+// +k8s:openapi-gen=true
 type LdapProvider struct {
 	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
@@ -285,6 +295,7 @@ type LdapProvider struct {
 }
 
 // AzureProvider represents integration with Azure
+// +k8s:openapi-gen=true
 type AzureProvider struct {
 	// BaseGroups allows for a set of groups to be specified to start searching from instead of searching all groups in the directory
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Base Groups",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
@@ -323,6 +334,7 @@ type AzureProvider struct {
 }
 
 // OktaProvider represents integration with Okta
+// +k8s:openapi-gen=true
 type OktaProvider struct {
 	// CredentialsSecret is a reference to a secret containing authentication details for the Okta server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
@@ -351,6 +363,7 @@ type OktaProvider struct {
 }
 
 // SecretRef represents a reference to an item within a Secret
+// +k8s:openapi-gen=true
 type SecretRef struct {
 	// Name represents the name of the secret
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Name of the secret",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}

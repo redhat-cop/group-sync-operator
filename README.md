@@ -240,7 +240,7 @@ The configurations of the three primary schemas (`rfc2307`, `activeDirectory` an
 | Name | Description | Defaults | Required | 
 | ----- | ---------- | -------- | ----- |
 | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
-| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
+| `credentialsSecret` | Reference to a secret containing authentication details (See below) | | No |
 | `insecure` | Ignore SSL verification | 'false' | No |
 | `groupUIDNameMapping` | User defined name mapping | | No |
 | `rfc2307` | Configuration using the [rfc2307](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html#ldap-syncing-rfc2307_ldap-syncing-groups) schema | | No |
@@ -292,7 +292,7 @@ The examples provided in the OpenShift documented referenced previously can be u
 
 #### Authenticating to LDAP
 
-A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys:
+If authentication is required in order to communicate with the LDAP server, a secret should be created in the same namespace that contains the `GroupSync` resource. The following keys can be defined:
 
 * `username` - Username (Bind DN) for authenticating with the LDAP server
 * `password` - Password for authenticating with the LDAP server

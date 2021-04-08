@@ -73,17 +73,7 @@ func (l *LdapSyncer) Validate() error {
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		} else {
-
-			// Check that provided secret contains required keys
-			_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
-			_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
-
-			if !(usernameSecretFound && passwordSecretFound) {
-				validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` in secret '%s' in namespace '%s", l.Provider.CredentialsSecret.Name, l.Provider.CredentialsSecret.Namespace))
-			}
-
 			l.CredentialsSecret = credentialsSecret
-
 		}
 
 	}
@@ -193,7 +183,10 @@ func (l *LdapSyncer) Bind() error {
 
 	}
 
-	clientConfig, err := ldapclient.NewLDAPClientConfig(l.URL.String(), string(l.CredentialsSecret.Data[secretUsernameKey]), string(l.CredentialsSecret.Data[secretPasswordKey]), l.CaCertificateFile, l.Provider.Insecure)
+	userName := l.getLdapCredentialValue(secretUsernameKey)
+	password := l.getLdapCredentialValue(secretPasswordKey)
+
+	clientConfig, err := ldapclient.NewLDAPClientConfig(l.URL.String(), userName, password, l.CaCertificateFile, l.Provider.Insecure)
 	if err != nil {
 		return fmt.Errorf("could not determine LDAP client configuration: %v", err)
 	}
@@ -440,4 +433,15 @@ func (l *LdapSyncer) GetBlacklist() []string {
 
 func (l *LdapSyncer) GetGroupNameMappings() map[string]string {
 	return l.Provider.LDAPGroupUIDToOpenShiftGroupNameMapping
+}
+
+func (l *LdapSyncer) getLdapCredentialValue(key string) string {
+
+	if l.Provider.CredentialsSecret != nil {
+		if value, ok := l.CredentialsSecret.Data[key]; ok {
+			return string(value)
+		}
+	}
+
+	return ""
 }
