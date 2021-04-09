@@ -3,9 +3,15 @@ layout: go.kubebuilder.io/v2
 projectName: group-sync-operator
 repo: github.com/redhat-cop/group-sync-operator
 resources:
-- group: redhatcop
+-
+  # TODO(user): Uncomment the below line if this resource implements a controller, else delete it.
+  # controller: true
+  domain: redhat.io
+  group: redhatcop
   kind: GroupSync
+  # TODO(user): Update the package path for your API if the below value is incorrect.
+  path: github.com/redhat-cop/group-sync-operator/api/v1alpha1
   version: v1alpha1
-version: 3-alpha
+version: "3"
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}

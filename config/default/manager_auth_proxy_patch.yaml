@@ -29,6 +29,11 @@ spec:
             - "--health-probe-bind-address=:8081"
             - "--metrics-addr=127.0.0.1:8080"
             - "--leader-elect"
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       volumes:
         - name: tls-cert
           secret:
