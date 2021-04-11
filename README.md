@@ -565,6 +565,39 @@ oc login --token ${token}
 make run ENABLE_WEBHOOKS=false
 ```
 
+### Test helm chart locally
+
+Define an image and tag. For example...
+
+```shell
+export imageRepository="quay.io/redhat-cop/group-sync-operator"
+export imageTag="v0.0.11"
+```
+
+Deploy chart...
+
+```shell
+make helmchart IMG=${imageRepository} VERSION=${imageTag}
+helm upgrade -i group-sync-operator-local charts/group-sync-operator -n group-sync-operator-local --create-namespace
+```
+
+Delete...
+
+```shell
+helm delete group-sync-operator-local -n group-sync-operator-local
+kubectl delete -f charts/group-sync-operator/crds/crds.yaml
+```
+
+### Test metrics
+
+```sh
+
+oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
+export operatorNamespace=group-sync-operator-local # or group-sync-operator
+curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://group-sync-operator-controller-manager-metrics-service.${operatorNamespace}.svc.cluster.local:8443/metrics
+exit
+```
+
 ### Building/Pushing the operator image
 
 ```shell

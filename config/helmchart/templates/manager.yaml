@@ -17,26 +17,59 @@ spec:
     {{- end }}
       labels:
         {{- include "group-sync-operator.selectorLabels" . | nindent 8 }}
+        control-plane: controller-manager
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "group-sync-operator.serviceAccountName" . }}    
       containers:
-      - command:
-        - /manager
-        args:
-        - --enable-leader-election
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        name: {{ .Chart.Name }}
-{{- if .Values.env }}
+        - args:
+          - --secure-listen-address=0.0.0.0:8443
+          - --upstream=http://127.0.0.1:8080/
+          - --logtostderr=true
+          - --tls-cert-file=/etc/certs/tls/tls.crt
+          - --tls-private-key-file=/etc/certs/tls/tls.key
+          - --v=10
+          image: quay.io/coreos/kube-rbac-proxy:v0.5.0
+          name: kube-rbac-proxy
+          ports:
+          - containerPort: 8443
+            name: https
+          volumeMounts:
+          - mountPath: /etc/certs/tls
+            name: tls-cert        
+        - command:
+          - /manager
+          args:
+          - --health-probe-bind-address=:8081
+          - --metrics-addr=127.0.0.1:8080
+          - --leader-elect
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          name: {{ .Chart.Name }}
           env:
-            {{- tpl (toYaml .Values.env) . | nindent 12 }}
-{{- end }}
-        resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- with .Values.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -49,3 +82,8 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: tls-cert
+          secret:
+            defaultMode: 420
+            secretName: group-sync-operator-certs
