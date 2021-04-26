@@ -50,3 +50,11 @@ Selector labels
 app.kubernetes.io/name: {{ include "group-sync-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+
+{{/*
+Service Acount Name
+*/}}
+{{- define "group-sync-operator.serviceAccountName" -}}
+{{- printf "%s-%s" (include "group-sync-operator.name" .) "controller-manager" }}
+{{- end }}

@@ -18,8 +18,8 @@ podAnnotations: {}
 
 resources:
   requests:
-    cpu: 100m
-    memory: 20Mi
+    cpu: 300m
+    memory: 200Mi
 
 nodeSelector: {}
 

@@ -1,11 +1,12 @@
 domain: redhat.io
-layout: go.kubebuilder.io/v2
+layout: go.kubebuilder.io/v3
 projectName: group-sync-operator
 repo: github.com/redhat-cop/group-sync-operator
 resources:
 - group: redhatcop
   kind: GroupSync
   version: v1alpha1
-version: 3-alpha
+version: "3"
 plugins:
-  go.sdk.operatorframework.io/v2-alpha: {}
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}

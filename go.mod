@@ -26,5 +26,5 @@ require (
 	k8s.io/apimachinery v0.20.1
 	k8s.io/client-go v0.20.0
 	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
-	sigs.k8s.io/controller-runtime v0.7.0
+	sigs.k8s.io/controller-runtime v0.7.2
 )
