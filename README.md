@@ -560,7 +560,7 @@ make docker-build IMG=quay.io/$repo/group-sync-operator:latest
 make docker-push IMG=quay.io/$repo/group-sync-operator:latest
 oc new-project group-sync-operator-local
 kustomize build ./config/local-development | oc apply -f - -n group-sync-operator-local
-export token=$(oc serviceaccounts get-token 'default' -n group-sync-operator-local)
+export token=$(oc serviceaccounts get-token 'group-sync-operator-controller-manager' -n group-sync-operator-local)
 oc login --token ${token}
 make run ENABLE_WEBHOOKS=false
 ```
@@ -571,7 +571,7 @@ Define an image and tag. For example...
 
 ```shell
 export imageRepository="quay.io/redhat-cop/group-sync-operator"
-export imageTag="v0.0.11"
+export imageTag="$(git describe --tags --abbrev=0)"
 ```
 
 Deploy chart...

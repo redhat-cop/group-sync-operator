@@ -19,6 +19,7 @@ spec:
         {{- include "group-sync-operator.selectorLabels" . | nindent 8 }}
         control-plane: controller-manager
     spec:
+      serviceAccountName: {{ include "group-sync-operator.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
