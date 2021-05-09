@@ -17,10 +17,15 @@ if [ ! -f "${CSV_FILE}" ]; then
   exit 1
 fi
 
+CREATED_TIME=`date +"%FT%H:%M:%SZ"`
 OPERATOR_IMAGE_DIGEST=$(skopeo inspect docker://quay.io/${QUAY_REGISTRY}:${OPERATOR_IMAGE_TAG} | jq -r ".Digest")
 OPERATOR_IMAGE="quay.io/${QUAY_REGISTRY}@${OPERATOR_IMAGE_DIGEST}"
 KUBE_RBAC_PROXY_IMAGE_DIGEST=$(skopeo inspect docker://$(yq r bundle/manifests/${REPOSITORY_NAME}.clusterserviceversion.yaml 'spec.install.spec.deployments[0].spec.template.spec.containers[0].image') | jq -r ".Digest")
 KUBE_RBAC_PROXY_IMAGE="$(yq r bundle/manifests/${REPOSITORY_NAME}.clusterserviceversion.yaml 'spec.install.spec.deployments[0].spec.template.spec.containers[0].image' | cut -d':' -f1)@${KUBE_RBAC_PROXY_IMAGE_DIGEST}"
+
+yq write --inplace "${CSV_FILE}" 'metadata.annotations.containerImage' ${OPERATOR_IMAGE}
+
+yq write --inplace "${CSV_FILE}" 'metadata.annotations.createdAt' ${CREATED_TIME}
 
 cat << EOF | yq write --inplace --script - "${CSV_FILE}"
 - command: update

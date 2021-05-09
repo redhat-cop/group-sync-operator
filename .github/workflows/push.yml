@@ -131,14 +131,14 @@ jobs:
           push: true
           tags: "quay.io/${{ env.QUAY_REGISTRY }}:latest,quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"
 
-      - name: Set Operator Digests
+      - name: Update CSV
         env:
           QUAY_REGISTRY: "${{ env.QUAY_REGISTRY }}"
           REPOSITORY_NAME: "${{ env.REPOSITORY_NAME }}"
           OPERATOR_IMAGE_TAG: "${{ env.OPERATOR_IMAGE_TAG }}"
-        run: ./hack/attach_image_digests.sh
+        run: ./hack/update_csv.sh
 
-      - name: Verify bundle after digests
+      - name: Verify bundle after csv update
         shell: bash
         run: operator-sdk bundle validate ./bundle --select-optional name=operatorhub
 
@@ -307,7 +307,7 @@ jobs:
           OPERATOR_IMAGE_TAG: "v${{ env.VERSION }}"
         run: |
           make bundle IMG=quay.io/${QUAY_REGISTRY}:v${VERSION} VERSION=${VERSION} DEFAULT_CHANNEL=alpha
-          ./hack/attach_image_digests.sh
+          ./hack/update_csv.sh
           sed  's/bundle\///g' bundle.Dockerfile > bundle/Dockerfile
           sed -i '/replaces: '"$(basename $GITHUB_REPOSITORY)"'/d' ./bundle/manifests/$(basename $GITHUB_REPOSITORY).clusterserviceversion.yaml
           mkdir -p ./tmp/community-operators/community-operators/$(basename $GITHUB_REPOSITORY)/${VERSION}
