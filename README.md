@@ -377,7 +377,7 @@ spec:
 A user with rights to query for Keycloak groups must be available. The following permissions must be associated to the user:
 
 * Password must be set (Temporary option unselected) on the _Credentials_ tab
-* On the _Role Mappings_ tab, select _master-realm_ or _realm-management_ next to the _Client Roles_ dropdown and then select **Query Groups** and **Query Users**.
+* On the _Role Mappings_ tab, select _master-realm_ or _realm-management_ next to the _Client Roles_ dropdown and then select **query-groups**, **query-users**, and **view-users**.
 
 A secret must be created in the same namespace that contains the `GroupSync` resource. It must contain the following keys for the user previously created:
 
