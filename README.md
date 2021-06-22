@@ -571,7 +571,7 @@ Define an image and tag. For example...
 
 ```shell
 export imageRepository="quay.io/redhat-cop/group-sync-operator"
-export imageTag="$(git describe --tags --abbrev=0)"
+export imageTag="$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/redhat-cop/group-sync-operator.git '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)"
 ```
 
 Deploy chart...
@@ -591,7 +591,8 @@ kubectl delete -f charts/group-sync-operator/crds/crds.yaml
 ### Test metrics
 
 ```sh
-
+export operatorNamespace=group-sync-operator-local # or group-sync-operator
+oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
 oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
 export operatorNamespace=group-sync-operator-local # or group-sync-operator
 curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://group-sync-operator-controller-manager-metrics-service.${operatorNamespace}.svc.cluster.local:8443/metrics

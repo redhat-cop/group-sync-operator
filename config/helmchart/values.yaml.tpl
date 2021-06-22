@@ -30,3 +30,13 @@ affinity: {}
 env: 
   # - name: VAR_NAME
   #   value: var-value
+
+kube_rbac_proxy:
+  image:
+    repository: quay.io/coreos/kube-rbac-proxy
+    pullPolicy: IfNotPresent
+    tag: v0.5.0
+  resources:
+    requests:
+      cpu: 100m
+      memory: 20Mi
