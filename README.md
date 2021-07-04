@@ -548,6 +548,17 @@ Prometheus compatible metrics are exposed by the Operator and can be integrated 
 oc label namespace <namespace> openshift.io/cluster-monitoring="true"
 ```
 
+### Test metrics
+
+```sh
+export operatorNamespace=group-sync-operator-local # or group-sync-operator
+oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
+oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
+export operatorNamespace=group-sync-operator-local # or group-sync-operator
+curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://group-sync-operator-controller-manager-metrics-service.${operatorNamespace}.svc.cluster.local:8443/metrics
+exit
+```
+
 ## Development
 
 ### Running the operator locally
@@ -586,17 +597,6 @@ Delete...
 ```shell
 helm delete group-sync-operator-local -n group-sync-operator-local
 kubectl delete -f charts/group-sync-operator/crds/crds.yaml
-```
-
-### Test metrics
-
-```sh
-export operatorNamespace=group-sync-operator-local # or group-sync-operator
-oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
-oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
-export operatorNamespace=group-sync-operator-local # or group-sync-operator
-curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://group-sync-operator-controller-manager-metrics-service.${operatorNamespace}.svc.cluster.local:8443/metrics
-exit
 ```
 
 ### Building/Pushing the operator image

@@ -41,6 +41,10 @@ spec:
           - mountPath: /etc/certs/tls
             name: tls-cert
           imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
+          {{- with .Values.env }}
+          env:
+          {{- toYaml . | nindent 10 }}
+          {{- end }}          
           resources:
             {{- toYaml .Values.kube_rbac_proxy.resources | nindent 12 }}
         - command:
