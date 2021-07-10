@@ -1,3 +1,5 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -350,6 +352,11 @@ spec:
                                 type: integer
                             required:
                             - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
                             type: object
                         required:
                         - groupMembershipAttributes
@@ -419,6 +426,11 @@ spec:
                                 type: integer
                             required:
                             - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
                             type: object
                           userNameAttributes:
                             description: UserNameAttributes defines which attributes
@@ -467,6 +479,11 @@ spec:
                                 type: integer
                             required:
                             - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
                             type: object
                         required:
                         - groupMembershipAttributes
@@ -595,6 +612,11 @@ spec:
                                 type: integer
                             required:
                             - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
                             type: object
                           tolerateMemberNotFoundErrors:
                             description: TolerateMemberNotFoundErrors determines the
@@ -676,12 +698,19 @@ spec:
                                 type: integer
                             required:
                             - baseDN
+                            - derefAliases
+                            - filter
+                            - pageSize
+                            - scope
+                            - timeout
                             type: object
                         required:
                         - groupMembershipAttributes
                         - groupNameAttributes
                         - groupUIDAttribute
                         - groupsQuery
+                        - tolerateMemberNotFoundErrors
+                        - tolerateMemberOutOfScopeErrors
                         - userNameAttributes
                         - userUIDAttribute
                         - usersQuery

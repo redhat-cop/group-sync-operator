@@ -13,7 +13,7 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
+env: []
 podAnnotations: {}
 
 resources:
@@ -40,3 +40,5 @@ kube_rbac_proxy:
     requests:
       cpu: 100m
       memory: 20Mi
+
+enableMonitoring: true      

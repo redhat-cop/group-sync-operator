@@ -1,11 +1,18 @@
 domain: redhat.io
-layout: go.kubebuilder.io/v3
+layout: 
+- go.kubebuilder.io/v3
 projectName: group-sync-operator
 repo: github.com/redhat-cop/group-sync-operator
 resources:
-- group: redhatcop
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: redhat.io  
+  group: redhatcop
   kind: GroupSync
   version: v1alpha1
+  path: github.com/redhat-cop/group-sync-operator/api/v1alpha1
 version: "3"
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
