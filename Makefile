@@ -22,7 +22,7 @@ VERSION ?= 0.0.1
 # Operator SDK
 OPERATOR_SDK ?= operator-sdk
 # YQ Version
-
+YQ_VERSION ?= 4.9.8
 
 # Default bundle image tag
 BUNDLE_IMG ?= quay.io/redhat-cop/group-sync-operator-bundle:$(VERSION)
@@ -38,7 +38,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/redhat-cop/group-sync-operator:$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,crdVersions=v1beta1,preserveUnknownFields=false"
+CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
 
 
@@ -91,13 +91,6 @@ IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
-
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -124,8 +117,9 @@ help: ## Display this help.
 
 ##@ Development
 
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+manifests: controller-gen yq ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	YQ=$(YQ) $(shell pwd)/hack/fix-ldap-provider-crd.sh
 
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
@@ -141,6 +135,17 @@ test: manifests generate fmt vet ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+
+YQ=$(shell pwd)/bin/yq
+yq:
+    ifeq ("$(wildcard $(YQ))","")
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(YQ)) ;\
+	curl -sSLo $(YQ) https://github.com/mikefarah/yq/releases/download/v$(YQ_VERSION)/yq_$(PLATFORM)_amd64 && chmod +x $(YQ) ;\
+	}
+    endif
+
 
 ##@ Build
 
@@ -271,15 +276,4 @@ helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
 	git -C ${HELM_REPO_DEST} push origin "gh-pages"	
-
-YQ_VERSION ?= 3.2.1
-BUILD_TOOLS_DIR=$(shell pwd)/buildtools
-yq:
-    ifeq ("$(wildcard $(BUILD_TOOLS_DIR)/yq)","")
-	@{ \
-	set -e ;\
-	mkdir -p $(BUILD_TOOLS_DIR) ;\
-	curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_$(PLATFORM)_amd64 --output $(BUILD_TOOLS_DIR)/yq && chmod +x $(BUILD_TOOLS_DIR)/yq ;\
-	}
-    endif
-YQ=$(BUILD_TOOLS_DIR)/yq	
+	

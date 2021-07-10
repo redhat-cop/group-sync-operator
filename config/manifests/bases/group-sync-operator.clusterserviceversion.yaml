@@ -27,18 +27,21 @@ spec:
       kind: GroupSync
       name: groupsyncs.redhatcop.redhat.io
       specDescriptors:
-      - description: List of Providers that can be mounted by containers belonging to the pod.
+      - description: List of Providers that can be mounted by containers belonging
+          to the pod.
         displayName: Providers
         path: providers
       - description: Azure represents the Azure provider
         displayName: Azure Provider
         path: providers[0].azure
-      - description: BaseGroups allows for a set of groups to be specified to start searching from instead of searching all groups in the directory
+      - description: BaseGroups allows for a set of groups to be specified to start
+          searching from instead of searching all groups in the directory
         displayName: Base Groups
         path: providers[0].azure.baseGroups
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for communicating to Azure
         displayName: Secret Containing the Credentials
         path: providers[0].azure.credentialsSecret
         x-descriptors:
@@ -58,7 +61,8 @@ spec:
         path: providers[0].azure.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Filter allows for limiting the results from the groups response using the Filter feature of the Azure Graph API
+      - description: Filter allows for limiting the results from the groups response
+          using the Filter feature of the Azure Graph API
         displayName: Filter
         path: providers[0].azure.filter
         x-descriptors:
@@ -68,7 +72,8 @@ spec:
         path: providers[0].azure.groups
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to Azure
+      - description: Insecure specifies whether to allow for unverified certificates
+          to be used when communicating to Azure
         displayName: Ignore SSL Verification
         path: providers[0].azure.insecure
         x-descriptors:
@@ -78,7 +83,8 @@ spec:
         path: providers[0].azure.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: UserNameAttributes are the fields to consider on the User object containing the username
+      - description: UserNameAttributes are the fields to consider on the User object
+          containing the username
         displayName: Azure UserName Attributes
         path: providers[0].azure.userNameAttributes
         x-descriptors:
@@ -86,7 +92,8 @@ spec:
       - description: GitHub represents the GitHub provider
         displayName: GitHub Provider
         path: providers[0].github
-      - description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
+      - description: CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the GitHub server
         displayName: Secret Containing the CA Certificate
         path: providers[0].github.caSecret
         x-descriptors:
@@ -106,7 +113,8 @@ spec:
         path: providers[0].github.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CredentialsSecret is a reference to a secret containing authentication details for the GitHub server
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for the GitHub server
         displayName: Secret Containing the Credentials
         path: providers[0].github.credentialsSecret
         x-descriptors:
@@ -126,7 +134,8 @@ spec:
         path: providers[0].github.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitHab
+      - description: Insecure specifies whether to allow for unverified certificates
+          to be used when communicating to GitHab
         displayName: Ignore SSL Verification
         path: providers[0].github.insecure
         x-descriptors:
@@ -149,7 +158,8 @@ spec:
       - description: GitLab represents the GitLab provider
         displayName: GitLab Provider
         path: providers[0].gitlab
-      - description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+      - description: CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the GitLab server
         displayName: Secret Containing the CA Certificate
         path: providers[0].gitlab.caSecret
         x-descriptors:
@@ -169,7 +179,8 @@ spec:
         path: providers[0].gitlab.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CredentialsSecret is a reference to a secret containing authentication details for the GitLab server
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for the GitLab server
         displayName: Secret Containing the Credentials
         path: providers[0].gitlab.credentialsSecret
         x-descriptors:
@@ -194,7 +205,8 @@ spec:
         path: providers[0].gitlab.groups
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
+      - description: Insecure specifies whether to allow for unverified certificates
+          to be used when communicating to GitLab
         displayName: Ignore SSL Verification
         path: providers[0].gitlab.insecure
         x-descriptors:
@@ -207,7 +219,8 @@ spec:
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
         path: providers[0].keycloak
-      - description: CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
+      - description: CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the Keycloak server
         displayName: Secret Containing the CA Certificate
         path: providers[0].keycloak.caSecret
         x-descriptors:
@@ -227,7 +240,8 @@ spec:
         path: providers[0].keycloak.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CredentialsSecret is a reference to a secret containing authentication details for the Keycloak server
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for the Keycloak server
         displayName: Secret Containing the Credentials
         path: providers[0].keycloak.credentialsSecret
         x-descriptors:
@@ -250,7 +264,8 @@ spec:
       - description: Groups represents a filtered list of groups to synchronize
         displayName: Groups to Synchronize
         path: providers[0].keycloak.groups
-      - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to Keycloak
+      - description: Insecure specifies whether to allow for unverified certificates
+          to be used when communicating to Keycloak
         displayName: Ignore SSL Verification
         path: providers[0].keycloak.insecure
         x-descriptors:
@@ -274,10 +289,12 @@ spec:
       - description: Ldap represents the LDAP provider
         displayName: LDAP Provider
         path: providers[0].ldap
-      - description: ActiveDirectoryConfig represents the configuration for Active Directory
+      - description: ActiveDirectoryConfig represents the configuration for Active
+          Directory
         displayName: Active Directory configuration
         path: providers[0].ldap.activeDirectory
-      - description: ActiveDirectoryConfig represents the configuration for Augmented Active Directory
+      - description: ActiveDirectoryConfig represents the configuration for Augmented
+          Active Directory
         displayName: Augmented Active Directory configuration
         path: providers[0].ldap.augmentedActiveDirectory
       - description: Blacklist represents a list of groups to not synchronize
@@ -285,7 +302,8 @@ spec:
         path: providers[0].ldap.blacklist
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+      - description: CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the GitLab server
         displayName: Secret Containing the CA Certificate
         path: providers[0].ldap.caSecret
         x-descriptors:
@@ -305,7 +323,8 @@ spec:
         path: providers[0].ldap.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CredentialsSecret is a reference to a secret containing authentication details for communicating to LDAP
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for communicating to LDAP
         displayName: Secret Containing the Credentials
         path: providers[0].ldap.credentialsSecret
         x-descriptors:
@@ -325,10 +344,12 @@ spec:
         path: providers[0].ldap.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: / LDAPGroupUIDToOpenShiftGroupNameMapping is an optional direct mapping of LDAP group UIDs to OpenShift group names
+      - description: / LDAPGroupUIDToOpenShiftGroupNameMapping is an optional direct
+          mapping of LDAP group UIDs to OpenShift group names
         displayName: LDAP group UID's to OpenShift group name mapping
         path: providers[0].ldap.groupUIDNameMapping
-      - description: Insecure specifies whether to allow for unverified certificates to be used when communicating to LDAP
+      - description: Insecure specifies whether to allow for unverified certificates
+          to be used when communicating to LDAP
         displayName: Ignore SSL Verification
         path: providers[0].ldap.insecure
         x-descriptors:
@@ -357,7 +378,8 @@ spec:
         path: providers[0].okta.appId
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CredentialsSecret is a reference to a secret containing authentication details for the Okta server
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for the Okta server
         displayName: Secret Containing the Credentials
         path: providers[0].okta.credentialsSecret
         x-descriptors:
@@ -377,7 +399,8 @@ spec:
         path: providers[0].okta.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: ExtractLoginUsername is true if Okta username's are defaulted to emails and you would like the username only
+      - description: ExtractLoginUsername is true if Okta username's are defaulted
+          to emails and you would like the username only
         displayName: Extract Login Username
         path: providers[0].okta.extractLoginUsername
         x-descriptors:
@@ -387,7 +410,8 @@ spec:
         path: providers[0].okta.groups
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: ProfileKey the attribute from Okta you would like to use as the user identifier.  Default is "login"
+      - description: ProfileKey the attribute from Okta you would like to use as the
+          user identifier.  Default is "login"
         displayName: Profile Key
         path: providers[0].okta.profileKey
         x-descriptors:
@@ -407,7 +431,8 @@ spec:
         path: conditions
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes.conditions
-      - description: LastSyncSuccessTime represents the time last synchronization completed successfully
+      - description: LastSyncSuccessTime represents the time last synchronization
+          completed successfully
         displayName: Last Sync Success Time
         path: lastSyncSuccessTime
       version: v1alpha1

@@ -1,9 +1,6 @@
 # OSX
 .DS_Store
 
-#BuildTools
-buildtools/*
-
 #EnvTest
 testbin/*
 
