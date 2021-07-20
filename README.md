@@ -399,8 +399,8 @@ The following table describes the set of configuration options for the Okta prov
 | ----- | ---------- | -------- | ----- |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | `''`  | Yes |
 | `groups` | List of groups to filter against | `nil`  | No |
-| `url` | Okta organization URL (Must contain a trailing slash) | `''`  | Yes |
-| `appId` | Application ID of App Groups are assigned to | `''`  | Yes |
+| `url` | Okta URL which can be found under the "Okta Domain" in your application settings (must contain the protocol and a trailing slash) | `''`  | Yes |
+| `appId` | Okta Application (Client) ID that is attached to the application groups you wish to sync | `''`  | Yes |
 | `extractLoginUsername` | Bool to determine if you should extract username from okta login | `false`  | No |
 | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `'login'` | No |
 
@@ -420,7 +420,7 @@ spec:
           name: okta-api-token
           namespace: group-sync-operator
         url: "https://example.okta.com/"
-        appId: okta-sync-app-id
+        appId: 0oad5lTSBOMUBOBVVQSC
 ```
 
 #### Authenticating to Okta
