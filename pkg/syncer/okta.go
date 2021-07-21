@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
+	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"net/url"
 	"strings"
 	"sync"
@@ -32,13 +32,6 @@ const (
 	secretOktaTokenKey = "okta-api-token"
 )
 
-type AppGroup struct {
-	Id          string      `json:"id,omitempty"`
-	LastUpdated string      `json:"lastUpdated,omitempty"`
-	Links       interface{} `json:"_links,omitempty"`
-	Priority    int         `json:"priority,omitempty"`
-}
-
 type OktaSyncer struct {
 	cachedGroups       map[string]*okta.Group
 	cachedGroupMembers map[string][]*okta.User
@@ -53,6 +46,10 @@ type OktaSyncer struct {
 func (o *OktaSyncer) Init() bool {
 	o.cachedGroupMembers = make(map[string][]*okta.User)
 	o.cachedGroups = make(map[string]*okta.Group)
+
+	if o.Provider.GroupLimit == 0 {
+		o.Provider.GroupLimit = 1000
+	}
 
 	if o.Provider.ProfileKey == "" {
 		o.Provider.ProfileKey = "login"
@@ -177,19 +174,11 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 
 func (o OktaSyncer) getGroups() ([]*okta.Group, error) {
 	var (
-		appGroups []AppGroup
-		groups    []*okta.Group
+		groups []*okta.Group
 	)
 
-	url := "api/v1/apps/" + o.Provider.AppId + "/groups"
+	appGroups, _, err := o.goOkta.Application.ListApplicationGroupAssignments(context.TODO(), o.Provider.AppId, query.NewQueryParams(query.WithLimit(int64(o.Provider.GroupLimit))))
 
-	// at the time okta did not currently provide a function for this endpoint
-	req, err := o.goOkta.GetRequestExecutor().
-		WithAccept("application/json").
-		WithContentType("application/json").
-		NewRequest(http.MethodGet, url, nil)
-
-	_, err = o.goOkta.GetRequestExecutor().Do(context.TODO(), req, &appGroups)
 	if err != nil {
 		oktaLogger.Error(err, "getting groups for specified application")
 		return nil, err
@@ -199,7 +188,7 @@ func (o OktaSyncer) getGroups() ([]*okta.Group, error) {
 	return groups, err
 }
 
-func (o OktaSyncer) fetchGroupsAsync(appGroups []AppGroup) ([]*okta.Group, error) {
+func (o OktaSyncer) fetchGroupsAsync(appGroups []*okta.ApplicationGroupAssignment) ([]*okta.Group, error) {
 
 	wg := &sync.WaitGroup{}
 	groupCh := make(chan *okta.Group, len(appGroups))
@@ -223,7 +212,7 @@ func (o OktaSyncer) fetchGroupsAsync(appGroups []AppGroup) ([]*okta.Group, error
 	return groups, nil
 }
 
-func getGroup(app AppGroup, groupChan chan *okta.Group, resource *okta.GroupResource, wg *sync.WaitGroup) {
+func getGroup(app *okta.ApplicationGroupAssignment, groupChan chan *okta.Group, resource *okta.GroupResource, wg *sync.WaitGroup) {
 	defer wg.Done()
 	group, _, err := resource.GetGroup(context.TODO(), app.Id)
 	if err != nil {

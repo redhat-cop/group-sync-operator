@@ -549,6 +549,9 @@ spec:
                           url:
                             description: URL is the location of the Okta domain server
                             type: string
+                          groupLimit:
+                            description: The maximum number of groups that can be synced
+                            type: integer
                         required:
                           - appId
                           - credentialsSecret
