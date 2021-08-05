@@ -191,6 +191,10 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 		groupName := group.DisplayName
 
+		if groupName == nil {
+			continue
+		}
+
 		if !isGroupAllowed(*groupName, a.Provider.Groups) {
 			continue
 		}
