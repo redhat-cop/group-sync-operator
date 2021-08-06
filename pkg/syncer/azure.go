@@ -192,6 +192,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 		groupName := group.DisplayName
 
 		if groupName == nil {
+			azureLogger.Info(fmt.Sprintf("Warning: Skipping Group record with empty displayName"))
 			continue
 		}
 
