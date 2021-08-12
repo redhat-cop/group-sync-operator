@@ -91,7 +91,7 @@ type GroupSyncList struct {
 type Provider struct {
 	// Name represents the name of the provider
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Name of the Provider"
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
 	*ProviderType `json:",inline"`

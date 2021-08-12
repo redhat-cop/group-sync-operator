@@ -554,6 +554,8 @@ spec:
                           - credentialsSecret
                           - url
                         type: object
+                    required:
+                      - name
                     type: object
                   type: array
                 schedule:
