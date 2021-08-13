@@ -360,6 +360,10 @@ type OktaProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Profile Key",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	ProfileKey string `json:"profileKey"`
+	// GroupLimit is the maximum number of groups that can be synced. Default is "1000"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Group Limit",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number"}
+	// +kubebuilder:validation:Optional
+	GroupLimit int `json:"groupLimit"`
 }
 
 // SecretRef represents a reference to an item within a Secret
