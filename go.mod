@@ -1,6 +1,6 @@
 module github.com/redhat-cop/group-sync-operator
 
-go 1.16
+go 1.17
 
 require (
 	github.com/Nerzal/gocloak/v5 v5.1.0
