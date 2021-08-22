@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	secretUsernameKey  = "username"
+	secretPasswordKey  = "password"
 	secretTokenKey     = "token"
 	defaultSecretCaKey = "ca.crt"
 )
