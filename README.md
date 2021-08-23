@@ -152,7 +152,7 @@ spec:
 
 #### Authenticating to GitHub
 
-Authentication to GitHub can be performed using an OAuth Personal Access Token or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
+Authentication to GitHub can be performed using an OAuth Personal Access Token. A secret must be created in the same namespace that contains the `GroupSync` resource:
 
 When using an OAuth token, the following key is required:
 
@@ -162,18 +162,6 @@ The secret can be created by executing the following command:
 
 ```shell
 oc create secret generic github-group-sync --from-literal=token=<token>
-```
-
-
-The following keys are required for username and password:
-
-* `username` - Username for authenticating with GitHub
-* `password` - Password for authenticating with GitHub
-
-The secret can be created by executing the following command:
-
-```shell
-oc create secret generic github-group-sync --from-literal=username=<username> --from-literal=password=<password>
 ```
 
 ### GitLab

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/google/go-github/v32/github"
 	userv1 "github.com/openshift/api/user/v1"
@@ -64,12 +63,10 @@ func (g *GitHubSyncer) Validate() error {
 	} else {
 
 		// Check that provided secret contains required keys
-		_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
-		_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 
-		if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+		if !tokenSecretFound {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
@@ -122,8 +119,6 @@ func (g *GitHubSyncer) Validate() error {
 
 func (g *GitHubSyncer) Bind() error {
 
-	usernameSecret, usernameSecretFound := g.CredentialsSecret.Data[secretUsernameKey]
-	passwordSecret, passwordSecretFound := g.CredentialsSecret.Data[secretPasswordKey]
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
 
 	var ghClient *github.Client
@@ -159,16 +154,6 @@ func (g *GitHubSyncer) Bind() error {
 
 		httpClient := oauth2.NewClient(g.Context, ts)
 		ghClient = github.NewClient(httpClient)
-
-	} else if usernameSecretFound && passwordSecretFound {
-		tp := github.BasicAuthTransport{
-			Username:  strings.TrimSpace(string(usernameSecret)),
-			Password:  strings.TrimSpace(string(passwordSecret)),
-			Transport: transport,
-		}
-
-		ghClient = github.NewClient(tp.Client())
-
 	} else {
 		return fmt.Errorf("Could not locate credentials in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace)
 	}
