@@ -5,16 +5,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/gregjones/httpcache"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	"github.com/palantir/go-githubapp/githubapp"
 	"github.com/google/go-github/v38/github"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -120,10 +121,12 @@ func (g *GitHubSyncer) Validate() error {
 func (g *GitHubSyncer) Bind() error {
 
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
+	privateKey, privateKeyFound := g.CredentialsSecret.Data[privateKey]
+	integrationId, installationIdFound := g.CredentialsSecret.Data[integrationId]
 
 	var ghClient *github.Client
-
 	var transport *http.Transport
+
 
 	if g.Provider.Insecure == true {
 		transport = &http.Transport{
@@ -145,15 +148,56 @@ func (g *GitHubSyncer) Bind() error {
 		}
 	}
 
-	if tokenSecretFound {
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: string(tokenSecret)})
+	config := githubapp.Config {
+		V3APIURL: *g.Provider.URL,
+		V4APIURL: *g.Provider.URL,
+	}
 
-		if transport != nil {
-			g.Context = context.WithValue(g.Context, oauth2.HTTPClient, &http.Client{Transport: transport})
+	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
+		githubapp.WithClientUserAgent("redhat-cop/group-sync-operator"),
+		githubapp.WithClientCaching(true, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+		githubapp.WithClientMiddleware(func(tripper http.RoundTripper) http.RoundTripper {
+			if transport != nil {
+				return transport
+			}
+			return tripper
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	if privateKeyFound && installationIdFound {
+		config.App.PrivateKey = string(privateKey)
+
+		intId, err := strconv.ParseInt(string(integrationId), 10, 64 )
+		if err != nil {
+			return err
+		}
+		config.App.IntegrationID = intId
+
+		appClient, err := clientCreator.NewAppClient()
+		if err != nil {
+			return err
 		}
 
-		httpClient := oauth2.NewClient(g.Context, ts)
-		ghClient = github.NewClient(httpClient)
+		installService := githubapp.NewInstallationsService(appClient)
+		installation, err := installService.GetByOwner(context.Background(), g.Provider.Organization)
+		if err != nil {
+			return err
+		}
+
+		ghClient, err = clientCreator.NewInstallationClient(installation.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if tokenSecretFound {
+		ghClient, err = clientCreator.NewTokenClient(string(tokenSecret))
+		if err != nil {
+			return err
+		}
 	} else {
 		return fmt.Errorf("Could not locate credentials in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace)
 	}
@@ -165,7 +209,6 @@ func (g *GitHubSyncer) Bind() error {
 	g.Client = ghClient
 
 	return nil
-
 }
 
 func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
