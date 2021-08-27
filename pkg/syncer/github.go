@@ -122,7 +122,7 @@ func (g *GitHubSyncer) Bind() error {
 
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
 	privateKey, privateKeyFound := g.CredentialsSecret.Data[privateKey]
-	integrationId, installationIdFound := g.CredentialsSecret.Data[integrationId]
+	integrationId, integrationIdFound := g.CredentialsSecret.Data[integrationId]
 
 	var ghClient *github.Client
 	var transport *http.Transport
@@ -167,7 +167,7 @@ func (g *GitHubSyncer) Bind() error {
 		return err
 	}
 
-	if privateKeyFound && installationIdFound {
+	if privateKeyFound && integrationIdFound {
 		config.App.PrivateKey = string(privateKey)
 
 		intId, err := strconv.ParseInt(string(integrationId), 10, 64 )
