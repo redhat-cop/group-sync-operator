@@ -6,7 +6,8 @@ require (
 	github.com/Nerzal/gocloak/v5 v5.1.0
 	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.19.3
-	github.com/google/go-github/v32 v32.1.0
+	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/go-github/v38 v38.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/okta/okta-sdk-golang/v2 v2.3.0
 	github.com/onsi/ginkgo v1.16.4
