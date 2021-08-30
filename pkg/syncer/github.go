@@ -10,9 +10,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/palantir/go-githubapp/githubapp"
 	"github.com/google/go-github/v38/github"
 	userv1 "github.com/openshift/api/user/v1"
+	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -127,7 +127,6 @@ func (g *GitHubSyncer) Bind() error {
 	var ghClient *github.Client
 	var transport *http.Transport
 
-
 	if g.Provider.Insecure == true {
 		transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -148,21 +147,19 @@ func (g *GitHubSyncer) Bind() error {
 		}
 	}
 
-	config := githubapp.Config {
+	config := githubapp.Config{
 		V3APIURL: *g.Provider.URL,
 		V4APIURL: *g.Provider.URL,
 	}
 
-	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config,
+	opts := []githubapp.ClientOption{
 		githubapp.WithClientUserAgent("redhat-cop/group-sync-operator"),
 		githubapp.WithClientCaching(true, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
-		githubapp.WithClientMiddleware(func(tripper http.RoundTripper) http.RoundTripper {
-			if transport != nil {
-				return transport
-			}
-			return tripper
-		}),
-	)
+	}
+	if transport != nil {
+		opts = append(opts, githubapp.WithTransport(transport))
+	}
+	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts)
 	if err != nil {
 		return err
 	}
@@ -170,7 +167,7 @@ func (g *GitHubSyncer) Bind() error {
 	if privateKeyFound && integrationIdFound {
 		config.App.PrivateKey = string(privateKey)
 
-		intId, err := strconv.ParseInt(string(integrationId), 10, 64 )
+		intId, err := strconv.ParseInt(string(integrationId), 10, 64)
 		if err != nil {
 			return err
 		}
