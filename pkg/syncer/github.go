@@ -159,7 +159,7 @@ func (g *GitHubSyncer) Bind() error {
 	if transport != nil {
 		opts = append(opts, githubapp.WithTransport(transport))
 	}
-	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts)
+	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
 	if err != nil {
 		return err
 	}
