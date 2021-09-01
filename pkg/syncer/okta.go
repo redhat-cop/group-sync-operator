@@ -141,7 +141,7 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 		ocpGroup := userv1.Group{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Group",
-				APIVersion: userv1.SchemeGroupVersion.String(),
+				APIVersion: userv1.GroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
 				Name:        cachedGroup.Profile.Name,

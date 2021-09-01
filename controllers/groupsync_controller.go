@@ -127,7 +127,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 				ocpGroup = &userv1.Group{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "Group",
-						APIVersion: userv1.SchemeGroupVersion.String(),
+						APIVersion: userv1.GroupVersion.String(),
 					},
 				}
 				ocpGroup.Name = group.Name
