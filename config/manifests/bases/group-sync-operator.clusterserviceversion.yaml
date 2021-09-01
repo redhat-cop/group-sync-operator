@@ -7,15 +7,20 @@ metadata:
     categories: Security
     certified: "false"
     containerImage: quay.io/redhat-cop/group-sync-operator:latest
-    createdAt: "2021-04-28T19:33:15Z"
+    createdAt: "2021-08-01T22:11:02Z"
     description: Synchronize groups and users from external providers
     operatorframework.io/cluster-monitoring: "true"
     operatorframework.io/suggested-namespace: group-sync-operator
     operators.openshift.io/infrastructure-features: '["Disconnected"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.2.0
+    operators.operatorframework.io/builder: operator-sdk-v1.9.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/redhat-cop/group-sync-operator
     support: Red Hat Community of Practice
+  labels:
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/arch.arm64: supported
+    operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/os.linux: supported
   name: group-sync-operator.v0.0.1
   namespace: placeholder
 spec:
@@ -405,6 +410,12 @@ spec:
         path: providers[0].okta.extractLoginUsername
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: GroupLimit is the maximum number of groups that can be synced.
+          Default is "1000"
+        displayName: Group Limit
+        path: providers[0].okta.groupLimit
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:number
       - description: Groups represents a filtered list of groups to synchronize
         displayName: Groups to Synchronize
         path: providers[0].okta.groups

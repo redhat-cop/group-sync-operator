@@ -492,6 +492,15 @@ It is recommended to deploy this operator via [`OperatorHub`](https://operatorhu
 
 If you want to utilize the Operator Lifecycle Manager (OLM) to install this operator, you can do so in two ways: from the UI or the CLI.
 
+### Multiarch Support
+
+| Arch  | Support  |
+|:-:|:-:|
+| amd64  | ✅ |
+| arm64  | ✅  |
+| ppc64le  | ✅  |
+| s390x  | ❌  |
+
 #### Deploying from OperatorHub UI
 
 * If you would like to launch this operator from the UI, you'll need to navigate to the OperatorHub tab in the console.

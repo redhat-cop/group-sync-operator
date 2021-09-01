@@ -8,7 +8,7 @@ image:
   repository: ${image_repo}
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ${version}
+  version: ${version}
 
 imagePullSecrets: []
 nameOverride: ""
@@ -33,9 +33,9 @@ env:
 
 kube_rbac_proxy:
   image:
-    repository: quay.io/coreos/kube-rbac-proxy
+    repository: gcr.io/kubebuilder/kube-rbac-proxy
     pullPolicy: IfNotPresent
-    tag: v0.5.0
+    version: v0.8.0
   resources:
     requests:
       cpu: 100m
