@@ -16,7 +16,7 @@ jobs:
         run: |
           DEFAULT_QUAY_REGISTRY=${{ github.repository_owner }}/$(basename $GITHUB_REPOSITORY)
           echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" |tee -a $GITHUB_ENV
-          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-DEFAULT_QUAY_REGISTRY}" |tee -a $GITHUB_ENV
+          echo "QUAY_REGISTRY=${QUAY_REGISTRY:-$DEFAULT_QUAY_REGISTRY}" |tee -a $GITHUB_ENV
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
@@ -36,15 +36,6 @@ jobs:
           mv operator-sdk_linux_amd64 ${HOME}/bin/operator-sdk 
           echo "${HOME}/bin" |tee -a $GITHUB_PATH
 
-      - name: Download compatible Helm version
-        shell: bash
-        env:
-          HELM_VERSION: v3.3.0
-        run: |
-          curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar vxz \
-              && sudo mv -v linux-amd64/helm /usr/local/bin/helm \
-              && rm -vrf linux-amd64
-
       - name: build code
         shell: bash
         run: make VERSION=latest
@@ -60,3 +51,29 @@ jobs:
       - name: build chart
         shell: bash
         run: make helmchart VERSION=0.0.1 IMG=quay.io/${QUAY_REGISTRY}:0.0.1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: "Build Operator Image"
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          push: false
+          tags: "quay.io/${{ github.repository_owner }}/${{ env.REPOSITORY_NAME }}:v0.0.1"
+
+      - name: "Build Bundle Image"
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./bundle.Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          push: false
+          tags: "quay.io/${{ github.repository_owner }}/${{ env.REPOSITORY_NAME }}-bundle:0.0.1"

@@ -538,6 +538,9 @@ spec:
                           extractLoginUsername:
                             description: ExtractLoginUsername is true if Okta username's are defaulted to emails and you would like the username only
                             type: boolean
+                          groupLimit:
+                            description: GroupLimit is the maximum number of groups that can be synced. Default is "1000"
+                            type: integer
                           groups:
                             description: Groups represents a filtered list of groups to synchronize
                             items:
@@ -549,9 +552,6 @@ spec:
                           url:
                             description: URL is the location of the Okta domain server
                             type: string
-                          groupLimit:
-                            description: The maximum number of groups that can be synced
-                            type: integer
                         required:
                           - appId
                           - credentialsSecret
