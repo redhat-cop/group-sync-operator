@@ -100,12 +100,6 @@ jobs:
         run: |
           make bundle IMG=quay.io/${QUAY_REGISTRY}:${OPERATOR_IMAGE_TAG} VERSION=${BUNDLE_VERSION} DEFAULT_CHANNEL=alpha
 
-      - name: process bundle for disconnected support
-        uses: redhat-cop/github-actions/disconnected-csv@master
-        with:
-          CSV_FILE: bundle/manifests/${{ env.REPOSITORY_NAME }}.clusterserviceversion.yaml
-          TAGS_TO_DIGESTS: ${OPERATOR_IMAGE_TAG}
-
       - name: verify bundle
         shell: bash
         run: operator-sdk bundle validate ./bundle --select-optional name=operatorhub
@@ -138,13 +132,6 @@ jobs:
           push: true
           tags: "quay.io/${{ env.QUAY_REGISTRY }}:latest,quay.io/${{ env.QUAY_REGISTRY }}:${{ env.OPERATOR_IMAGE_TAG }}"
 
-      - name: Update CSV
-        env:
-          QUAY_REGISTRY: "${{ env.QUAY_REGISTRY }}"
-          REPOSITORY_NAME: "${{ env.REPOSITORY_NAME }}"
-          OPERATOR_IMAGE_TAG: "${{ env.OPERATOR_IMAGE_TAG }}"
-        run: ./hack/update_csv.sh
-
       - name: Verify bundle after csv update
         shell: bash
         run: operator-sdk bundle validate ./bundle --select-optional name=operatorhub
@@ -161,6 +148,12 @@ jobs:
       - name: "Verify bundle image"
         shell: bash
         run: operator-sdk bundle validate quay.io/${QUAY_REGISTRY}-bundle:${BUNDLE_IMAGE_TAG} --select-optional name=operatorhub
+
+      - name: process bundle for disconnected support
+        uses: redhat-cop/github-actions/disconnected-csv@master
+        with:
+          CSV_FILE: bundle/manifests/${{ env.REPOSITORY_NAME }}.clusterserviceversion.yaml
+          TAGS_TO_DIGESTS: ${OPERATOR_IMAGE_TAG}
 
   release-helm-chart:
     name: Helm Chart Release
