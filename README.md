@@ -71,7 +71,7 @@ The following sections describe the configuration options available for each pro
 
 Groups contained within Azure Active Directory can be synchronized into OpenShift. The following table describes the set of configuration options for the Azure provider:
 
-| Name | Description | Defaults | Required | 
+| Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
 | `baseGroups` | List of groups to start searching from instead of listing all groups in the directory | | No |
 | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
@@ -123,7 +123,7 @@ oc create secret generic azure-group-sync --from-literal=AZURE_TENANT_ID=<AZURE_
 
 Teams stored within a GitHub organization can be synchronized into OpenShift. The following table describes the set of configuration options for the GitHub provider:
 
-| Name | Description | Defaults | Required | 
+| Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
 | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
@@ -145,14 +145,15 @@ spec:
   - name: github
     github:
       organization: ocp
-      credentialsSecret: 
+      credentialsSecret:
         name: github-group-sync
         namespace: group-sync-operator
 ```
 
 #### Authenticating to GitHub
 
-Authentication to GitHub can be performed using an OAuth Personal Access Token. A secret must be created in the same namespace that contains the `GroupSync` resource:
+Authentication to GitHub can be performed using an OAuth Personal Access Token or as an GithubApp, using a secret key and integrationId.
+A secret must be created in the same namespace that contains the `GroupSync` resource:
 
 When using an OAuth token, the following key is required:
 
@@ -164,11 +165,20 @@ The secret can be created by executing the following command:
 oc create secret generic github-group-sync --from-literal=token=<token>
 ```
 
+
+* `privateKey` and `integrationId`
+
+The secret can be created by executing the following command:
+
+```shell
+oc create secret generic github-group-sync --from-literal=integrationId=<theIntegrationId> --from-file=privateKey=</path/to/thefile>
+```
+
 ### GitLab
 
 Groups stored within a GitLab can be synchronized into OpenShift. The following table describes the set of configuration options for the GitLab provider:
 
-| Name | Description | Defaults | Required | 
+| Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
 | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
@@ -221,11 +231,11 @@ oc create secret generic gitlab-group-sync --from-literal=username=<username> --
 
 ### LDAP
 
-Groups stored within an [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol) server can be synchronized into OpenShift. The LDAP provider implements the included features of the [Syncing LDAP groups](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html) feature and makes use of the libraries from the [OpenShift Command Line](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html) tool to streamline the migration to this operator based implementation. 
+Groups stored within an [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol) server can be synchronized into OpenShift. The LDAP provider implements the included features of the [Syncing LDAP groups](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html) feature and makes use of the libraries from the [OpenShift Command Line](https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html) tool to streamline the migration to this operator based implementation.
 
 The configurations of the three primary schemas (`rfc2307`, `activeDirectory` and `augmentedActiveDirectory`) can be directly migrated as is without any modification.
 
-| Name | Description | Defaults | Required | 
+| Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
 | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | No |
@@ -330,7 +340,7 @@ spec:
 
 Groups stored within Keycloak can be synchronized into OpenShift. The following table describes the set of configuration options for the Keycloak provider:
 
-| Name | Description | Defaults | Required | 
+| Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
 | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
@@ -383,7 +393,7 @@ oc create secret generic keycloak-group-sync --from-literal=username=<username> 
 [Okta Groups](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) assigned to [Okta Applications](https://help.okta.com/en/prod/Content/Topics/Apps/Apps_Apps.htm) can be synchronized into OpenShift. The developer docs for the Okta API that the Okta Syncer uses can be found [here](https://developer.okta.com/docs/reference/api/apps/#list-groups-assigned-to-application).
 The following table describes the set of configuration options for the Okta provider:
 
-| Name | Description | Defaults | Required | 
+| Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | `''`  | Yes |
 | `groups` | List of groups to filter against | `nil`  | No |
