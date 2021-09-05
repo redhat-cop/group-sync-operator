@@ -65,9 +65,11 @@ func (g *GitHubSyncer) Validate() error {
 
 		// Check that provided secret contains required keys
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
+		_, privateKeyFound := credentialsSecret.Data[privateKey]
+		_, integrationIdFound := credentialsSecret.Data[integrationId]
 
-		if !tokenSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+		if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `integrationId` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
