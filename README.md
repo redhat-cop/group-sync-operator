@@ -171,7 +171,7 @@ oc create secret generic github-group-sync --from-literal=token=<token>
 #### First create a github app
 
 In GitHub, go to developer-settings -> github apps. Create a new app, it does not need webhook callbacks.
-Generate a private-key and download it, under "permissions and events" the app will need read-only access to the "Members" permission.
+Generate a private-key and download it, under "permissions and events" the app will need read-only access to the "Members" permission in the "Organization" section.
 Take note of the "App ID" as you need it for later.
 Install the app to your organization.
 
