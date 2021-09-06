@@ -156,7 +156,7 @@ func (g *GitHubSyncer) Bind() error {
 
 	opts := []githubapp.ClientOption{
 		githubapp.WithClientUserAgent("redhat-cop/group-sync-operator"),
-		githubapp.WithClientCaching(true, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
 	}
 	if transport != nil {
 		opts = append(opts, githubapp.WithTransport(transport))
