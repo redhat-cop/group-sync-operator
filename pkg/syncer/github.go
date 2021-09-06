@@ -191,9 +191,7 @@ func (g *GitHubSyncer) Bind() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	if tokenSecretFound {
+	} else if tokenSecretFound {
 		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
 		if err != nil {
 			return err
