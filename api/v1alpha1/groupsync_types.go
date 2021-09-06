@@ -207,7 +207,8 @@ type GitHubProvider struct {
 
 	// URL is the location of the GitHub server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitHub URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default="https://api.github.com/"
 	URL *string `json:"url,omitempty"`
 }
 
