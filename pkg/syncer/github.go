@@ -161,10 +161,6 @@ func (g *GitHubSyncer) Bind() error {
 	if transport != nil {
 		opts = append(opts, githubapp.WithTransport(transport))
 	}
-	clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
-	if err != nil {
-		return err
-	}
 
 	if privateKeyFound && integrationIdFound {
 		config.App.PrivateKey = string(privateKey)
@@ -174,6 +170,11 @@ func (g *GitHubSyncer) Bind() error {
 			return err
 		}
 		config.App.IntegrationID = intId
+
+		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
+		if err != nil {
+			return err
+		}
 
 		appClient, err := clientCreator.NewAppClient()
 		if err != nil {
@@ -193,6 +194,10 @@ func (g *GitHubSyncer) Bind() error {
 	}
 
 	if tokenSecretFound {
+		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
+		if err != nil {
+			return err
+		}
 		ghClient, err = clientCreator.NewTokenClient(string(tokenSecret))
 		if err != nil {
 			return err
