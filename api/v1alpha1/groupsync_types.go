@@ -234,7 +234,7 @@ type GitLabProvider struct {
 	// +kubebuilder:validation:Optional
 	Groups []string `json:"groups,omitempty"`
 
-	// URL is the location of the GitLub server
+	// URL is the location of the GitLab server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitLab URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	URL *string `json:"url,omitempty"`
