@@ -177,7 +177,7 @@ spec:
                             description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
                             type: boolean
                           url:
-                            description: URL is the location of the GitLub server
+                            description: URL is the location of the GitLab server
                             type: string
                         required:
                           - credentialsSecret
