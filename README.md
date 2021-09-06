@@ -155,6 +155,8 @@ spec:
 Authentication to GitHub can be performed using an OAuth Personal Access Token or as an GithubApp, using a secret key and integrationId.
 A secret must be created in the same namespace that contains the `GroupSync` resource:
 
+##### OAuth
+
 When using an OAuth token, the following key is required:
 
 * `token` - OAuth token
@@ -165,15 +167,20 @@ The secret can be created by executing the following command:
 oc create secret generic github-group-sync --from-literal=token=<token>
 ```
 
+##### As a GitHub app
 
+When authenticating as a Github App, the following keys are required:
 * `privateKey` and `integrationId`
 
-#### First create a github app
+
+###### First create a github app
 
 In GitHub, go to developer-settings -> github apps. Create a new app, it does not need webhook callbacks.
 Generate a private-key and download it, under "permissions and events" the app will need read-only access to the "Members" permission in the "Organization" section.
 Take note of the "App ID" as you need it for later.
 Install the app to your organization.
+
+###### Create the secret
 
 The secret can be created by executing the following command:
 
