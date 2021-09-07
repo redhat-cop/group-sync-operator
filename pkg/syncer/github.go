@@ -66,10 +66,10 @@ func (g *GitHubSyncer) Validate() error {
 		// Check that provided secret contains required keys
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 		_, privateKeyFound := credentialsSecret.Data[privateKey]
-		_, integrationIdFound := credentialsSecret.Data[integrationId]
+		_, integrationIdFound := credentialsSecret.Data[appId]
 
 		if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `integrationId` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
@@ -124,7 +124,7 @@ func (g *GitHubSyncer) Bind() error {
 
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
 	privateKey, privateKeyFound := g.CredentialsSecret.Data[privateKey]
-	integrationId, integrationIdFound := g.CredentialsSecret.Data[integrationId]
+	appId, appIdFound := g.CredentialsSecret.Data[appId]
 
 	var ghClient *github.Client
 	var transport *http.Transport
@@ -162,10 +162,10 @@ func (g *GitHubSyncer) Bind() error {
 		opts = append(opts, githubapp.WithTransport(transport))
 	}
 
-	if privateKeyFound && integrationIdFound {
+	if privateKeyFound && appIdFound {
 		config.App.PrivateKey = string(privateKey)
 
-		intId, err := strconv.ParseInt(string(integrationId), 10, 64)
+		intId, err := strconv.ParseInt(string(appId), 10, 64)
 		if err != nil {
 			return err
 		}

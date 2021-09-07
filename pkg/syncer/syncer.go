@@ -16,7 +16,7 @@ const (
 	secretPasswordKey  = "password"
 	secretTokenKey     = "token"
 	privateKey         = "privateKey"
-	integrationId      = "integrationId"
+	appId              = "appId"
 	defaultSecretCaKey = "ca.crt"
 )
 
