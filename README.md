@@ -152,7 +152,7 @@ spec:
 
 #### Authenticating to GitHub
 
-Authentication to GitHub can be performed using an OAuth Personal Access Token or as an GitHub App, using a secret key and integrationId.
+Authentication to GitHub can be performed using an OAuth Personal Access Token or as an GitHub App, using a secret key and appId.
 A secret must be created in the same namespace that contains the `GroupSync` resource:
 
 ##### OAuth
@@ -170,7 +170,7 @@ oc create secret generic github-group-sync --from-literal=token=<token>
 ##### As a GitHub app
 
 When authenticating as a Github App, the following keys are required:
-* `privateKey` and `integrationId`
+* `privateKey` and `appId`
 
 
 ###### First create a GitHub app
@@ -185,7 +185,7 @@ Install the app to your organization.
 The secret can be created by executing the following command:
 
 ```shell
-oc create secret generic github-group-sync --from-literal=integrationId=<theIntegrationId> --from-file=privateKey=</path/to/thefile>
+oc create secret generic github-group-sync --from-literal=appId=<theAppId> --from-file=privateKey=</path/to/thefile>
 ```
 
 ### GitLab
