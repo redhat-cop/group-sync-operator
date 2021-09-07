@@ -133,7 +133,7 @@ Teams stored within a GitHub organization can be synchronized into OpenShift. Th
 | `url` | Base URL for the GitHub or GitHub Enterprise host (Must contain a trailing slash) | | No |
 
 
-The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
+The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
 ```shell
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -152,7 +152,7 @@ spec:
 
 #### Authenticating to GitHub
 
-Authentication to GitHub can be performed using an OAuth Personal Access Token or as an GithubApp, using a secret key and integrationId.
+Authentication to GitHub can be performed using an OAuth Personal Access Token or as an GitHub App, using a secret key and integrationId.
 A secret must be created in the same namespace that contains the `GroupSync` resource:
 
 ##### OAuth
@@ -201,7 +201,7 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 | `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
 
 
-The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
+The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
 ```shell
 apiVersion: redhatcop.redhat.io/v1alpha1
