@@ -15,6 +15,8 @@ const (
 	secretUsernameKey  = "username"
 	secretPasswordKey  = "password"
 	secretTokenKey     = "token"
+	privateKey         = "privateKey"
+	appId              = "appId"
 	defaultSecretCaKey = "ca.crt"
 )
 

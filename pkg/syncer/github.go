@@ -5,16 +5,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/gregjones/httpcache"
 	"net/http"
 	"net/url"
 	"strconv"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v38/github"
 	userv1 "github.com/openshift/api/user/v1"
+	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +30,7 @@ var (
 
 const (
 	pageSize = 100
+	userAgent = "redhat-cop/group-sync-operator"
 )
 
 type GitHubSyncer struct {
@@ -64,9 +66,11 @@ func (g *GitHubSyncer) Validate() error {
 
 		// Check that provided secret contains required keys
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
+		_, privateKeyFound := credentialsSecret.Data[privateKey]
+		_, integrationIdFound := credentialsSecret.Data[appId]
 
-		if !tokenSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+		if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
@@ -120,9 +124,10 @@ func (g *GitHubSyncer) Validate() error {
 func (g *GitHubSyncer) Bind() error {
 
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
+	privateKey, privateKeyFound := g.CredentialsSecret.Data[privateKey]
+	appId, appIdFound := g.CredentialsSecret.Data[appId]
 
 	var ghClient *github.Client
-
 	var transport *http.Transport
 
 	if g.Provider.Insecure == true {
@@ -145,15 +150,57 @@ func (g *GitHubSyncer) Bind() error {
 		}
 	}
 
-	if tokenSecretFound {
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: string(tokenSecret)})
+	config := githubapp.Config{
+		V3APIURL: *g.Provider.URL,
+		V4APIURL: *g.Provider.URL,
+	}
 
-		if transport != nil {
-			g.Context = context.WithValue(g.Context, oauth2.HTTPClient, &http.Client{Transport: transport})
+	opts := []githubapp.ClientOption{
+		githubapp.WithClientUserAgent(userAgent),
+		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
+	}
+	if transport != nil {
+		opts = append(opts, githubapp.WithTransport(transport))
+	}
+
+	if privateKeyFound && appIdFound {
+		config.App.PrivateKey = string(privateKey)
+
+		intId, err := strconv.ParseInt(string(appId), 10, 64)
+		if err != nil {
+			return err
+		}
+		config.App.IntegrationID = intId
+
+		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
+		if err != nil {
+			return err
 		}
 
-		httpClient := oauth2.NewClient(g.Context, ts)
-		ghClient = github.NewClient(httpClient)
+		appClient, err := clientCreator.NewAppClient()
+		if err != nil {
+			return err
+		}
+
+		installService := githubapp.NewInstallationsService(appClient)
+		installation, err := installService.GetByOwner(context.Background(), g.Provider.Organization)
+		if err != nil {
+			return err
+		}
+
+		ghClient, err = clientCreator.NewInstallationClient(installation.ID)
+		if err != nil {
+			return err
+		}
+	} else if tokenSecretFound {
+		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
+		if err != nil {
+			return err
+		}
+		ghClient, err = clientCreator.NewTokenClient(string(tokenSecret))
+		if err != nil {
+			return err
+		}
 	} else {
 		return fmt.Errorf("Could not locate credentials in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace)
 	}
@@ -165,7 +212,6 @@ func (g *GitHubSyncer) Bind() error {
 	g.Client = ghClient
 
 	return nil
-
 }
 
 func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {

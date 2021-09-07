@@ -128,6 +128,7 @@ spec:
                               type: string
                             type: array
                           url:
+                            default: https://api.github.com/
                             description: URL is the location of the GitHub server
                             type: string
                         required:
@@ -177,7 +178,7 @@ spec:
                             description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
                             type: boolean
                           url:
-                            description: URL is the location of the GitLub server
+                            description: URL is the location of the GitLab server
                             type: string
                         required:
                           - credentialsSecret
