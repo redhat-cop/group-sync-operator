@@ -30,6 +30,7 @@ var (
 
 const (
 	pageSize = 100
+	userAgent = "redhat-cop/group-sync-operator"
 )
 
 type GitHubSyncer struct {
@@ -155,7 +156,7 @@ func (g *GitHubSyncer) Bind() error {
 	}
 
 	opts := []githubapp.ClientOption{
-		githubapp.WithClientUserAgent("redhat-cop/group-sync-operator"),
+		githubapp.WithClientUserAgent(userAgent),
 		githubapp.WithClientCaching(false, func() httpcache.Cache { return httpcache.NewMemoryCache() }),
 	}
 	if transport != nil {
