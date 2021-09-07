@@ -173,7 +173,7 @@ When authenticating as a Github App, the following keys are required:
 * `privateKey` and `integrationId`
 
 
-###### First create a github app
+###### First create a GitHub app
 
 In GitHub, go to developer-settings -> github apps. Create a new app, it does not need webhook callbacks.
 Generate a private-key and download it, under "permissions and events" the app will need read-only access to the "Members" permission in the "Organization" section.
