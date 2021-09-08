@@ -27,6 +27,29 @@ import (
 var (
 	gitHubLogger   = logf.Log.WithName("syncer_github")
 	defaultBaseURL = "https://api.github.com/"
+	scimQuery      struct {
+		Organization struct {
+			SamlIdentityProvider struct {
+				ExternalIdentities struct {
+					PageInfo struct {
+						HasNextPage githubv4.Boolean
+						EndCursor   githubv4.String
+					} `graphql:"pageInfo"`
+					Edges []struct {
+						Node struct {
+							SamlIdentity struct {
+								NameId   githubv4.String
+								Username githubv4.String
+							} `graphql:"samlIdentity"`
+							User struct {
+								Login githubv4.String
+							} `graphql:"user"`
+						} `graphql:"node"`
+					} `graphql:"edges"`
+				} `graphql:"externalIdentities(first: $first, after: $after)"`
+			} `graphql:"samlIdentityProvider"`
+		} `graphql:"organization(login: $organization)"`
+	}
 )
 
 const (
@@ -65,7 +88,6 @@ func (g *GitHubSyncer) Validate() error {
 	if err != nil {
 		validationErrors = append(validationErrors, err)
 	} else {
-
 		// Check that provided secret contains required keys
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 		_, privateKeyFound := credentialsSecret.Data[privateKey]
@@ -103,11 +125,9 @@ func (g *GitHubSyncer) Validate() error {
 		}
 
 		g.CaCertificate = caSecret.Data[secretCaKey]
-
 	}
 
 	if g.Provider.URL != nil {
-
 		if (*g.Provider.URL)[len(*g.Provider.URL)-1] != '/' {
 			validationErrors = append(validationErrors, fmt.Errorf("GitHub URL Must end with a slash ('/')"))
 		}
@@ -117,7 +137,6 @@ func (g *GitHubSyncer) Validate() error {
 		if err != nil {
 			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s", *g.Provider.URL))
 		}
-
 	}
 
 	return utilerrors.NewAggregate(validationErrors)
@@ -246,9 +265,9 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 		return nil, err
 	}
 
-	var userIdMap map[string]string = nil
+	var scimUserIdMap map[string]string = nil
 	if g.Provider.MapByScimId {
-		userIdMap, err = g.getScimIdentity()
+		scimUserIdMap, err = g.getScimIdentity()
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +305,7 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 		for _, teamMember := range teamMembers {
 			var userId string
 			if g.Provider.MapByScimId {
-				userId = userIdMap[*teamMember.Login]
+				userId = scimUserIdMap[*teamMember.Login]
 			} else {
 				userId = *teamMember.Login
 			}
@@ -301,51 +320,36 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 }
 
 func (g *GitHubSyncer) getScimIdentity() (map[string]string, error) {
-	var query struct {
-		Organization struct {
-			SamlIdentityProvider struct {
-				ExternalIdentities struct {
-					PageInfo struct {
-						hasNextPage githubv4.Boolean
-						endCursor   githubv4.String
-					} `graphql:"pageInfo"`
-					Edges []struct {
-						Node struct {
-							SamlIdentity struct {
-								NameId   githubv4.String
-								Username githubv4.String
-							} `graphql:"samlIdentity"`
-							User struct {
-								Login githubv4.String
-							} `graphql:"user"`
-						} `graphql:"node"`
-					} `graphql:"edges"`
-				} `graphql:"externalIdentities(first: $first, after: $after)"`
-			} `graphql:"samlIdentityProvider"`
-		} `graphql:"organization(login: $login)"`
-	}
-
+	const after = "after"
+	// query vars for graphQl
 	variables := map[string]interface{}{
-		"login": githubv4.String(g.Provider.Organization),
-		"first": githubv4.Int(pageSize),
-		"after": (*githubv4.String)(nil),
-	}
-
-	err := g.V4Client.Query(g.Context, &query, variables)
-	if err != nil {
-		return nil, err
+		"organization": githubv4.String(g.Provider.Organization),
+		"first":        githubv4.Int(pageSize),
+		after:          (*githubv4.String)(nil),
 	}
 
 	userMap := make(map[string]string)
-	for _, v := range query.Organization.SamlIdentityProvider.ExternalIdentities.Edges {
-		userMap[string(v.Node.User.Login)] = string(v.Node.SamlIdentity.Username)
+	for { // while
+		err := g.V4Client.Query(g.Context, &scimQuery, variables)
+		if err != nil {
+			return nil, err
+		}
+
+		// map from loginId -> SCIM/SAML Id
+		for _, v := range scimQuery.Organization.SamlIdentityProvider.ExternalIdentities.Edges {
+			userMap[string(v.Node.User.Login)] = string(v.Node.SamlIdentity.Username)
+		}
+		if !scimQuery.Organization.SamlIdentityProvider.ExternalIdentities.PageInfo.HasNextPage {
+			break
+		}
+		variables[after] = scimQuery.Organization.SamlIdentityProvider.ExternalIdentities.PageInfo.EndCursor
 	}
 
 	return userMap, nil
 }
 
 func (g *GitHubSyncer) getOrganizationTeams() ([]*github.Team, error) {
-	opts := &github.ListOptions{PerPage: 100}
+	opts := &github.ListOptions{PerPage: pageSize}
 	var allTeams []*github.Team
 
 	for {
@@ -374,7 +378,7 @@ func (g *GitHubSyncer) listTeamMembers(teamID *int64, organizationID *int64) ([]
 	teamUsers := []*github.User{}
 
 	opts := github.TeamListTeamMembersOptions{
-		ListOptions: github.ListOptions{PerPage: 100},
+		ListOptions: github.ListOptions{PerPage: pageSize},
 	}
 
 	for {
