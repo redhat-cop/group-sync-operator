@@ -195,7 +195,6 @@ func (g *GitHubSyncer) Bind() error {
 			return err
 		}
 
-
 		g.V4Client, err = clientCreator.NewInstallationV4Client(installation.ID)
 		if err != nil {
 			return err
