@@ -154,7 +154,7 @@ func (g *GitHubSyncer) Bind() error {
 
 	config := githubapp.Config{
 		V3APIURL: *g.Provider.URL,
-		V4APIURL: *g.Provider.URL,
+		V4APIURL: *g.Provider.URL + "graphql",
 	}
 
 	opts := []githubapp.ClientOption{
@@ -185,7 +185,7 @@ func (g *GitHubSyncer) Bind() error {
 		}
 
 		installService := githubapp.NewInstallationsService(appClient)
-		installation, err := installService.GetByOwner(context.Background(), g.Provider.Organization)
+		installation, err := installService.GetByOwner(g.Context, g.Provider.Organization)
 		if err != nil {
 			return err
 		}
@@ -194,6 +194,7 @@ func (g *GitHubSyncer) Bind() error {
 		if err != nil {
 			return err
 		}
+
 
 		g.V4Client, err = clientCreator.NewInstallationV4Client(installation.ID)
 		if err != nil {
@@ -308,6 +309,10 @@ func (g *GitHubSyncer) getScimIdentity() (map[string]string, error) {
 		Organization struct {
 			SamlIdentityProvider struct {
 				ExternalIdentities struct {
+					PageInfo struct {
+						hasNextPage githubv4.Boolean
+						endCursor   githubv4.String
+					} `graphql:"pageInfo"`
 					Edges []struct {
 						Node struct {
 							SamlIdentity struct {
@@ -319,17 +324,15 @@ func (g *GitHubSyncer) getScimIdentity() (map[string]string, error) {
 							} `graphql:"user"`
 						} `graphql:"node"`
 					} `graphql:"edges"`
-					PageInfo struct {
-						hasNextPage githubv4.Boolean
-						endCursor   githubv4.String
-					} `graphql:"pageInfo"`
 				} `graphql:"externalIdentities(first: $first, after: $after)"`
 			} `graphql:"samlIdentityProvider"`
-		} `graphql:"organization($login)"`
+		} `graphql:"organization(login: $login)"`
 	}
 
 	variables := map[string]interface{}{
 		"login": githubv4.String(g.Provider.Organization),
+		"first": githubv4.Int(pageSize),
+		"after": (*githubv4.String)(nil),
 	}
 
 	err := g.V4Client.Query(context.Background(), &query, variables)
