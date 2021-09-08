@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/gregjones/httpcache"
+	"github.com/shurcooL/githubv4"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -29,7 +30,7 @@ var (
 )
 
 const (
-	pageSize = 100
+	pageSize  = 100
 	userAgent = "redhat-cop/group-sync-operator"
 )
 
@@ -38,6 +39,7 @@ type GitHubSyncer struct {
 	GroupSync         *redhatcopv1alpha1.GroupSync
 	Provider          *redhatcopv1alpha1.GitHubProvider
 	Client            *github.Client
+	V4Client          *githubv4.Client
 	Context           context.Context
 	ReconcilerBase    util.ReconcilerBase
 	CredentialsSecret *corev1.Secret
@@ -192,12 +194,23 @@ func (g *GitHubSyncer) Bind() error {
 		if err != nil {
 			return err
 		}
+
+		g.V4Client, err = clientCreator.NewInstallationV4Client(installation.ID)
+		if err != nil {
+			return err
+		}
+
 	} else if tokenSecretFound {
 		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
 		if err != nil {
 			return err
 		}
 		ghClient, err = clientCreator.NewTokenClient(string(tokenSecret))
+		if err != nil {
+			return err
+		}
+
+		g.V4Client, err = clientCreator.NewTokenV4Client(string(tokenSecret))
 		if err != nil {
 			return err
 		}
@@ -216,6 +229,9 @@ func (g *GitHubSyncer) Bind() error {
 
 func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 
+	// TODO put into CR
+	mapUserByScim := true
+
 	ocpGroups := []userv1.Group{}
 
 	organization, _, err := g.Client.Organizations.Get(g.Context, g.Provider.Organization)
@@ -231,6 +247,14 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 	if err != nil {
 		gitHubLogger.Error(err, "Failed to get Teams", "Provider", g.Name)
 		return nil, err
+	}
+
+	var userIdMap map[string]string = nil
+	if mapUserByScim {
+		userIdMap, err = g.getScimIdentity()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for _, team := range teams {
@@ -263,14 +287,62 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 		}
 
 		for _, teamMember := range teamMembers {
-			ocpGroup.Users = append(ocpGroup.Users, *teamMember.Login)
+			var userId string
+			if mapUserByScim {
+				userId = userIdMap[*teamMember.Login]
+			} else {
+				userId = *teamMember.Login
+			}
+
+			ocpGroup.Users = append(ocpGroup.Users, userId)
 		}
 
 		ocpGroups = append(ocpGroups, ocpGroup)
-
 	}
 
 	return ocpGroups, nil
+}
+
+func (g *GitHubSyncer) getScimIdentity() (map[string]string, error) {
+	var query struct {
+		Organization struct {
+			SamlIdentityProvider struct {
+				ExternalIdentities struct {
+					Edges []struct {
+						Node struct {
+							SamlIdentity struct {
+								NameId   githubv4.String
+								Username githubv4.String
+							} `graphql:"samlIdentity"`
+							User struct {
+								Login githubv4.String
+							} `graphql:"user"`
+						} `graphql:"node"`
+					} `graphql:"edges"`
+					PageInfo struct {
+						hasNextPage githubv4.Boolean
+						endCursor   githubv4.String
+					} `graphql:"pageInfo"`
+				} `graphql:"externalIdentities(first: $first, after: $after)"`
+			} `graphql:"samlIdentityProvider"`
+		} `graphql:"organization($login)"`
+	}
+
+	variables := map[string]interface{}{
+		"login": githubv4.String(g.Provider.Organization),
+	}
+
+	err := g.V4Client.Query(context.Background(), &query, variables)
+	if err != nil {
+		return nil, err
+	}
+
+	userMap := make(map[string]string)
+	for _, v := range query.Organization.SamlIdentityProvider.ExternalIdentities.Edges {
+		userMap[string(v.Node.User.Login)] = string(v.Node.SamlIdentity.Username)
+	}
+
+	return userMap, nil
 }
 
 func (g *GitHubSyncer) getOrganizationTeams() ([]*github.Team, error) {
