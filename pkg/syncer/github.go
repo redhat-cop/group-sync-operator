@@ -230,9 +230,6 @@ func (g *GitHubSyncer) Bind() error {
 
 func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 
-	// TODO put into CR
-	mapUserByScim := true
-
 	ocpGroups := []userv1.Group{}
 
 	organization, _, err := g.Client.Organizations.Get(g.Context, g.Provider.Organization)
@@ -251,7 +248,7 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 	}
 
 	var userIdMap map[string]string = nil
-	if mapUserByScim {
+	if g.Provider.MapByScimId {
 		userIdMap, err = g.getScimIdentity()
 		if err != nil {
 			return nil, err
@@ -289,7 +286,7 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 
 		for _, teamMember := range teamMembers {
 			var userId string
-			if mapUserByScim {
+			if g.Provider.MapByScimId {
 				userId = userIdMap[*teamMember.Login]
 			} else {
 				userId = *teamMember.Login
