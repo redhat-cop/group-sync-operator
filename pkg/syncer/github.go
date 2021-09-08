@@ -60,7 +60,7 @@ func (g *GitHubSyncer) Validate() error {
 	validationErrors := []error{}
 
 	credentialsSecret := &corev1.Secret{}
-	err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+	err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
@@ -84,7 +84,7 @@ func (g *GitHubSyncer) Validate() error {
 
 	if g.Provider.CaSecret != nil {
 		caSecret := &corev1.Secret{}
-		err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
+		err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
@@ -331,7 +331,7 @@ func (g *GitHubSyncer) getScimIdentity() (map[string]string, error) {
 		"after": (*githubv4.String)(nil),
 	}
 
-	err := g.V4Client.Query(context.Background(), &query, variables)
+	err := g.V4Client.Query(g.Context, &query, variables)
 	if err != nil {
 		return nil, err
 	}
