@@ -173,7 +173,7 @@ func (g *GitHubSyncer) Bind() error {
 
 	config := githubapp.Config{
 		V3APIURL: *g.Provider.URL,
-		V4APIURL: *g.Provider.URL + "graphql",
+		V4APIURL: *g.Provider.V4URL,
 	}
 
 	opts := []githubapp.ClientOption{

@@ -134,6 +134,10 @@ spec:
                             default: https://api.github.com/
                             description: URL is the location of the GitHub server
                             type: string
+                          v4url:
+                            default: https://api.github.com/graphql
+                            description: V4URL is the location of the GitHub server graphql endpoint.
+                            type: string
                         required:
                           - credentialsSecret
                         type: object
