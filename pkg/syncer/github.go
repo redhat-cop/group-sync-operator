@@ -29,7 +29,7 @@ var (
 )
 
 const (
-	pageSize = 100
+	pageSize  = 100
 	userAgent = "redhat-cop/group-sync-operator"
 )
 
