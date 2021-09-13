@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/google/go-github/v38/github"
+	"github.com/google/go-github/v39/github"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
