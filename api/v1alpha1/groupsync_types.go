@@ -205,11 +205,22 @@ type GitHubProvider struct {
 	// +kubebuilder:validation:Optional
 	Teams []string `json:"teams,omitempty"`
 
+	// Map users by SCIM Id. This will usually match your IDP id, like UPN when using AAD.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Map users by SCIM-ID",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	MapByScimId bool `json:"mapByScimId,omitempty"`
+
 	// URL is the location of the GitHub server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitHub URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default="https://api.github.com/"
 	URL *string `json:"url,omitempty"`
+
+	// V4URL is the location of the GitHub server graphql endpoint.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitHub v4URL (graphql)",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="https://api.github.com/graphql"
+	V4URL *string `json:"v4url,omitempty"`
 }
 
 // GitLabProvider represents integration with GitLab

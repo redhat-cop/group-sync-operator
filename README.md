@@ -178,7 +178,7 @@ When authenticating as a Github App, the following keys are required:
 In GitHub, go to developer-settings -> github apps.
 * Create a new app, it does not need webhook callbacks.
 * Generate a private-key and download it
-* Under "permissions and events" the app will need read-only access to the "Members" permission in the "Organization" section.
+* Under "permissions and events", the app will need read-only access to the "Members" permission in the "Organization" section. NOTE: If you enable `mapByScimId`, this permissions needs to be _Read & Write_, though the operator only does read-only operations. The reason for this is the use of the v4 graphql api-endpoint.
 * Take note of the "App ID" as you need it for later.
 * Install the app to your organization.
 

@@ -6,11 +6,12 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/gregjones/httpcache"
+	"github.com/shurcooL/githubv4"
 	"net/http"
 	"net/url"
 	"strconv"
 
-	"github.com/google/go-github/v38/github"
+	"github.com/google/go-github/v39/github"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
@@ -26,10 +27,33 @@ import (
 var (
 	gitHubLogger   = logf.Log.WithName("syncer_github")
 	defaultBaseURL = "https://api.github.com/"
+	scimQuery      struct {
+		Organization struct {
+			SamlIdentityProvider struct {
+				ExternalIdentities struct {
+					PageInfo struct {
+						HasNextPage githubv4.Boolean
+						EndCursor   githubv4.String
+					} `graphql:"pageInfo"`
+					Edges []struct {
+						Node struct {
+							SamlIdentity struct {
+								NameId   githubv4.String
+								Username githubv4.String
+							} `graphql:"samlIdentity"`
+							User struct {
+								Login githubv4.String
+							} `graphql:"user"`
+						} `graphql:"node"`
+					} `graphql:"edges"`
+				} `graphql:"externalIdentities(first: $first, after: $after)"`
+			} `graphql:"samlIdentityProvider"`
+		} `graphql:"organization(login: $organization)"`
+	}
 )
 
 const (
-	pageSize = 100
+	pageSize  = 100
 	userAgent = "redhat-cop/group-sync-operator"
 )
 
@@ -38,6 +62,7 @@ type GitHubSyncer struct {
 	GroupSync         *redhatcopv1alpha1.GroupSync
 	Provider          *redhatcopv1alpha1.GitHubProvider
 	Client            *github.Client
+	V4Client          *githubv4.Client
 	Context           context.Context
 	ReconcilerBase    util.ReconcilerBase
 	CredentialsSecret *corev1.Secret
@@ -58,12 +83,11 @@ func (g *GitHubSyncer) Validate() error {
 	validationErrors := []error{}
 
 	credentialsSecret := &corev1.Secret{}
-	err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+	err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 	if err != nil {
 		validationErrors = append(validationErrors, err)
 	} else {
-
 		// Check that provided secret contains required keys
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 		_, privateKeyFound := credentialsSecret.Data[privateKey]
@@ -82,7 +106,7 @@ func (g *GitHubSyncer) Validate() error {
 
 	if g.Provider.CaSecret != nil {
 		caSecret := &corev1.Secret{}
-		err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
+		err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
@@ -101,11 +125,9 @@ func (g *GitHubSyncer) Validate() error {
 		}
 
 		g.CaCertificate = caSecret.Data[secretCaKey]
-
 	}
 
 	if g.Provider.URL != nil {
-
 		if (*g.Provider.URL)[len(*g.Provider.URL)-1] != '/' {
 			validationErrors = append(validationErrors, fmt.Errorf("GitHub URL Must end with a slash ('/')"))
 		}
@@ -115,7 +137,6 @@ func (g *GitHubSyncer) Validate() error {
 		if err != nil {
 			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s", *g.Provider.URL))
 		}
-
 	}
 
 	return utilerrors.NewAggregate(validationErrors)
@@ -152,7 +173,7 @@ func (g *GitHubSyncer) Bind() error {
 
 	config := githubapp.Config{
 		V3APIURL: *g.Provider.URL,
-		V4APIURL: *g.Provider.URL,
+		V4APIURL: *g.Provider.V4URL,
 	}
 
 	opts := []githubapp.ClientOption{
@@ -183,7 +204,7 @@ func (g *GitHubSyncer) Bind() error {
 		}
 
 		installService := githubapp.NewInstallationsService(appClient)
-		installation, err := installService.GetByOwner(context.Background(), g.Provider.Organization)
+		installation, err := installService.GetByOwner(g.Context, g.Provider.Organization)
 		if err != nil {
 			return err
 		}
@@ -192,12 +213,23 @@ func (g *GitHubSyncer) Bind() error {
 		if err != nil {
 			return err
 		}
+
+		g.V4Client, err = clientCreator.NewInstallationV4Client(installation.ID)
+		if err != nil {
+			return err
+		}
+
 	} else if tokenSecretFound {
 		clientCreator, err := githubapp.NewDefaultCachingClientCreator(config, opts...)
 		if err != nil {
 			return err
 		}
 		ghClient, err = clientCreator.NewTokenClient(string(tokenSecret))
+		if err != nil {
+			return err
+		}
+
+		g.V4Client, err = clientCreator.NewTokenV4Client(string(tokenSecret))
 		if err != nil {
 			return err
 		}
@@ -233,6 +265,14 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 		return nil, err
 	}
 
+	var scimUserIdMap map[string]string = nil
+	if g.Provider.MapByScimId {
+		scimUserIdMap, err = g.getScimIdentity()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	for _, team := range teams {
 		if !isGroupAllowed(*team.Name, g.Provider.Teams) {
 			continue
@@ -263,18 +303,53 @@ func (g *GitHubSyncer) Sync() ([]userv1.Group, error) {
 		}
 
 		for _, teamMember := range teamMembers {
-			ocpGroup.Users = append(ocpGroup.Users, *teamMember.Login)
+			var userId string
+			if g.Provider.MapByScimId {
+				userId = scimUserIdMap[*teamMember.Login]
+			} else {
+				userId = *teamMember.Login
+			}
+
+			ocpGroup.Users = append(ocpGroup.Users, userId)
 		}
 
 		ocpGroups = append(ocpGroups, ocpGroup)
-
 	}
 
 	return ocpGroups, nil
 }
 
+func (g *GitHubSyncer) getScimIdentity() (map[string]string, error) {
+	const after = "after"
+	// query vars for graphQl
+	variables := map[string]interface{}{
+		"organization": githubv4.String(g.Provider.Organization),
+		"first":        githubv4.Int(pageSize),
+		after:          (*githubv4.String)(nil),
+	}
+
+	userMap := make(map[string]string)
+	for { // while
+		err := g.V4Client.Query(g.Context, &scimQuery, variables)
+		if err != nil {
+			return nil, err
+		}
+
+		// map from loginId -> SCIM/SAML Id
+		for _, v := range scimQuery.Organization.SamlIdentityProvider.ExternalIdentities.Edges {
+			userMap[string(v.Node.User.Login)] = string(v.Node.SamlIdentity.Username)
+		}
+		if !scimQuery.Organization.SamlIdentityProvider.ExternalIdentities.PageInfo.HasNextPage {
+			break
+		}
+		variables[after] = scimQuery.Organization.SamlIdentityProvider.ExternalIdentities.PageInfo.EndCursor
+	}
+
+	return userMap, nil
+}
+
 func (g *GitHubSyncer) getOrganizationTeams() ([]*github.Team, error) {
-	opts := &github.ListOptions{PerPage: 100}
+	opts := &github.ListOptions{PerPage: pageSize}
 	var allTeams []*github.Team
 
 	for {
@@ -303,7 +378,7 @@ func (g *GitHubSyncer) listTeamMembers(teamID *int64, organizationID *int64) ([]
 	teamUsers := []*github.User{}
 
 	opts := github.TeamListTeamMembersOptions{
-		ListOptions: github.ListOptions{PerPage: 100},
+		ListOptions: github.ListOptions{PerPage: pageSize},
 	}
 
 	for {

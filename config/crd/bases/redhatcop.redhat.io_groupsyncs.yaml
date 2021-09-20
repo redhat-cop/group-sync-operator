@@ -119,6 +119,9 @@ spec:
                           insecure:
                             description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitHab
                             type: boolean
+                          mapByScimId:
+                            description: Map users by SCIM Id. This will usually match your IDP id, like UPN when using AAD.
+                            type: boolean
                           organization:
                             description: Organization represents the location to source teams to synchronize
                             type: string
@@ -130,6 +133,10 @@ spec:
                           url:
                             default: https://api.github.com/
                             description: URL is the location of the GitHub server
+                            type: string
+                          v4url:
+                            default: https://api.github.com/graphql
+                            description: V4URL is the location of the GitHub server graphql endpoint.
                             type: string
                         required:
                           - credentialsSecret
