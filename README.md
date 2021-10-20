@@ -8,7 +8,7 @@ Synchronizes groups from external providers into OpenShift
 
 ## Overview
 
-The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, the functionality that is included in OpenShift to limited to synchronizing LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
+The OpenShift Container Platform contains functionality to synchronize groups found in external identity providers into the platform. Currently, the functionality that is included in OpenShift is limited to synchronizing LDAP only. This operator is designed to integrate with external providers in order to provide new solutions.
 
 Group Synchronization is facilitated by creating a `GroupSync` resource. The following describes the high level schema for this resource:
 
