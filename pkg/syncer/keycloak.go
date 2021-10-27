@@ -3,6 +3,7 @@ package syncer
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -30,6 +31,8 @@ var (
 	keycloakLogger = logf.Log.WithName("syncer_keycloak")
 	truthy         = true
 	iterationMax   = 100
+
+	errGroupNameContainsSeparator = errors.New("group name contains separator")
 )
 
 type KeycloakSyncer struct {
@@ -174,7 +177,7 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 	for _, group := range groups {
 
 		if _, groupFound := k.CachedGroups[*group.ID]; !groupFound {
-			k.processGroupsAndMembers(group, nil, k.Provider.Scope)
+			k.processGroupsAndMembers(group, nil, k.Provider.Scope, k.Provider.SubGroupProcessing, k.Provider.SubJoinSeparator)
 		}
 	}
 
@@ -241,6 +244,22 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			ocpGroup.GetAnnotations()[constants.HierarchyParents] = strings.Join(parentGroups, ",")
 		}
 
+		if redhatcopv1alpha1.JoinSubGroupProcessing == k.Provider.SubGroupProcessing {
+			candidates := make([]*gocloak.Group, 0, len(k.CachedGroups))
+			for _, group := range k.CachedGroups {
+				candidates = append(candidates, group)
+			}
+			parents := findAllParentGroups(cachedGroup, candidates)
+
+			path := make([]string, 0, len(parents)+1)
+			for _, parent := range parents {
+				path = append(path, *parent.Name)
+			}
+			path = append(path, *cachedGroup.Name)
+
+			ocpGroup.Name = strings.Join(path, k.Provider.SubJoinSeparator)
+		}
+
 		for _, user := range k.CachedGroupMembers[*cachedGroup.ID] {
 			ocpGroup.Users = append(ocpGroup.Users, *user.Username)
 		}
@@ -252,10 +271,22 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 	return ocpGroups, nil
 }
 
-func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Group, scope redhatcopv1alpha1.SyncScope) error {
+func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Group, scope redhatcopv1alpha1.SyncScope, subGroupProcessing redhatcopv1alpha1.SubGroupProcessing, subJoinSeparator string) error {
 
 	if parentGroup == nil && !isGroupAllowed(*group.Name, k.Provider.Groups) {
 		return nil
+	}
+
+	if redhatcopv1alpha1.JoinSubGroupProcessing == subGroupProcessing &&
+		subJoinSeparator != "" &&
+		strings.Contains(*group.Name, subJoinSeparator) {
+		keycloakLogger.Error(
+			errGroupNameContainsSeparator,
+			"error processing group",
+			"group", *group.Name,
+			"separator", subJoinSeparator,
+		)
+		return errGroupNameContainsSeparator
 	}
 
 	k.CachedGroups[*group.ID] = group
@@ -269,7 +300,7 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 	k.CachedGroupMembers[*group.ID] = groupMembers
 
 	// Add Group Members to Primary Group
-	if parentGroup != nil {
+	if parentGroup != nil && redhatcopv1alpha1.JoinSubGroupProcessing != subGroupProcessing {
 		usersToAdd, _ := k.diff(groupMembers, k.CachedGroupMembers[*parentGroup.ID])
 		k.CachedGroupMembers[*parentGroup.ID] = append(k.CachedGroupMembers[*parentGroup.ID], usersToAdd...)
 	}
@@ -278,7 +309,7 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 	if redhatcopv1alpha1.SubSyncScope == scope {
 		for _, subGroup := range group.SubGroups {
 			if _, subGroupFound := k.CachedGroups[*subGroup.ID]; !subGroupFound {
-				k.processGroupsAndMembers(subGroup, group, scope)
+				k.processGroupsAndMembers(subGroup, group, scope, subGroupProcessing, subJoinSeparator)
 			}
 		}
 	}
@@ -364,4 +395,36 @@ func (k *KeycloakSyncer) getGroupMembers(groupId string) ([]*gocloak.User, error
 
 func (k *KeycloakSyncer) GetProviderName() string {
 	return k.Name
+}
+
+func findParentGroup(group *gocloak.Group, candidates []*gocloak.Group) *gocloak.Group {
+	for _, candidate := range candidates {
+		for _, subgroup := range candidate.SubGroups {
+			if *subgroup.ID == *group.ID {
+				return candidate
+			}
+		}
+	}
+
+	return nil
+}
+
+func findAllParentGroups(group *gocloak.Group, candidates []*gocloak.Group) []*gocloak.Group {
+	parents := []*gocloak.Group{}
+
+	for {
+		parent := findParentGroup(group, candidates)
+		if parent == nil {
+			break
+		}
+
+		parents = append(parents, parent)
+		group = parent
+	}
+
+	for l, r := 0, len(parents)-1; l < r; l, r = l+1, r-1 {
+		parents[l], parents[r] = parents[r], parents[l]
+	}
+
+	return parents
 }
