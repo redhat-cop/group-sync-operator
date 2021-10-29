@@ -246,7 +246,7 @@ spec:
                               - sub
                             type: string
                           subGroupProcessing:
-                            description: SubGroupProcessing controlls how sub groups are processed. Flat flattens the groups and is the default. Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "purple-bat", "staff". Join joins the group names with a configurable separator. Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "hidden-fox/staff", "purple-bat", "purple-bat/staff".
+                            description: SubGroupProcessing controls how sub groups are processed. Flat flattens the groups and is the default. Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "purple-bat", "staff". Join joins the group names with a configurable separator. Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "hidden-fox/staff", "purple-bat", "purple-bat/staff".
                             enum:
                               - flat
                               - join

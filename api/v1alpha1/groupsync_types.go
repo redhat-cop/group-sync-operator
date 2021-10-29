@@ -177,7 +177,7 @@ type KeycloakProvider struct {
 	// +kubebuilder:validation:Enum=one;sub
 	Scope SyncScope `json:"scope,omitempty"`
 
-	// SubGroupProcessing controlls how sub groups are processed.
+	// SubGroupProcessing controls how sub groups are processed.
 	// Flat flattens the groups and is the default.
 	// Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "purple-bat", "staff".
 	// Join joins the group names with a configurable separator.
