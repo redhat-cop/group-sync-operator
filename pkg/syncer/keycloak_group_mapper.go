@@ -15,10 +15,10 @@ import (
 type KeycloakGroupMapper struct {
 	GetGroupMembers func(groupID string) ([]*gocloak.User, error)
 
-	AllowedGroups      []string
-	Scope              redhatcopv1alpha1.SyncScope
-	SubGroupProcessing redhatcopv1alpha1.SubGroupProcessing
-	SubJoinSeparator   string
+	AllowedGroups         []string
+	Scope                 redhatcopv1alpha1.SyncScope
+	SubGroupProcessing    redhatcopv1alpha1.SubGroupProcessing
+	SubGroupJoinSeparator string
 
 	cachedGroups       map[string]*gocloak.Group
 	cachedGroupMembers map[string][]*gocloak.User
@@ -31,7 +31,7 @@ func (k *KeycloakGroupMapper) Map(groups []*gocloak.Group) ([]userv1.Group, erro
 	for _, group := range groups {
 
 		if _, groupFound := k.cachedGroups[*group.ID]; !groupFound {
-			k.processGroupsAndMembers(group, nil, k.Scope, k.SubGroupProcessing, k.SubJoinSeparator)
+			k.processGroupsAndMembers(group, nil, k.Scope, k.SubGroupProcessing, k.SubGroupJoinSeparator)
 		}
 	}
 
@@ -102,26 +102,26 @@ func (k *KeycloakGroupMapper) Map(groups []*gocloak.Group) ([]userv1.Group, erro
 	return ocpGroups, nil
 }
 
-func (k *KeycloakGroupMapper) processGroupsAndMembers(group, parentGroup *gocloak.Group, scope redhatcopv1alpha1.SyncScope, subGroupProcessing redhatcopv1alpha1.SubGroupProcessing, subJoinSeparator string) error {
+func (k *KeycloakGroupMapper) processGroupsAndMembers(group, parentGroup *gocloak.Group, scope redhatcopv1alpha1.SyncScope, subGroupProcessing redhatcopv1alpha1.SubGroupProcessing, subGroupJoinSeparator string) error {
 
 	if parentGroup == nil && !isGroupAllowed(*group.Name, k.AllowedGroups) {
 		return nil
 	}
 
 	if redhatcopv1alpha1.JoinSubGroupProcessing == subGroupProcessing &&
-		subJoinSeparator != "" &&
-		strings.Contains(*group.Name, subJoinSeparator) {
+		subGroupJoinSeparator != "" &&
+		strings.Contains(*group.Name, subGroupJoinSeparator) {
 		keycloakLogger.Error(
 			errGroupNameContainsSeparator,
 			"error processing group",
 			"group", *group.Name,
-			"separator", subJoinSeparator,
+			"separator", subGroupJoinSeparator,
 		)
 		return errGroupNameContainsSeparator
 	}
 
 	if parentGroup != nil && redhatcopv1alpha1.JoinSubGroupProcessing == k.SubGroupProcessing {
-		name := *parentGroup.Name + subJoinSeparator + *group.Name
+		name := *parentGroup.Name + subGroupJoinSeparator + *group.Name
 		group.Name = &name
 	}
 
@@ -145,7 +145,7 @@ func (k *KeycloakGroupMapper) processGroupsAndMembers(group, parentGroup *gocloa
 	if redhatcopv1alpha1.SubSyncScope == scope {
 		for _, subGroup := range group.SubGroups {
 			if _, subGroupFound := k.cachedGroups[*subGroup.ID]; !subGroupFound {
-				k.processGroupsAndMembers(subGroup, group, scope, subGroupProcessing, subJoinSeparator)
+				k.processGroupsAndMembers(subGroup, group, scope, subGroupProcessing, subGroupJoinSeparator)
 			}
 		}
 	}

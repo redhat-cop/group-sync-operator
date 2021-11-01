@@ -187,10 +187,10 @@ type KeycloakProvider struct {
 	// +kubebuilder:validation:Enum=flat;join
 	SubGroupProcessing SubGroupProcessing `json:"subGroupProcessing,omitempty"`
 
-	// SubJoinSeparator represents the separator to join group names if subGroupProcessing is set to join
+	// SubGroupJoinSeparator represents the separator to join group names if subGroupProcessing is set to join
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Scope represents the separator to join group names if scope is set to join"
 	// +kubebuilder:validation:Optional
-	SubJoinSeparator string `json:"subJoinSeparator,omitempty"`
+	SubGroupJoinSeparator string `json:"subGroupJoinSeparator,omitempty"`
 
 	// URL is the location of the Keycloak server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Keycloak URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}

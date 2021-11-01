@@ -179,10 +179,10 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 	mapper := KeycloakGroupMapper{
 		GetGroupMembers: k.getGroupMembers,
 
-		AllowedGroups:      k.Provider.Groups,
-		Scope:              k.Provider.Scope,
-		SubGroupProcessing: k.Provider.SubGroupProcessing,
-		SubJoinSeparator:   k.Provider.SubJoinSeparator,
+		AllowedGroups:         k.Provider.Groups,
+		Scope:                 k.Provider.Scope,
+		SubGroupProcessing:    k.Provider.SubGroupProcessing,
+		SubGroupJoinSeparator: k.Provider.SubGroupJoinSeparator,
 	}
 
 	ocpGroups, err := mapper.Map(groups)

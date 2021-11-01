@@ -78,9 +78,9 @@ func Test_KeycloakGroupMapper_Map_ScopeSub_JoinSubGroupProcessing(t *testing.T) 
 	mapper := KeycloakGroupMapper{
 		GetGroupMembers: getGroupMembersFunc(groupHierarchyUsers),
 
-		Scope:              redhatcopv1alpha1.SubSyncScope,
-		SubGroupProcessing: redhatcopv1alpha1.JoinSubGroupProcessing,
-		SubJoinSeparator:   ":",
+		Scope:                 redhatcopv1alpha1.SubSyncScope,
+		SubGroupProcessing:    redhatcopv1alpha1.JoinSubGroupProcessing,
+		SubGroupJoinSeparator: ":",
 	}
 
 	mapped, err := mapper.Map(groups)
@@ -104,9 +104,9 @@ func Test_KeycloakGroupMapper_Map_ScopeSub_JoinSubGroupProcessing_IgnoreGroupsWi
 	mapper := KeycloakGroupMapper{
 		GetGroupMembers: noopGetGroupMembersFunc,
 
-		Scope:              redhatcopv1alpha1.SubSyncScope,
-		SubGroupProcessing: redhatcopv1alpha1.JoinSubGroupProcessing,
-		SubJoinSeparator:   ":",
+		Scope:                 redhatcopv1alpha1.SubSyncScope,
+		SubGroupProcessing:    redhatcopv1alpha1.JoinSubGroupProcessing,
+		SubGroupJoinSeparator: ":",
 	}
 
 	mapped, err := mapper.Map(groups)
