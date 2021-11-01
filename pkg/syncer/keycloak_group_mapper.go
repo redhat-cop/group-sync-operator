@@ -91,22 +91,6 @@ func (k *KeycloakGroupMapper) Map(groups []*gocloak.Group) ([]userv1.Group, erro
 			ocpGroup.GetAnnotations()[constants.HierarchyParents] = strings.Join(parentGroups, ",")
 		}
 
-		if redhatcopv1alpha1.JoinSubGroupProcessing == k.SubGroupProcessing {
-			candidates := make([]*gocloak.Group, 0, len(k.cachedGroups))
-			for _, group := range k.cachedGroups {
-				candidates = append(candidates, group)
-			}
-			parents := findAllParentGroups(cachedGroup, candidates)
-
-			path := make([]string, 0, len(parents)+1)
-			for _, parent := range parents {
-				path = append(path, *parent.Name)
-			}
-			path = append(path, *cachedGroup.Name)
-
-			ocpGroup.Name = strings.Join(path, k.SubJoinSeparator)
-		}
-
 		for _, user := range k.cachedGroupMembers[*cachedGroup.ID] {
 			ocpGroup.Users = append(ocpGroup.Users, *user.Username)
 		}
@@ -134,6 +118,11 @@ func (k *KeycloakGroupMapper) processGroupsAndMembers(group, parentGroup *gocloa
 			"separator", subJoinSeparator,
 		)
 		return errGroupNameContainsSeparator
+	}
+
+	if parentGroup != nil && redhatcopv1alpha1.JoinSubGroupProcessing == k.SubGroupProcessing {
+		name := *parentGroup.Name + subJoinSeparator + *group.Name
+		group.Name = &name
 	}
 
 	k.cachedGroups[*group.ID] = group
@@ -184,36 +173,4 @@ func (k *KeycloakGroupMapper) singleDiff(lhsSlice, rhsSlice []*gocloak.User) (lh
 	}
 
 	return lhsOnly
-}
-
-func findParentGroup(group *gocloak.Group, candidates []*gocloak.Group) *gocloak.Group {
-	for _, candidate := range candidates {
-		for _, subgroup := range candidate.SubGroups {
-			if *subgroup.ID == *group.ID {
-				return candidate
-			}
-		}
-	}
-
-	return nil
-}
-
-func findAllParentGroups(group *gocloak.Group, candidates []*gocloak.Group) []*gocloak.Group {
-	parents := []*gocloak.Group{}
-
-	for {
-		parent := findParentGroup(group, candidates)
-		if parent == nil {
-			break
-		}
-
-		parents = append(parents, parent)
-		group = parent
-	}
-
-	for l, r := 0, len(parents)-1; l < r; l, r = l+1, r-1 {
-		parents[l], parents[r] = parents[r], parents[l]
-	}
-
-	return parents
 }
