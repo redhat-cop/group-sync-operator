@@ -308,13 +308,31 @@ func (k *KeycloakSyncer) singleDiff(lhsSlice, rhsSlice []*gocloak.User) (lhsOnly
 	return lhsOnly
 }
 
+func (k *KeycloakSyncer) setGroupsAttributes(groups []*gocloak.Group) {
+	for _, group := range groups {
+
+		g, err := k.GoCloak.GetGroup(k.Token.AccessToken, k.Provider.Realm, *group.ID)
+
+		if err != nil {
+			continue
+		}
+
+		if g.Attributes != nil && len(g.Attributes) > 0 {
+			group.Attributes = g.Attributes
+		}
+
+		if group.SubGroups != nil && len(group.SubGroups) > 0 {
+			k.setGroupsAttributes(group.SubGroups)
+		}
+	}
+}
+
 func (k *KeycloakSyncer) getGroups() ([]*gocloak.Group, error) {
 	groups := []*gocloak.Group{}
 
 	iteration := 0
 
 	for {
-
 		gIteration := iteration * iterationMax
 		groupsParams := gocloak.GetGroupsParams{First: &gIteration, Max: &iterationMax, BriefRepresentation: &truthy}
 		groupsResponse, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupsParams)
@@ -326,6 +344,8 @@ func (k *KeycloakSyncer) getGroups() ([]*gocloak.Group, error) {
 		if len(groupsResponse) == 0 {
 			break
 		}
+
+		k.setGroupsAttributes(groupsResponse)
 
 		groups = append(groups, groupsResponse...)
 		iteration = iteration + 1
