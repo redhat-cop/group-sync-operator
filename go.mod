@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/okta/okta-sdk-golang/v2 v2.3.0
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.13.0
+	github.com/onsi/gomega v1.18.0
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/library-go v0.0.0-20200527213645-a9b77f5402e3
 	github.com/palantir/go-githubapp v0.9.2-0.20210913152418-062be9630ea5
