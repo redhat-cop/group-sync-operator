@@ -21,11 +21,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type SyncScope string
+type (
+	SyncScope          string
+	SubGroupProcessing string
+)
 
 const (
 	OneSyncScope SyncScope = "one"
 	SubSyncScope SyncScope = "sub"
+
+	FlatSubGroupProcessing SubGroupProcessing = "flat"
+	JoinSubGroupProcessing SubGroupProcessing = "join"
 )
 
 // GroupSyncSpec defines the desired state of GroupSync
@@ -170,6 +176,21 @@ type KeycloakProvider struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=one;sub
 	Scope SyncScope `json:"scope,omitempty"`
+
+	// SubGroupProcessing controls how sub groups are processed.
+	// Flat flattens the groups and is the default.
+	// Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "purple-bat", "staff".
+	// Join joins the group names with a configurable separator.
+	// Groups "hidden-fox" with child "staff" and "purple-bat" with child "staff" become "hidden-fox", "hidden-fox/staff", "purple-bat", "purple-bat/staff".
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="SubGroupProcessing controlls how sub groups are processed"
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=flat;join
+	SubGroupProcessing SubGroupProcessing `json:"subGroupProcessing,omitempty"`
+
+	// SubGroupJoinSeparator represents the separator to join group names if subGroupProcessing is set to join
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Scope represents the separator to join group names if scope is set to join"
+	// +kubebuilder:validation:Optional
+	SubGroupJoinSeparator string `json:"subGroupJoinSeparator,omitempty"`
 
 	// URL is the location of the Keycloak server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Keycloak URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}

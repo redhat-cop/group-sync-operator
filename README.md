@@ -365,6 +365,8 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 | `loginRealm` | Realm to authenticate against | `master` | No |
 | `realm` | Realm to synchronize | | Yes |
 | `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
+| `subGroupProcessing` | Controls how sub groups are processed. `flat` flattens the groups. `join` joins the group names with a configurable separator. | `flat` | No |
+| `subGroupJoinSeparator` | Separator to join group names if subGroupProcessing is set to join. | `""` | No |
 | `url` | URL Location for Keycloak | | Yes |
 
 
