@@ -3,7 +3,7 @@ module github.com/redhat-cop/group-sync-operator
 go 1.16
 
 require (
-	github.com/Nerzal/gocloak/v5 v5.1.0
+	github.com/Nerzal/gocloak/v5 v5.5.0
 	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/go-github/v39 v39.2.0
