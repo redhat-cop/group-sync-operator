@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/go-github/v39 v39.2.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/okta/okta-sdk-golang/v2 v2.3.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.18.1
