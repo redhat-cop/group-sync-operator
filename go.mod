@@ -3,7 +3,7 @@ module github.com/redhat-cop/group-sync-operator
 go 1.16
 
 require (
-	github.com/Nerzal/gocloak/v5 v5.1.0
+	github.com/Nerzal/gocloak/v5 v5.5.0
 	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/go-github/v39 v39.2.0
@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/okta/okta-sdk-golang/v2 v2.3.0
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.13.0
+	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/openshift/library-go v0.0.0-20200527213645-a9b77f5402e3
 	github.com/palantir/go-githubapp v0.9.2-0.20210913152418-062be9630ea5
