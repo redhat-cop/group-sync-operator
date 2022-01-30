@@ -146,6 +146,12 @@ spec:
         path: providers[0].github.insecure
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Map users by SCIM Id. This will usually match your IDP id, like
+          UPN when using AAD.
+        displayName: Map users by SCIM-ID
+        path: providers[0].github.mapByScimId
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Organization represents the location to source teams to synchronize
         displayName: Organization to Synchronize
         path: providers[0].github.organization
@@ -159,6 +165,11 @@ spec:
       - description: URL is the location of the GitHub server
         displayName: GitHub URL
         path: providers[0].github.url
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: V4URL is the location of the GitHub server graphql endpoint.
+        displayName: GitHub v4URL (graphql)
+        path: providers[0].github.v4url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: GitLab represents the GitLab provider
@@ -217,7 +228,7 @@ spec:
         path: providers[0].gitlab.insecure
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: URL is the location of the GitLub server
+      - description: URL is the location of the GitLab server
         displayName: GitLab URL
         path: providers[0].gitlab.url
         x-descriptors:
