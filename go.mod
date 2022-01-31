@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/Nerzal/gocloak/v5 v5.5.0
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.0
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/go-github/v39 v39.2.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
@@ -23,11 +23,11 @@ require (
 	github.com/shurcooL/githubv4 v0.0.0-20210725200734-83ba7b4c9228
 	github.com/xanzy/go-gitlab v0.54.3
 	github.com/yaegashi/msgraph.go v0.1.4
-	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3
+	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	gopkg.in/ldap.v2 v2.5.1
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
-	k8s.io/client-go v0.20.2
-	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
+	k8s.io/api v0.23.3
+	k8s.io/apimachinery v0.23.3
+	k8s.io/client-go v0.23.3
+	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
 	sigs.k8s.io/controller-runtime v0.8.3
 )
