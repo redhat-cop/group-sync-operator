@@ -52,18 +52,24 @@ spec:
         path: providers[0].azure.credentialsSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].azure.credentialsSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].azure.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].azure.credentialsSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].azure.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -98,24 +104,57 @@ spec:
       - description: GitHub represents the GitHub provider
         displayName: GitHub Provider
         path: providers[0].github
-      - description: CaSecret is a reference to a secret containing a CA certificate
+      - description: Ca is a reference to a Secret or ConfigMap containing a CA certificate
           to communicate to the GitHub server
-        displayName: Secret Containing the CA Certificate
+        displayName: Resource Containing the CA Certificate
+        path: providers[0].github.ca
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].github.ca.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].github.ca.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].github.ca.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].github.ca.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the GitHub server Deprecated: Use Ca instead.'
+        displayName: Resource Containing the CA Certificate
         path: providers[0].github.caSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].github.caSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].github.caSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].github.caSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].github.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -125,18 +164,24 @@ spec:
         path: providers[0].github.credentialsSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].github.credentialsSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].github.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].github.credentialsSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].github.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -175,24 +220,57 @@ spec:
       - description: GitLab represents the GitLab provider
         displayName: GitLab Provider
         path: providers[0].gitlab
-      - description: CaSecret is a reference to a secret containing a CA certificate
+      - description: Ca is a reference to a Secret or ConfigMap containing a CA certificate
           to communicate to the GitLab server
-        displayName: Secret Containing the CA Certificate
+        displayName: Resource Containing the CA Certificate
+        path: providers[0].gitlab.ca
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].gitlab.ca.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].gitlab.ca.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].gitlab.ca.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].gitlab.ca.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the GitLab server Deprecated: Use Ca instead.'
+        displayName: Resource Containing the CA Certificate
         path: providers[0].gitlab.caSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].gitlab.caSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].gitlab.caSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].gitlab.caSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].gitlab.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -202,18 +280,24 @@ spec:
         path: providers[0].gitlab.credentialsSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].gitlab.credentialsSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].gitlab.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].gitlab.credentialsSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].gitlab.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -236,24 +320,57 @@ spec:
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
         path: providers[0].keycloak
-      - description: CaSecret is a reference to a secret containing a CA certificate
+      - description: Ca is a reference to a Secret or ConfigMap containing a CA certificate
           to communicate to the Keycloak server
-        displayName: Secret Containing the CA Certificate
+        displayName: Resource Containing the CA Certificate
+        path: providers[0].keycloak.ca
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].keycloak.ca.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].keycloak.ca.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].keycloak.ca.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].keycloak.ca.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'CaSecret is a reference to a secret containing a CA certificate
+          to communicate to the Keycloak server Deprecated: Use Ca instead.'
+        displayName: Resource Containing the CA Certificate
         path: providers[0].keycloak.caSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].keycloak.caSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].keycloak.caSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].keycloak.caSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].keycloak.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -263,18 +380,24 @@ spec:
         path: providers[0].keycloak.credentialsSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].keycloak.credentialsSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].keycloak.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].keycloak.credentialsSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].keycloak.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -319,24 +442,57 @@ spec:
         path: providers[0].ldap.blacklist
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: CaSecret is a reference to a secret containing a CA certificate
-          to communicate to the GitLab server
-        displayName: Secret Containing the CA Certificate
+      - description: Ca is a reference to a Secret or ConfigMap containing a CA certificate
+          to communicate to LDAP
+        displayName: Resource Containing the CA Certificate
+        path: providers[0].ldap.ca
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].ldap.ca.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].ldap.ca.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].ldap.ca.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].ldap.ca.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'CaSecret is a reference to a secret containing a CA certificate
+          to communicate to LDAP Deprecated: Use Ca instead.'
+        displayName: Resource Containing the CA Certificate
         path: providers[0].ldap.caSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].ldap.caSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].ldap.caSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].ldap.caSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].ldap.caSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -346,18 +502,24 @@ spec:
         path: providers[0].ldap.credentialsSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].ldap.credentialsSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].ldap.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].ldap.credentialsSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].ldap.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -401,18 +563,24 @@ spec:
         path: providers[0].okta.credentialsSecret
         x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret
-      - description: Key represents the specific key to reference from the secret
-        displayName: Key within the secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
         path: providers[0].okta.credentialsSecret.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Name represents the name of the secret
-        displayName: Name of the secret
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].okta.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
         path: providers[0].okta.credentialsSecret.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Namespace represents the namespace containing the secret
-        displayName: Namespace containing the secret
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
         path: providers[0].okta.credentialsSecret.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
@@ -615,7 +783,8 @@ spec:
 
     | Name | Description | Defaults | Required |
     | ----- | ---------- | -------- | ----- |
-    | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+    | `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+    | `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
     | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
     | `insecure` | Ignore SSL verification | 'false' | No |
     | `groups` | List of groups to filter against | | No |
@@ -670,7 +839,8 @@ spec:
 
     | Name | Description | Defaults | Required |
     | ----- | ---------- | -------- | ----- |
-    | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+    | `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+    | `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
     | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | No |
     | `insecure` | Ignore SSL verification | 'false' | No |
     | `groupUIDNameMapping` | User defined name mapping | | No |
@@ -774,7 +944,8 @@ spec:
 
     | Name | Description | Defaults | Required |
     | ----- | ---------- | -------- | ----- |
-    | `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+    | `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+    | `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
     | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
     | `groups` | List of groups to filter against | | No |
     | `insecure` | Ignore SSL verification | 'false' | No |
@@ -873,12 +1044,12 @@ spec:
 
     ## CA Certificates
 
-    Each provider allows for certificates to be provided in a secret to communicate securely to the target host through the use of a property called `caSecret`.
+    Several providers allow for certificates to be provided in either a _ConfigMap_ or _Secret_ to communicate securely to the target host through the use of a property called `ca`.
 
-    The certificate can be added to a secret called _keycloak-certs_ using the key `ca.crt` representing the certificate using the following command.
+    The certificate can be added to a Secret called _keycloak-certs_ using the key `ca.crt` representing the certificate using the following command.
 
     ```
-    $ oc create secret generic keycloak-certs --from-file=ca.crt=<file>
+    oc create secret generic keycloak-certs --from-file=ca.crt=<file>
     ```
 
     An example of how the CA certificate can be added to the Keycloak provider is shown below:
@@ -891,15 +1062,48 @@ spec:
       name: keycloak-groupsync
     spec:
       providers:
-      - keycloak:
+      - name: keycloak
+        keycloak:
           realm: ocp
           credentialsSecret:
             name: keycloak-group-sync
             namespace: group-sync-operator
           caSecret:
+            kind: Secret
             name: keycloak-certs
             namespace: group-sync-operator
-            key: tls.crt
+            key: ca.crt
+          url: https://keycloak-keycloak-operator.apps.openshift.com
+    ```
+
+    Alteratively, a _ConfigMap_ can be used instead instead of a _Secret_. This is useful when using the [Certificate injection using Operators](https://docs.openshift.com/container-platform/latest/networking/configuring-a-custom-pki.html#certificate-injection-using-operators_configuring-a-custom-pki) feature.
+
+    The following command can be used to create a _ConfigMap_ containing the certificate:
+
+    ```
+    oc create configmap keycloak-certs --from-file=ca.crt=<file>
+    ````
+
+    An example of how the CA certificate can be added to the Keycloak provider is shown below:
+
+    ```shell
+    apiVersion: redhatcop.redhat.io/v1alpha1
+    kind: GroupSync
+    metadata:
+      name: keycloak-groupsync
+    spec:
+      providers:
+      - name: keycloak
+        keycloak:
+          realm: ocp
+          credentialsSecret:
+            name: keycloak-group-sync
+            namespace: group-sync-operator
+          caSecret:
+            kind: ConfigMap
+            name: keycloak-certs
+            namespace: group-sync-operator
+            key: ca.crt
           url: https://keycloak-keycloak-operator.apps.openshift.com
     ```
 

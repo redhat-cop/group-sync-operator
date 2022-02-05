@@ -90,7 +90,7 @@ func (l *LdapSyncer) Validate() error {
 		if l.Provider.CaSecret.Key != "" {
 			secretCaKey = l.Provider.CaSecret.Key
 		} else {
-			secretCaKey = defaultSecretCaKey
+			secretCaKey = defaultResourceCaKey
 		}
 
 		// Certificate key validation

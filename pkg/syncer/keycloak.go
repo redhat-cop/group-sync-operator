@@ -37,6 +37,7 @@ type KeycloakSyncer struct {
 	GroupSync          *redhatcopv1alpha1.GroupSync
 	Provider           *redhatcopv1alpha1.KeycloakProvider
 	GoCloak            gocloak.GoCloak
+	Context            context.Context
 	Token              *gocloak.JWT
 	CachedGroups       map[string]*gocloak.Group
 	CachedGroupMembers map[string][]*gocloak.User
@@ -46,6 +47,8 @@ type KeycloakSyncer struct {
 }
 
 func (k *KeycloakSyncer) Init() bool {
+
+	k.Context = context.Background()
 
 	changed := false
 
@@ -97,28 +100,28 @@ func (k *KeycloakSyncer) Validate() error {
 		validationErrors = append(validationErrors, err)
 	}
 
-	if k.Provider.CaSecret != nil {
-		caSecret := &corev1.Secret{}
-		err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CaSecret.Name, Namespace: k.Provider.CaSecret.Namespace}, caSecret)
+	providerCaResource := determineFromDeprecatedObjectRef(k.Provider.Ca, k.Provider.CaSecret)
+	if providerCaResource != nil {
+
+		caResource, err := getObjectRefData(k.Context, k.ReconcilerBase.GetClient(), providerCaResource)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		}
 
-		var secretCaKey string
-		if k.Provider.CaSecret.Key != "" {
-			secretCaKey = k.Provider.CaSecret.Key
+		var resourceCaKey string
+		if providerCaResource.Key != "" {
+			resourceCaKey = providerCaResource.Key
 		} else {
-			secretCaKey = defaultSecretCaKey
+			resourceCaKey = defaultResourceCaKey
 		}
 
-		// Password key validation
-		if _, found := caSecret.Data[secretCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, k.Provider.CaSecret.Name, k.Provider.CaSecret.Namespace))
+		// Certificate key validation
+		if _, found := caResource[resourceCaKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
-		k.CaCertificate = caSecret.Data[secretCaKey]
-
+		k.CaCertificate = caResource[resourceCaKey]
 	}
 
 	return utilerrors.NewAggregate(validationErrors)

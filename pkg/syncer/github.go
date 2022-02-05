@@ -5,11 +5,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/gregjones/httpcache"
-	"github.com/shurcooL/githubv4"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/gregjones/httpcache"
+	"github.com/shurcooL/githubv4"
 
 	"github.com/google/go-github/v39/github"
 	userv1 "github.com/openshift/api/user/v1"
@@ -104,27 +105,28 @@ func (g *GitHubSyncer) Validate() error {
 		validationErrors = append(validationErrors, fmt.Errorf("Organization name not provided"))
 	}
 
-	if g.Provider.CaSecret != nil {
-		caSecret := &corev1.Secret{}
-		err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
+	providerCaResource := determineFromDeprecatedObjectRef(g.Provider.Ca, g.Provider.CaSecret)
+	if providerCaResource != nil {
+
+		caResource, err := getObjectRefData(g.Context, g.ReconcilerBase.GetClient(), providerCaResource)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		}
 
-		var secretCaKey string
-		if g.Provider.CaSecret.Key != "" {
-			secretCaKey = g.Provider.CaSecret.Key
+		var resourceCaKey string
+		if providerCaResource.Key != "" {
+			resourceCaKey = providerCaResource.Key
 		} else {
-			secretCaKey = defaultSecretCaKey
+			resourceCaKey = defaultResourceCaKey
 		}
 
 		// Certificate key validation
-		if _, found := caSecret.Data[secretCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, g.Provider.CaSecret.Name, g.Provider.CaSecret.Namespace))
+		if _, found := caResource[resourceCaKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
-		g.CaCertificate = caSecret.Data[secretCaKey]
+		g.CaCertificate = caResource[resourceCaKey]
 	}
 
 	if g.Provider.URL != nil {
