@@ -22,10 +22,14 @@ import (
 )
 
 type SyncScope string
+type ObjectRefKind string
 
 const (
 	OneSyncScope SyncScope = "one"
 	SubSyncScope SyncScope = "sub"
+
+	ConfigMapObjectRefKind ObjectRefKind = "ConfigMap"
+	SecretMapObjectRefKind ObjectRefKind = "Secret"
 )
 
 // GroupSyncSpec defines the desired state of GroupSync
@@ -135,15 +139,21 @@ type ProviderType struct {
 // +k8s:openapi-gen=true
 type KeycloakProvider struct {
 
-	// CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to the Keycloak server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Optional
-	CaSecret *SecretRef `json:"caSecret,omitempty"`
+	Ca *ObjectRef `json:"ca,omitempty"`
+
+	// CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Optional
+	// Deprecated: Use Ca instead.
+	CaSecret *ObjectRef `json:"caSecret,omitempty"`
 
 	// CredentialsSecret is a reference to a secret containing authentication details for the Keycloak server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
-	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
 
 	// Groups represents a filtered list of groups to synchronize
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Groups to Synchronize"
@@ -180,15 +190,22 @@ type KeycloakProvider struct {
 // GitHubProvider represents integration with GitHub
 // +k8s:openapi-gen=true
 type GitHubProvider struct {
-	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+
+	// Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to the GitHub server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Optional
-	CaSecret *SecretRef `json:"caSecret,omitempty"`
+	Ca *ObjectRef `json:"ca,omitempty"`
+
+	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Optional
+	// Deprecated: Use Ca instead.
+	CaSecret *ObjectRef `json:"caSecret,omitempty"`
 
 	// CredentialsSecret is a reference to a secret containing authentication details for the GitHub server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
-	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
 
 	// Insecure specifies whether to allow for unverified certificates to be used when communicating to GitHab
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
@@ -226,15 +243,22 @@ type GitHubProvider struct {
 // GitLabProvider represents integration with GitLab
 // +k8s:openapi-gen=true
 type GitLabProvider struct {
-	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+
+	// Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to the GitLab server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Optional
-	CaSecret *SecretRef `json:"caSecret,omitempty"`
+	Ca *ObjectRef `json:"ca,omitempty"`
+
+	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Optional
+	// Deprecated: Use Ca instead.
+	CaSecret *ObjectRef `json:"caSecret,omitempty"`
 
 	// CredentialsSecret is a reference to a secret containing authentication details for the GitLab server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
-	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
 
 	// Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
@@ -255,15 +279,22 @@ type GitLabProvider struct {
 // LdapProvider represents integration with an LDAP server
 // +k8s:openapi-gen=true
 type LdapProvider struct {
-	// CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+
+	// Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to LDAP
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Optional
-	CaSecret *SecretRef `json:"caSecret,omitempty"`
+	Ca *ObjectRef `json:"ca,omitempty"`
+
+	// CaSecret is a reference to a secret containing a CA certificate to communicate to LDAP
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Optional
+	// Deprecated: Use Ca instead.
+	CaSecret *ObjectRef `json:"caSecret,omitempty"`
 
 	// CredentialsSecret is a reference to a secret containing authentication details for communicating to LDAP
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Optional
-	CredentialsSecret *SecretRef `json:"credentialsSecret,omitempty"`
+	CredentialsSecret *ObjectRef `json:"credentialsSecret,omitempty"`
 
 	// Insecure specifies whether to allow for unverified certificates to be used when communicating to LDAP
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
@@ -317,7 +348,7 @@ type AzureProvider struct {
 	// CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
-	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
 
 	// Filter allows for limiting the results from the groups response using the Filter feature of the Azure Graph API
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Filter",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
@@ -351,7 +382,7 @@ type OktaProvider struct {
 	// CredentialsSecret is a reference to a secret containing authentication details for the Okta server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
-	CredentialsSecret *SecretRef `json:"credentialsSecret"`
+	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
 	// Groups represents a filtered list of groups to synchronize
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Groups to Synchronize",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
@@ -378,23 +409,31 @@ type OktaProvider struct {
 	GroupLimit int `json:"groupLimit"`
 }
 
-// SecretRef represents a reference to an item within a Secret
+// ObjectRef represents a reference to an item within a Secret
 // +k8s:openapi-gen=true
-type SecretRef struct {
-	// Name represents the name of the secret
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Name of the secret",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+type ObjectRef struct {
+
+	// Key represents the specific key to reference from the resource
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Key",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	Key string `json:"key,omitempty"`
+
+	// Name represents the name of the resource
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Name",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
-	// Namespace represents the namespace containing the secret
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Namespace containing the secret",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// Namespace represents the namespace containing the resource
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Namespace",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
 	Namespace string `json:"namespace"`
 
-	// Key represents the specific key to reference from the secret
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Key within the secret",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// Kind is a string value representing the resource type
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Kind",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:ConfigMap","urn:alm:descriptor:com.tectonic.ui:select:Secret"}
 	// +kubebuilder:validation:Optional
-	Key string `json:"key,omitempty"`
+	// +kubebuilder:validation:Enum:={"ConfigMap","Secret"}
+	// +kubebuilder:default="Secret"
+	Kind ObjectRefKind `json:"kind,omitempty"`
 }
 
 func (g *GroupSync) GetConditions() []metav1.Condition {

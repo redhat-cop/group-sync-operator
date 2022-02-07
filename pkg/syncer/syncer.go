@@ -1,23 +1,26 @@
 package syncer
 
 import (
+	"context"
 	"fmt"
-
-	"github.com/robfig/cron/v3"
 
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	"github.com/robfig/cron/v3"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	secretUsernameKey  = "username"
-	secretPasswordKey  = "password"
-	secretTokenKey     = "token"
-	privateKey         = "privateKey"
-	appId              = "appId"
-	defaultSecretCaKey = "ca.crt"
+	secretUsernameKey    = "username"
+	secretPasswordKey    = "password"
+	secretTokenKey       = "token"
+	privateKey           = "privateKey"
+	appId                = "appId"
+	defaultResourceCaKey = "ca.crt"
 )
 
 type GroupSyncer interface {
@@ -136,4 +139,51 @@ func isGroupAllowed(groupName string, allowedGroups []string) bool {
 	}
 
 	return false
+}
+
+func getObjectRefData(context context.Context, client client.Client, resource *redhatcopv1alpha1.ObjectRef) (map[string][]byte, error) {
+
+	if resource.Kind != "" && resource.Kind == redhatcopv1alpha1.ConfigMapObjectRefKind {
+		caConfigMap := &corev1.ConfigMap{}
+		err := client.Get(context, types.NamespacedName{Name: resource.Name, Namespace: resource.Namespace}, caConfigMap)
+
+		if err != nil {
+			return nil, err
+		}
+
+		configMapMap := map[string][]byte{}
+
+		if caConfigMap.Data == nil {
+			return nil, nil
+		}
+
+		for k, v := range caConfigMap.Data {
+			configMapMap[k] = []byte(v)
+		}
+
+		return configMapMap, nil
+
+	} else if resource.Kind != "" {
+		caSecret := &corev1.Secret{}
+		err := client.Get(context, types.NamespacedName{Name: resource.Name, Namespace: resource.Namespace}, caSecret)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return caSecret.Data, nil
+
+	}
+
+	return nil, nil
+}
+
+func determineFromDeprecatedObjectRef(objectRef *redhatcopv1alpha1.ObjectRef, deprecatedObjectRef *redhatcopv1alpha1.ObjectRef) *redhatcopv1alpha1.ObjectRef {
+
+	if objectRef != nil {
+		return objectRef
+	}
+
+	return deprecatedObjectRef
+
 }

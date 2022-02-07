@@ -32,6 +32,7 @@ type GitLabSyncer struct {
 	GroupSync         *redhatcopv1alpha1.GroupSync
 	Provider          *redhatcopv1alpha1.GitLabProvider
 	Client            *gitlab.Client
+	Context           context.Context
 	ReconcilerBase    util.ReconcilerBase
 	CredentialsSecret *corev1.Secret
 	URL               *url.URL
@@ -39,6 +40,8 @@ type GitLabSyncer struct {
 }
 
 func (g *GitLabSyncer) Init() bool {
+
+	g.Context = context.Background()
 
 	return false
 }
@@ -67,28 +70,28 @@ func (g *GitLabSyncer) Validate() error {
 
 	}
 
-	if g.Provider.CaSecret != nil {
-		caSecret := &corev1.Secret{}
-		err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CaSecret.Name, Namespace: g.Provider.CaSecret.Namespace}, caSecret)
+	providerCaResource := determineFromDeprecatedObjectRef(g.Provider.Ca, g.Provider.CaSecret)
+	if providerCaResource != nil {
+
+		caResource, err := getObjectRefData(g.Context, g.ReconcilerBase.GetClient(), providerCaResource)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		}
 
-		var secretCaKey string
-		if g.Provider.CaSecret.Key != "" {
-			secretCaKey = g.Provider.CaSecret.Key
+		var resourceCaKey string
+		if providerCaResource.Key != "" {
+			resourceCaKey = providerCaResource.Key
 		} else {
-			secretCaKey = defaultSecretCaKey
+			resourceCaKey = defaultResourceCaKey
 		}
 
 		// Certificate key validation
-		if _, found := caSecret.Data[secretCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, g.Provider.CaSecret.Name, g.Provider.CaSecret.Namespace))
+		if _, found := caResource[resourceCaKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
-		g.CaCertificate = caSecret.Data[secretCaKey]
-
+		g.CaCertificate = caResource[resourceCaKey]
 	}
 
 	if g.Provider.URL != nil {

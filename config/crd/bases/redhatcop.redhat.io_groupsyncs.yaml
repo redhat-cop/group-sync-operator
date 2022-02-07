@@ -47,13 +47,20 @@ spec:
                             description: CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -84,17 +91,47 @@ spec:
                       github:
                         description: GitHub represents the GitHub provider
                         properties:
-                          caSecret:
-                            description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
+                          ca:
+                            description: Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to the GitHub server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          caSecret:
+                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server Deprecated: Use Ca instead.'
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -104,13 +141,20 @@ spec:
                             description: CredentialsSecret is a reference to a secret containing authentication details for the GitHub server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -144,17 +188,47 @@ spec:
                       gitlab:
                         description: GitLab represents the GitLab provider
                         properties:
-                          caSecret:
-                            description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+                          ca:
+                            description: Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to the GitLab server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          caSecret:
+                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server Deprecated: Use Ca instead.'
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -164,13 +238,20 @@ spec:
                             description: CredentialsSecret is a reference to a secret containing authentication details for the GitLab server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -193,17 +274,47 @@ spec:
                       keycloak:
                         description: Keycloak represents the Keycloak provider
                         properties:
-                          caSecret:
-                            description: CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
+                          ca:
+                            description: Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to the Keycloak server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          caSecret:
+                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server Deprecated: Use Ca instead.'
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -213,13 +324,20 @@ spec:
                             description: CredentialsSecret is a reference to a secret containing authentication details for the Keycloak server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -380,17 +498,47 @@ spec:
                             items:
                               type: string
                             type: array
-                          caSecret:
-                            description: CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+                          ca:
+                            description: Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to LDAP
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          caSecret:
+                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to LDAP Deprecated: Use Ca instead.'
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -400,13 +548,20 @@ spec:
                             description: CredentialsSecret is a reference to a secret containing authentication details for communicating to LDAP
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name
@@ -531,13 +686,20 @@ spec:
                             description: CredentialsSecret is a reference to a secret containing authentication details for the Okta server
                             properties:
                               key:
-                                description: Key represents the specific key to reference from the secret
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
                                 type: string
                               name:
-                                description: Name represents the name of the secret
+                                description: Name represents the name of the resource
                                 type: string
                               namespace:
-                                description: Namespace represents the namespace containing the secret
+                                description: Namespace represents the namespace containing the resource
                                 type: string
                             required:
                               - name

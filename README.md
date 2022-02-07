@@ -29,6 +29,7 @@ Use the following steps to deploy the operator to an OpenShift cluster
 1. Clone the project locally and changed into the project
 .
 .
+
 ```shell
 git clone https://github.com/redhat-cop/group-sync-operator.git
 cd group-sync-operator
@@ -41,7 +42,6 @@ make deploy IMG=quay.io/redhat-cop/group-sync-operator:latest
 ```
 
 _Note:_ The `make deploy` command will execute the `manifests` target that will require additional build tools to be made available. This target can be skipped by including the `-o manifests` in the command above.
-
 
 ## Authentication
 
@@ -65,7 +65,6 @@ Integration with external systems is made possible through a set of pluggable ex
 * [Okta](https://www.okta.com/)
 
 The following sections describe the configuration options available for each provider
-
 
 ### Azure
 
@@ -125,13 +124,13 @@ Teams stored within a GitHub organization can be synchronized into OpenShift. Th
 
 | Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
-| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+| `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `insecure` | Ignore SSL verification | `false` | No |
 | `organization` | Organization to synchronize against | | Yes |
 | `teams` | List of teams to filter against | | No |
 | `url` | Base URL for the GitHub or GitHub Enterprise host (Must contain a trailing slash) | | No |
-
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
@@ -170,12 +169,13 @@ oc create secret generic github-group-sync --from-literal=token=<token>
 ##### As a GitHub app
 
 When authenticating as a Github App, the following keys are required:
-* `privateKey` and `appId`
 
+* `privateKey` and `appId`
 
 ###### First create a GitHub app
 
 In GitHub, go to developer-settings -> github apps.
+
 * Create a new app, it does not need webhook callbacks.
 * Generate a private-key and download it
 * Under "permissions and events", the app will need read-only access to the "Members" permission in the "Organization" section. NOTE: If you enable `mapByScimId`, this permissions needs to be _Read & Write_, though the operator only does read-only operations. The reason for this is the use of the v4 graphql api-endpoint.
@@ -196,12 +196,12 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 
 | Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
-| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+| `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `insecure` | Ignore SSL verification | 'false' | No |
 | `groups` | List of groups to filter against | | No |
 | `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
-
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
@@ -233,7 +233,6 @@ The secret can be created by executing the following command:
 oc create secret generic gitlab-group-sync --from-literal=token=<token>
 ```
 
-
 The following keys are required for username and password:
 
 * `username` - Username for authenticating with GitLab
@@ -253,7 +252,8 @@ The configurations of the three primary schemas (`rfc2307`, `activeDirectory` an
 
 | Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
-| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+| `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | No |
 | `insecure` | Ignore SSL verification | 'false' | No |
 | `groupUIDNameMapping` | User defined name mapping | | No |
@@ -317,7 +317,6 @@ The secret can be created by executing the following command:
 oc create secret generic ldap-group-sync --from-literal=username=<username> --from-literal=password=<password>
 ```
 
-
 #### Whitelists and Blacklists
 
 Groups can be explicitly whitelisted or blacklisted in order to control the groups that are eligible to be synchronized into OpenShift. When running LDAP group synchronization using the command line, this configuration is referenced via separate files, but these are instead specified in the `blacklist` and `whitelist` properties as shown below:
@@ -358,7 +357,8 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 
 | Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
-| `caSecret` | Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
+| `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
+| `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `groups` | List of groups to filter against | | No |
 | `insecure` | Ignore SSL verification | 'false' | No |
@@ -366,7 +366,6 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 | `realm` | Realm to synchronize | | Yes |
 | `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
 | `url` | URL Location for Keycloak | | Yes |
-
 
 The following is an example of a minimal configuration that can be applied to integrate with a Keycloak provider:
 
@@ -419,7 +418,6 @@ The following table describes the set of configuration options for the Okta prov
 | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `'login'` | No |
 | `groupLimit` | Integer to set the maximum number of groups to sync | `1000` | No |
 
-
 The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 
 ```shell
@@ -459,16 +457,15 @@ Additional metadata based on Keycloak group are also added to the OpenShift grou
 
 ## CA Certificates
 
-Each provider allows for certificates to be provided in a secret to communicate securely to the target host through the use of a property called `caSecret`.
+Several providers allow for certificates to be provided in either a _ConfigMap_ or _Secret_ to communicate securely to the target host through the use of a property called `ca`.
 
-The certificate can be added to a secret called _keycloak-certs_ using the key `ca.crt` representing the certificate using the following command.
+The certificate can be added to a Secret called _keycloak-certs_ using the key `ca.crt` representing the certificate using the following command.
 
 ```
-$ oc create secret generic keycloak-certs --from-file=ca.crt=<file>
+oc create secret generic keycloak-certs --from-file=ca.crt=<file>
 ```
 
 An example of how the CA certificate can be added to the Keycloak provider is shown below:
-
 
 ```shell
 apiVersion: redhatcop.redhat.io/v1alpha1
@@ -477,23 +474,54 @@ metadata:
   name: keycloak-groupsync
 spec:
   providers:
-  - keycloak:
+  - name: keycloak
+    keycloak:
       realm: ocp
       credentialsSecret:
         name: keycloak-group-sync
         namespace: group-sync-operator
-      caSecret:
+      ca:
+        kind: Secret
         name: keycloak-certs
         namespace: group-sync-operator
-        key: tls.crt
+        key: ca.crt
       url: https://keycloak-keycloak-operator.apps.openshift.com
 ```
 
+Alteratively, a _ConfigMap_ can be used instead instead of a _Secret_. This is useful when using the [Certificate injection using Operators](https://docs.openshift.com/container-platform/latest/networking/configuring-a-custom-pki.html#certificate-injection-using-operators_configuring-a-custom-pki) feature.
+
+The following command can be used to create a _ConfigMap_ containing the certificate:
+
+```
+oc create configmap keycloak-certs --from-file=ca.crt=<file>
+```
+
+An example of how the CA certificate can be added to the Keycloak provider is shown below:
+
+```shell
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: keycloak-groupsync
+spec:
+  providers:
+  - name: keycloak
+    keycloak:
+      realm: ocp
+      credentialsSecret:
+        name: keycloak-group-sync
+        namespace: group-sync-operator
+      ca:
+        kind: ConfigMap
+        name: keycloak-certs
+        namespace: group-sync-operator
+        key: ca.crt
+      url: https://keycloak-keycloak-operator.apps.openshift.com
+```
 
 ## Scheduled Execution
 
 A cron style expression can be specified for which a synchronization event will occur. The following specifies that a synchronization should occur nightly at 3AM
-
 
 ```shell
 apiVersion: redhatcop.redhat.io/v1alpha1
