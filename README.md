@@ -416,7 +416,8 @@ The following table describes the set of configuration options for the Okta prov
 | `appId` | Application ID of App Groups are assigned to | `''`  | Yes |
 | `extractLoginUsername` | Bool to determine if you should extract username from okta login | `false`  | No |
 | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `'login'` | No |
-| `groupLimit` | Integer to set the maximum number of groups to sync | `1000` | No |
+| `groupLimit` | Integer to set the maximum number of groups to retrieve from OKTA per request. | `1000` | No |
+
 
 The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 
