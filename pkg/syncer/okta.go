@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"net/url"
 	"strings"
 	"sync"
+
+	"github.com/okta/okta-sdk-golang/v2/okta/query"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	userv1 "github.com/openshift/api/user/v1"
@@ -177,11 +178,23 @@ func (o OktaSyncer) getGroups() ([]*okta.Group, error) {
 		groups []*okta.Group
 	)
 
-	appGroups, _, err := o.goOkta.Application.ListApplicationGroupAssignments(context.TODO(), o.Provider.AppId, query.NewQueryParams(query.WithLimit(int64(o.Provider.GroupLimit))))
+	appGroups, resp, err := o.goOkta.Application.ListApplicationGroupAssignments(context.TODO(), o.Provider.AppId, query.NewQueryParams(query.WithLimit(int64(o.Provider.GroupLimit))))
 
 	if err != nil {
 		oktaLogger.Error(err, "getting groups for specified application")
 		return nil, err
+	}
+
+	for resp.HasNextPage() {
+		var nextAppGroups []*okta.ApplicationGroupAssignment
+		resp, err = resp.Next(context.TODO(), &nextAppGroups)
+
+		if err != nil {
+			oktaLogger.Error(err, "getting groups for specified application")
+			return nil, err
+		}
+
+		appGroups = append(appGroups, nextAppGroups...)
 	}
 
 	groups, err = o.fetchGroupsAsync(appGroups)
