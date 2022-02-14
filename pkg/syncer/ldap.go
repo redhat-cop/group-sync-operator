@@ -445,3 +445,7 @@ func (l *LdapSyncer) getLdapCredentialValue(key string) string {
 
 	return ""
 }
+
+func (l *LdapSyncer) GetPrune() bool {
+	return false
+}

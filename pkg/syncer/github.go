@@ -402,3 +402,7 @@ func (g *GitHubSyncer) listTeamMembers(teamID *int64, organizationID *int64) ([]
 func (g *GitHubSyncer) GetProviderName() string {
 	return g.Name
 }
+
+func (g *GitHubSyncer) GetPrune() bool {
+	return false
+}

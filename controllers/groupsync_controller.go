@@ -116,6 +116,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		}
 
 		updatedGroups := 0
+		syncStartTime := ISO8601(time.Now())
 
 		for _, group := range groups {
 
@@ -171,10 +172,13 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			}
 
 			updatedGroups++
-
 		}
 
 		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
+
+		if groupSyncer.GetPrune() {
+			r.doPrune(context, instance, providerLabel, syncStartTime, logger)
+		}
 
 		// Add Metrics
 
@@ -213,6 +217,20 @@ func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prome
 	groupSyncError.With(prometheusLabels).Set(1)
 
 	return r.ManageError(context, obj, issue)
+}
+
+func (r *GroupSyncReconciler) doPrune(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) error {
+
+	ocpGroups := &userv1.GroupList{}
+	opts := []client.ListOption{
+		client.InNamespace(""),
+		client.MatchingLabels{constants.SyncProvider: providerLabel},
+	}
+	err := r.GetClient().List(context, ocpGroups, opts...)
+	for _, group := range ocpGroups.Items {
+		logger.Info("Group List", group.Name)
+	}
+	return err
 }
 
 func ISO8601(t time.Time) string {

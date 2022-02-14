@@ -292,3 +292,7 @@ func (a *AzureSyncer) isUsernamePresent(user msgraph.DirectoryObject, field stri
 
 	return fmt.Sprintf("%v", value), ok
 }
+
+func (a *AzureSyncer) GetPrune() bool {
+	return false
+}

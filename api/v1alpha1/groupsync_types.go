@@ -407,6 +407,9 @@ type OktaProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Group Limit",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number"}
 	// +kubebuilder:validation:Optional
 	GroupLimit int `json:"groupLimit"`
+	// Prune Whether to prune groups that are no longer in OKTA. Default is false
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	Prune bool `json:"prune"`
 }
 
 // ObjectRef represents a reference to an item within a Secret

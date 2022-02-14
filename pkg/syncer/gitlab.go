@@ -288,3 +288,7 @@ func (g *GitLabSyncer) getGroupMembers(groupId int) ([]*gitlab.GroupMember, erro
 func (g *GitLabSyncer) GetProviderName() string {
 	return g.Name
 }
+
+func (g *GitLabSyncer) GetPrune() bool {
+	return false
+}
