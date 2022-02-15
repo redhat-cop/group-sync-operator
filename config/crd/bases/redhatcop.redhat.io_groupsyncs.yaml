@@ -169,6 +169,9 @@ spec:
                           organization:
                             description: Organization represents the location to source teams to synchronize
                             type: string
+                          prune:
+                            description: Prune Whether to prune groups that are no longer in GitHub. Default is false
+                            type: boolean
                           teams:
                             description: Teams represents a filtered list of teams to synchronize
                             items:
@@ -265,6 +268,9 @@ spec:
                           insecure:
                             description: Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
                             type: boolean
+                          prune:
+                            description: Prune Whether to prune groups that are no longer in GitLab. Default is false
+                            type: boolean
                           url:
                             description: URL is the location of the GitLab server
                             type: string
@@ -354,6 +360,9 @@ spec:
                           loginRealm:
                             description: LoginRealm is the Keycloak realm to authenticate against
                             type: string
+                          prune:
+                            description: Prune Whether to prune groups that are no longer in Keycloak. Default is false
+                            type: boolean
                           realm:
                             description: Realm is the realm containing the groups to synchronize against
                             type: string
@@ -575,6 +584,9 @@ spec:
                           insecure:
                             description: Insecure specifies whether to allow for unverified certificates to be used when communicating to LDAP
                             type: boolean
+                          prune:
+                            description: Prune Whether to prune groups that are no longer in LDAP. Default is false
+                            type: boolean
                           rfc2307:
                             description: RFC2307Config represents the configuration for a RFC2307 schema
                             properties:
@@ -719,6 +731,9 @@ spec:
                           profileKey:
                             description: ProfileKey the attribute from Okta you would like to use as the user identifier.  Default is "login"
                             type: string
+                          prune:
+                            description: Prune Whether to prune groups that are no longer in OKTA. Default is false
+                            type: boolean
                           url:
                             description: URL is the location of the Okta domain server
                             type: string

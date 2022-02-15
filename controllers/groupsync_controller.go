@@ -107,6 +107,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 		}
 
+		syncStartTime := ISO8601(time.Now())
 		// Perform Sync
 		groups, err := groupSyncer.Sync()
 
@@ -116,7 +117,6 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		}
 
 		updatedGroups := 0
-		syncStartTime := ISO8601(time.Now())
 
 		for _, group := range groups {
 
@@ -161,9 +161,11 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			ocpGroup.Labels[constants.SyncProvider] = providerLabel
 
 			// Add Gloabl Annotations/Labels
-			ocpGroup.Annotations[constants.SyncTimestamp] = ISO8601(time.Now())
+			ocpGroup.Annotations[constants.SyncTimestamp] = syncStartTime
 
 			ocpGroup.Users = group.Users
+			logger.Info("Update", "Group", ocpGroup.Name, "syncTime", ocpGroup.Annotations[constants.SyncTimestamp])
+
 			err = r.CreateOrUpdateResource(context, nil, "", ocpGroup)
 
 			if err != nil {
@@ -177,7 +179,11 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
 
 		if groupSyncer.GetPrune() {
+			logger.Info("Start Prune")
 			r.doPrune(context, instance, providerLabel, syncStartTime, logger)
+			logger.Info("Prune Completed")
+		} else {
+			logger.Info("No Prune")
 		}
 
 		// Add Metrics
@@ -227,10 +233,21 @@ func (r *GroupSyncReconciler) doPrune(context context.Context, instance *redhatc
 		client.MatchingLabels{constants.SyncProvider: providerLabel},
 	}
 	err := r.GetClient().List(context, ocpGroups, opts...)
-	for _, group := range ocpGroups.Items {
-		logger.Info("Group List", group.Name)
+	if err != nil {
+		logger.Error(err, "doPrune - Error listing groups group")
+		return err
 	}
-	return err
+
+	for _, group := range ocpGroups.Items {
+		if group.Annotations[constants.SyncTimestamp] != syncStartTime {
+			logger.Info("doPrune", "Delete Group", group.Name, "syncStartTime", syncStartTime, "groupSyncTime", group.Annotations[constants.SyncTimestamp])
+			err = r.GetClient().Delete(context, &group)
+			if err != nil {
+				logger.Error(err, "doPrune", "Error deleting group", group.Name)
+			}
+		}
+	}
+	return nil
 }
 
 func ISO8601(t time.Time) string {

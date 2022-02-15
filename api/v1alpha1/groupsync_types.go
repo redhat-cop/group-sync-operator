@@ -185,6 +185,11 @@ type KeycloakProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Keycloak URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
 	URL string `json:"url"`
+
+	// Prune Whether to prune groups that are no longer in Keycloak. Default is false
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
+	Prune bool `json:"prune"`
 }
 
 // GitHubProvider represents integration with GitHub
@@ -238,6 +243,11 @@ type GitHubProvider struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="https://api.github.com/graphql"
 	V4URL *string `json:"v4url,omitempty"`
+
+	// Prune Whether to prune groups that are no longer in GitHub. Default is false
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
+	Prune bool `json:"prune"`
 }
 
 // GitLabProvider represents integration with GitLab
@@ -274,6 +284,11 @@ type GitLabProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitLab URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	URL *string `json:"url,omitempty"`
+
+	// Prune Whether to prune groups that are no longer in GitLab. Default is false
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
+	Prune bool `json:"prune"`
 }
 
 // LdapProvider represents integration with an LDAP server
@@ -335,6 +350,11 @@ type LdapProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Blacklisted groups to not synchronize",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	Blacklist *[]string `json:"blacklist,omitempty"`
+
+	// Prune Whether to prune groups that are no longer in LDAP. Default is false
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
+	Prune bool `json:"prune"`
 }
 
 // AzureProvider represents integration with Azure
@@ -409,6 +429,7 @@ type OktaProvider struct {
 	GroupLimit int `json:"groupLimit"`
 	// Prune Whether to prune groups that are no longer in OKTA. Default is false
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
 	Prune bool `json:"prune"`
 }
 
