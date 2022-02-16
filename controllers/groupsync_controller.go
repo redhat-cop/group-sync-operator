@@ -179,7 +179,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 
 		if groupSyncer.GetPrune() {
 			logger.Info("Start Pruning Groups")
-			err = r.doPrune(context, instance, providerLabel, syncStartTime, logger)
+			err = r.pruneGroups(context, instance, providerLabel, syncStartTime, logger)
 			if err != nil {
 				log.Error(err, "Failed to Prune Group")
 				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
@@ -226,7 +226,7 @@ func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prome
 	return r.ManageError(context, obj, issue)
 }
 
-func (r *GroupSyncReconciler) doPrune(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) error {
+func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) error {
 
 	ocpGroups := &userv1.GroupList{}
 	opts := []client.ListOption{
@@ -240,7 +240,7 @@ func (r *GroupSyncReconciler) doPrune(context context.Context, instance *redhatc
 
 	for _, group := range ocpGroups.Items {
 		if group.Annotations[constants.SyncTimestamp] < syncStartTime {
-			logger.Info("doPrune", "Delete Group", group.Name, "syncStartTime", syncStartTime, "groupSyncTime", group.Annotations[constants.SyncTimestamp])
+			logger.Info("pruneGroups", "Delete Group", group.Name, "syncStartTime", syncStartTime, "groupSyncTime", group.Annotations[constants.SyncTimestamp])
 			err = r.GetClient().Delete(context, &group)
 			if err != nil {
 				return err
