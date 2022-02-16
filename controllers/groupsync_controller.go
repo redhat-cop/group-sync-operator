@@ -161,10 +161,9 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			ocpGroup.Labels[constants.SyncProvider] = providerLabel
 
 			// Add Gloabl Annotations/Labels
-			ocpGroup.Annotations[constants.SyncTimestamp] = syncStartTime
+			ocpGroup.Annotations[constants.SyncTimestamp] = ISO8601(time.Now())
 
 			ocpGroup.Users = group.Users
-			logger.Info("Update", "Group", ocpGroup.Name, "syncTime", ocpGroup.Annotations[constants.SyncTimestamp])
 
 			err = r.CreateOrUpdateResource(context, nil, "", ocpGroup)
 
@@ -179,11 +178,13 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
 
 		if groupSyncer.GetPrune() {
-			logger.Info("Start Prune")
-			r.doPrune(context, instance, providerLabel, syncStartTime, logger)
-			logger.Info("Prune Completed")
-		} else {
-			logger.Info("No Prune")
+			logger.Info("Start Pruning Groups")
+			err = r.doPrune(context, instance, providerLabel, syncStartTime, logger)
+			if err != nil {
+				log.Error(err, "Failed to Prune Group")
+				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
+			}
+			logger.Info("Pruning Completed")
 		}
 
 		// Add Metrics
@@ -234,16 +235,15 @@ func (r *GroupSyncReconciler) doPrune(context context.Context, instance *redhatc
 	}
 	err := r.GetClient().List(context, ocpGroups, opts...)
 	if err != nil {
-		logger.Error(err, "doPrune - Error listing groups group")
 		return err
 	}
 
 	for _, group := range ocpGroups.Items {
-		if group.Annotations[constants.SyncTimestamp] != syncStartTime {
+		if group.Annotations[constants.SyncTimestamp] < syncStartTime {
 			logger.Info("doPrune", "Delete Group", group.Name, "syncStartTime", syncStartTime, "groupSyncTime", group.Annotations[constants.SyncTimestamp])
 			err = r.GetClient().Delete(context, &group)
 			if err != nil {
-				logger.Error(err, "doPrune", "Error deleting group", group.Name)
+				return err
 			}
 		}
 	}
