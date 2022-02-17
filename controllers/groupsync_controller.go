@@ -240,7 +240,7 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 
 	for _, group := range ocpGroups.Items {
 		if group.Annotations[constants.SyncTimestamp] < syncStartTime {
-			logger.Info("pruneGroups", "Delete Group", group.Name, "syncStartTime", syncStartTime, "groupSyncTime", group.Annotations[constants.SyncTimestamp])
+			logger.Info("pruneGroups", "Delete Group", group.Name)
 			err = r.GetClient().Delete(context, &group)
 			if err != nil {
 				return err
