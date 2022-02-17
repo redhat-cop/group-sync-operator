@@ -290,5 +290,5 @@ func (g *GitLabSyncer) GetProviderName() string {
 }
 
 func (g *GitLabSyncer) GetPrune() bool {
-	return false
+	return g.Provider.Prune
 }

@@ -447,5 +447,5 @@ func (l *LdapSyncer) getLdapCredentialValue(key string) string {
 }
 
 func (l *LdapSyncer) GetPrune() bool {
-	return false
+	return l.Provider.Prune
 }

@@ -404,5 +404,5 @@ func (g *GitHubSyncer) GetProviderName() string {
 }
 
 func (g *GitHubSyncer) GetPrune() bool {
-	return false
+	return g.Provider.Prune
 }

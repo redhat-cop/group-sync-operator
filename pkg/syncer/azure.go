@@ -294,5 +294,5 @@ func (a *AzureSyncer) isUsernamePresent(user msgraph.DirectoryObject, field stri
 }
 
 func (a *AzureSyncer) GetPrune() bool {
-	return false
+	return a.Provider.Prune
 }

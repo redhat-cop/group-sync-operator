@@ -390,5 +390,5 @@ func (k *KeycloakSyncer) GetProviderName() string {
 }
 
 func (k *KeycloakSyncer) GetPrune() bool {
-	return false
+	return k.Provider.Prune
 }
