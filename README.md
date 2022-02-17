@@ -77,6 +77,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | `filter` | Graph API filter | | No |
 | `groups` | List of groups to filter against | | No |
 | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
+| `prune` | Prune Whether to prune groups that are no longer in Azure | false | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
 
@@ -131,6 +132,7 @@ Teams stored within a GitHub organization can be synchronized into OpenShift. Th
 | `organization` | Organization to synchronize against | | Yes |
 | `teams` | List of teams to filter against | | No |
 | `url` | Base URL for the GitHub or GitHub Enterprise host (Must contain a trailing slash) | | No |
+| `prune` | Prune Whether to prune groups that are no longer in GitHub | false | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
@@ -202,6 +204,7 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 | `insecure` | Ignore SSL verification | 'false' | No |
 | `groups` | List of groups to filter against | | No |
 | `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
+| `prune` | Prune Whether to prune groups that are no longer in GitLab | false | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
@@ -263,6 +266,7 @@ The configurations of the three primary schemas (`rfc2307`, `activeDirectory` an
 | `url` | Connection URL for the LDAP server | `https://gitlab.cldap://ldapserver:389om` | No |
 | `whitelist` | Explicit list of groups to synchronize |  | No |
 | `blacklist` | Explicit list of groups to not synchronize |  | No |
+| `prune` | Prune Whether to prune groups that are no longer in LDAP | false | No |
 
 The following is an example using the `rfc2307` schema:
 
@@ -366,6 +370,7 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 | `realm` | Realm to synchronize | | Yes |
 | `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
 | `url` | URL Location for Keycloak | | Yes |
+| `prune` | Prune Whether to prune groups that are no longer in Keycloak | false | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Keycloak provider:
 
@@ -417,6 +422,7 @@ The following table describes the set of configuration options for the Okta prov
 | `extractLoginUsername` | Bool to determine if you should extract username from okta login | `false`  | No |
 | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `'login'` | No |
 | `groupLimit` | Integer to set the maximum number of groups to sync | `1000` | No |
+| `prune` | Prune Whether to prune groups that are no longer in OKTA | false | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 
