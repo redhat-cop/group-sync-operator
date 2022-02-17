@@ -77,6 +77,9 @@ spec:
                           insecure:
                             description: Insecure specifies whether to allow for unverified certificates to be used when communicating to Azure
                             type: boolean
+                          prune:
+                            description: Prune Whether to prune groups that are no longer in Azure. Default is false
+                            type: boolean
                           url:
                             description: URL is the location of the Azure platform
                             type: string
