@@ -403,7 +403,7 @@ type OktaProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Profile Key",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	ProfileKey string `json:"profileKey"`
-	// GroupLimit is the maximum number of groups that can be synced. Default is "1000"
+	// GroupLimit is the maximum number of groups that are requested from OKTA per request.  Multiple requests will be made using pagination if you have more groups than this limit. Default is "1000"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Group Limit",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number"}
 	// +kubebuilder:validation:Optional
 	GroupLimit int `json:"groupLimit"`
