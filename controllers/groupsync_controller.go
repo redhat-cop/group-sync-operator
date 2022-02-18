@@ -193,7 +193,9 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		successfulGroupSyncs.With(prometheusLabels).Inc()
 		groupsSynchronized.With(prometheusLabels).Set(float64(updatedGroups))
 		groupSyncError.With(prometheusLabels).Set(0)
-
+		if groupSyncer.GetPrune() {
+			groupsPruned.With(prometheusLabels).Set(float64(prunedGroups))
+		}
 	}
 
 	instance.Status.LastSyncSuccessTime = &metav1.Time{Time: clock.Now()}
