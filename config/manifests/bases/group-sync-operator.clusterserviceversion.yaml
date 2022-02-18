@@ -615,7 +615,7 @@ spec:
         path: providers[0].okta.extractLoginUsername
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: GroupLimit is the maximum number of groups that can be synced.
+      - description: GroupLimit is the maximum number of groups that are requested from OKTA per request.  Multiple requests will be made using pagination if you have more groups than this limit.
           Default is "1000"
         displayName: Group Limit
         path: providers[0].okta.groupLimit
@@ -1038,8 +1038,8 @@ spec:
       | `appId` | Application ID of App Groups are assigned to | | Yes |
       | `extractLoginUsername` | Bool to determine if you should extract username from okta login | | No |
       | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `login` | No |
+      | `groupLimit` | Integer to set the maximum number of groups to retrieve from OKTA per request. | `1000` | No |
       | `prune` | Prune Whether to prune groups that are no longer in OKTA | false | No |
-
 
     The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 
