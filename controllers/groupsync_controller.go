@@ -117,6 +117,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		}
 
 		updatedGroups := 0
+		prunedGroups := 0
 
 		for _, group := range groups {
 
@@ -175,17 +176,17 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			updatedGroups++
 		}
 
-		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
-
 		if groupSyncer.GetPrune() {
 			logger.Info("Start Pruning Groups")
-			err = r.pruneGroups(context, instance, providerLabel, syncStartTime, logger)
+			prunedGroups, err = r.pruneGroups(context, instance, providerLabel, syncStartTime, logger)
 			if err != nil {
 				log.Error(err, "Failed to Prune Group")
 				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 			}
 			logger.Info("Pruning Completed")
 		}
+
+		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups, "Groups Pruned", prunedGroups)
 
 		// Add Metrics
 
@@ -226,8 +227,8 @@ func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prome
 	return r.ManageError(context, obj, issue)
 }
 
-func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) error {
-
+func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) (int, error) {
+	prunedGroups := 0
 	ocpGroups := &userv1.GroupList{}
 	opts := []client.ListOption{
 		client.InNamespace(""),
@@ -235,19 +236,20 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 	}
 	err := r.GetClient().List(context, ocpGroups, opts...)
 	if err != nil {
-		return err
+		return prunedGroups, err
 	}
 
 	for _, group := range ocpGroups.Items {
 		if group.Annotations[constants.SyncTimestamp] < syncStartTime {
 			logger.Info("pruneGroups", "Delete Group", group.Name)
 			err = r.GetClient().Delete(context, &group)
+			prunedGroups++
 			if err != nil {
-				return err
+				return prunedGroups, err
 			}
 		}
 	}
-	return nil
+	return prunedGroups, nil
 }
 
 func ISO8601(t time.Time) string {
