@@ -31,6 +31,7 @@ var (
 const (
 	// API token given by Okta application
 	secretOktaTokenKey = "okta-api-token"
+	activeStatus       = "ACTIVE"
 )
 
 type OktaSyncer struct {
@@ -158,13 +159,15 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 		users := o.cachedGroupMembers[cachedGroup.Id]
 		for _, user := range users {
 			profile := *user.Profile
-			if userName, ok := profile[o.Provider.ProfileKey].(string); !ok {
-				oktaLogger.Info("attribute unavailable on okta user profile " + o.Provider.ProfileKey)
-			} else if o.Provider.ExtractLoginUsername {
-				userName = strings.Split(userName, "@")[0]
-				ocpGroup.Users = append(ocpGroup.Users, userName)
-			} else {
-				ocpGroup.Users = append(ocpGroup.Users, userName)
+			if user.Status == activeStatus {
+				if userName, ok := profile[o.Provider.ProfileKey].(string); !ok {
+					oktaLogger.Info("attribute unavailable on okta user profile " + o.Provider.ProfileKey)
+				} else if o.Provider.ExtractLoginUsername {
+					userName = strings.Split(userName, "@")[0]
+					ocpGroup.Users = append(ocpGroup.Users, userName)
+				} else {
+					ocpGroup.Users = append(ocpGroup.Users, userName)
+				}
 			}
 		}
 		ocpGroups = append(ocpGroups, ocpGroup)
