@@ -2,8 +2,36 @@ apiVersion: v1
 entries:
   group-sync-operator:
   - apiVersion: v1
+    appVersion: 0.0.16
+    created: "2022-02-22T15:06:51.707212834Z"
+    description: Helm chart that deploys the group-sync-operator
+    digest: 85f84e368e0a7f31ba87ee2970b36323fcecd3694ef3a83180f3116aaace6c83
+    keywords:
+    - authorization
+    - security
+    name: group-sync-operator
+    sources:
+    - https://github.com/redhat-cop/group-sync-operator
+    urls:
+    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-0.0.16.tgz
+    version: 0.0.16
+  - apiVersion: v1
+    appVersion: v0.0.16
+    created: "2022-02-22T15:06:51.710566882Z"
+    description: Helm chart that deploys the group-sync-operator
+    digest: 8b30dbb95e36f321321c42670a1f9dbda600012bd0127920e07435ee10421343
+    keywords:
+    - authorization
+    - security
+    name: group-sync-operator
+    sources:
+    - https://github.com/redhat-cop/group-sync-operator
+    urls:
+    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.16.tgz
+    version: v0.0.16
+  - apiVersion: v1
     appVersion: 0.0.15
-    created: "2022-01-30T16:44:04.130138504Z"
+    created: "2022-02-22T15:06:51.706625326Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 41bcccc1eddfd9141222bf42d718bd32165ceb0c8b9528c6368007445553685b
     keywords:
@@ -17,7 +45,7 @@ entries:
     version: 0.0.15
   - apiVersion: v1
     appVersion: v0.0.15
-    created: "2022-01-30T16:44:04.134084245Z"
+    created: "2022-02-22T15:06:51.710022774Z"
     description: Helm chart that deploys the group-sync-operator
     digest: b44502dd833c2ec8c5166ba343007944205c1b49e636b85fe9e05fc6cecb7c9f
     keywords:
@@ -31,7 +59,7 @@ entries:
     version: v0.0.15
   - apiVersion: v1
     appVersion: v0.0.14
-    created: "2022-01-30T16:44:04.133460238Z"
+    created: "2022-02-22T15:06:51.709468766Z"
     description: Helm chart that deploys the group-sync-operator
     digest: b99d4485bb1e94b74a5d9d081e115a6017da4dc85321878dd6b78dc6a6d05e18
     keywords:
@@ -45,7 +73,7 @@ entries:
     version: v0.0.14
   - apiVersion: v1
     appVersion: v0.0.13
-    created: "2022-01-30T16:44:04.13266793Z"
+    created: "2022-02-22T15:06:51.708923259Z"
     description: Helm chart that deploys the group-sync-operator
     digest: d274656700e6378e723a28cd1fa3d14bb5a23447a1db67a8b1819ee22d408b59
     keywords:
@@ -59,7 +87,7 @@ entries:
     version: v0.0.13
   - apiVersion: v1
     appVersion: v0.0.12
-    created: "2022-01-30T16:44:04.131561519Z"
+    created: "2022-02-22T15:06:51.708397151Z"
     description: Helm chart that deploys the group-sync-operator
     digest: c4e674b48a592d10e927f329ec773738e275d9687c82735fee598b951b772764
     keywords:
@@ -73,7 +101,7 @@ entries:
     version: v0.0.12
   - apiVersion: v1
     appVersion: v0.0.11
-    created: "2022-01-30T16:44:04.130976613Z"
+    created: "2022-02-22T15:06:51.707914144Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 78db614e87d5a29edf9df0bdbde0a2a8583900904bb749a855446fd3f9296695
     keywords:
@@ -87,7 +115,7 @@ entries:
     version: v0.0.11
   - apiVersion: v1
     appVersion: v0.0.10
-    created: "2022-01-30T16:44:04.130555209Z"
+    created: "2022-02-22T15:06:51.707552839Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 33d1ee12b8b1f9eabc9ccd9da24ea5c4aa3a5e30e3cf9c8ff520389c68cd392d
     keywords:
@@ -101,7 +129,7 @@ entries:
     version: v0.0.10
   - apiVersion: v1
     appVersion: v0.0.9
-    created: "2022-01-30T16:44:04.134439348Z"
+    created: "2022-02-22T15:06:51.710883686Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 9a2fed700d978e42a1fd38e8258b096e282dc9e58e1746e9522a4b9eb902ca2a
     keywords:
@@ -113,4 +141,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.9.tgz
     version: v0.0.9
-generated: "2022-01-30T16:44:04.128957292Z"
+generated: "2022-02-22T15:06:51.704576397Z"
