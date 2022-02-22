@@ -29,6 +29,7 @@ type GroupSyncer interface {
 	Bind() error
 	Sync() ([]userv1.Group, error)
 	Validate() error
+	GetPrune() bool
 }
 
 type GroupSyncMgr struct {

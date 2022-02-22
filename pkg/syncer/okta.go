@@ -273,3 +273,7 @@ func (o *OktaSyncer) processGroupsAndMembers(group *okta.Group) error {
 func (o *OktaSyncer) GetProviderName() string {
 	return o.Name
 }
+
+func (o *OktaSyncer) GetPrune() bool {
+	return o.Provider.Prune
+}

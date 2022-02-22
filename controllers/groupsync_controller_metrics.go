@@ -33,6 +33,13 @@ var (
 		},
 		[]string{METRICS_PROVIDER_LABEL, METRICS_CR_NAMESPACE_LABEL, METRICS_CR_NAME_LABEL})
 
+	groupsPruned = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "group_pruned_number_groups",
+			Help: "Number of Groups Pruned",
+		},
+		[]string{METRICS_PROVIDER_LABEL, METRICS_CR_NAMESPACE_LABEL, METRICS_CR_NAME_LABEL})
+
 	nextScheduledSynchronization = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "group_sync_next_scheduled_sync",

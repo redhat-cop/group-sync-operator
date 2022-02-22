@@ -101,6 +101,11 @@ spec:
         path: providers[0].azure.userNameAttributes
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in Azure. Default is false
+        displayName: Azure Prune
+        path: providers[0].azure.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: GitHub represents the GitHub provider
         displayName: GitHub Provider
         path: providers[0].github
@@ -217,6 +222,11 @@ spec:
         path: providers[0].github.v4url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in GitHub. Default is false
+        displayName: GitHub Prune
+        path: providers[0].github.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: GitLab represents the GitLab provider
         displayName: GitLab Provider
         path: providers[0].gitlab
@@ -317,6 +327,11 @@ spec:
         path: providers[0].gitlab.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in GitLab. Default is false
+        displayName: GitLab Prune
+        path: providers[0].gitlab.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
         path: providers[0].keycloak
@@ -426,6 +441,11 @@ spec:
         path: providers[0].keycloak.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in Keycloak. Default is false
+        displayName: Keycloak Prune
+        path: providers[0].keycloak.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Ldap represents the LDAP provider
         displayName: LDAP Provider
         path: providers[0].ldap
@@ -546,6 +566,11 @@ spec:
         path: providers[0].ldap.whitelist
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in LDAP. Default is false
+        displayName: LDAP Prune
+        path: providers[0].ldap.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Name represents the name of the provider
         displayName: Name of the Provider
         path: providers[0].name
@@ -612,6 +637,11 @@ spec:
         path: providers[0].okta.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in OKTA. Default is false
+        displayName: OKTA Prune
+        path: providers[0].okta.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Schedule represents a cron based configuration for synchronization
         displayName: Schedule
         path: schedule
@@ -681,6 +711,7 @@ spec:
     | `filter` | Graph API filter | | No |
     | `groups` | List of groups to filter against | | No |
     | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
+    | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
 
@@ -734,6 +765,7 @@ spec:
     | `organization` | Organization to synchronize against | | Yes |
     | `teams` | List of teams to filter against | | No |
     | `url` | Base URL for the GitHub or GitHub Enterprise host (Must contain a trailing slash) | | No |
+    | `prune` | Prune Whether to prune groups that are no longer in GitHub | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
 
@@ -786,9 +818,10 @@ spec:
     | `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
     | `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
     | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
-    | `insecure` | Ignore SSL verification | 'false' | No |
+    | `insecure` | Ignore SSL verification | `false` | No |
     | `groups` | List of groups to filter against | | No |
     | `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
+    | `prune` | Prune Whether to prune groups that are no longer in GitLab | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with a Github provider:
 
@@ -842,7 +875,7 @@ spec:
     | `ca` | Reference to a resource containing a SSL certificate to use for communication (See below) | | No |
     | `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
     | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | No |
-    | `insecure` | Ignore SSL verification | 'false' | No |
+    | `insecure` | Ignore SSL verification | `false` | No |
     | `groupUIDNameMapping` | User defined name mapping | | No |
     | `rfc2307` | Configuration using the [rfc2307](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html#ldap-syncing-rfc2307_ldap-syncing-groups) schema | | No |
     | `activeDirectory` | Configuration using the [activeDirectory](https://docs.openshift.com/container-platform/4.5/authentication/ldap-syncing.html#ldap-syncing-activedir_ldap-syncing-groups) schema | | No |
@@ -850,6 +883,7 @@ spec:
     | `url` | Connection URL for the LDAP server | `https://gitlab.cldap://ldapserver:389om` | No |
     | `whitelist` | Explicit list of groups to synchronize |  | No |
     | `blacklist` | Explicit list of groups to not synchronize |  | No |
+    | `prune` | Prune Whether to prune groups that are no longer in LDAP | `false` | No |
 
     The following is an example using the `rfc2307` schema:
 
@@ -948,11 +982,12 @@ spec:
     | `caSecret` | **DEPRECATED** Reference to a secret containing a SSL certificate to use for communication (See below) | | No |
     | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
     | `groups` | List of groups to filter against | | No |
-    | `insecure` | Ignore SSL verification | 'false' | No |
+    | `insecure` | Ignore SSL verification | `false` | No |
     | `loginRealm` | Realm to authenticate against | `master` | No |
     | `realm` | Realm to synchronize | | Yes |
     | `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
     | `url` | URL Location for Keycloak | | Yes |
+    | `prune` | Prune Whether to prune groups that are no longer in Keycloak | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with a Keycloak provider:
 
@@ -1004,7 +1039,7 @@ spec:
       | `extractLoginUsername` | Bool to determine if you should extract username from okta login | | No |
       | `profileKey` | Attribute field on Okta User Profile you would like to use as identity | `login` | No |
       | `groupLimit` | Integer to set the maximum number of groups to retrieve from OKTA per request. | `1000` | No |
-
+      | `prune` | Prune Whether to prune groups that are no longer in OKTA | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 

@@ -107,6 +107,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 		}
 
+		syncStartTime := ISO8601(time.Now())
 		// Perform Sync
 		groups, err := groupSyncer.Sync()
 
@@ -116,6 +117,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		}
 
 		updatedGroups := 0
+		prunedGroups := 0
 
 		for _, group := range groups {
 
@@ -163,6 +165,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			ocpGroup.Annotations[constants.SyncTimestamp] = ISO8601(time.Now())
 
 			ocpGroup.Users = group.Users
+
 			err = r.CreateOrUpdateResource(context, nil, "", ocpGroup)
 
 			if err != nil {
@@ -171,17 +174,28 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			}
 
 			updatedGroups++
-
 		}
 
-		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups)
+		if groupSyncer.GetPrune() {
+			logger.Info("Start Pruning Groups")
+			prunedGroups, err = r.pruneGroups(context, instance, providerLabel, syncStartTime, logger)
+			if err != nil {
+				log.Error(err, "Failed to Prune Group")
+				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
+			}
+			logger.Info("Pruning Completed")
+		}
+
+		logger.Info("Sync Completed Successfully", "Provider", groupSyncer.GetProviderName(), "Groups Created or Updated", updatedGroups, "Groups Pruned", prunedGroups)
 
 		// Add Metrics
 
 		successfulGroupSyncs.With(prometheusLabels).Inc()
 		groupsSynchronized.With(prometheusLabels).Set(float64(updatedGroups))
 		groupSyncError.With(prometheusLabels).Set(0)
-
+		if groupSyncer.GetPrune() {
+			groupsPruned.With(prometheusLabels).Set(float64(prunedGroups))
+		}
 	}
 
 	instance.Status.LastSyncSuccessTime = &metav1.Time{Time: clock.Now()}
@@ -213,6 +227,31 @@ func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prome
 	groupSyncError.With(prometheusLabels).Set(1)
 
 	return r.ManageError(context, obj, issue)
+}
+
+func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) (int, error) {
+	prunedGroups := 0
+	ocpGroups := &userv1.GroupList{}
+	opts := []client.ListOption{
+		client.InNamespace(""),
+		client.MatchingLabels{constants.SyncProvider: providerLabel},
+	}
+	err := r.GetClient().List(context, ocpGroups, opts...)
+	if err != nil {
+		return prunedGroups, err
+	}
+
+	for _, group := range ocpGroups.Items {
+		if group.Annotations[constants.SyncTimestamp] < syncStartTime {
+			logger.Info("pruneGroups", "Delete Group", group.Name)
+			err = r.GetClient().Delete(context, &group)
+			prunedGroups++
+			if err != nil {
+				return prunedGroups, err
+			}
+		}
+	}
+	return prunedGroups, nil
 }
 
 func ISO8601(t time.Time) string {

@@ -388,3 +388,7 @@ func (k *KeycloakSyncer) getGroupMembers(groupId string) ([]*gocloak.User, error
 func (k *KeycloakSyncer) GetProviderName() string {
 	return k.Name
 }
+
+func (k *KeycloakSyncer) GetPrune() bool {
+	return k.Provider.Prune
+}
