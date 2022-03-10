@@ -420,7 +420,7 @@ spec:
           name: okta-api-token
           namespace: group-sync-operator
         url: "https://example.okta.com/"
-        appId: 0oad5lTSBOMUBOBVVQSC
+        appId: xxxxxxxxxxxxxxxxxxxx
 ```
 
 #### Authenticating to Okta
