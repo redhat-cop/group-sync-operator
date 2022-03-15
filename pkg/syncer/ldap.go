@@ -37,6 +37,7 @@ type LdapSyncer struct {
 	GroupSync         *redhatcopv1alpha1.GroupSync
 	Provider          *redhatcopv1alpha1.LdapProvider
 	ReconcilerBase    util.ReconcilerBase
+	Context           context.Context
 	CredentialsSecret *corev1.Secret
 	URL               *url.URL
 	CaCertificate     []byte
@@ -47,6 +48,8 @@ type LdapSyncer struct {
 }
 
 func (l *LdapSyncer) Init() bool {
+
+	l.Context = context.Background()
 
 	if l.Provider.Whitelist == nil {
 		l.Whitelist = []string{}
@@ -68,7 +71,7 @@ func (l *LdapSyncer) Validate() error {
 
 	if l.Provider.CredentialsSecret != nil {
 		credentialsSecret := &corev1.Secret{}
-		err := l.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: l.Provider.CredentialsSecret.Name, Namespace: l.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+		err := l.ReconcilerBase.GetClient().Get(l.Context, types.NamespacedName{Name: l.Provider.CredentialsSecret.Name, Namespace: l.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
@@ -78,28 +81,28 @@ func (l *LdapSyncer) Validate() error {
 
 	}
 
-	if l.Provider.CaSecret != nil {
-		caSecret := &corev1.Secret{}
-		err := l.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: l.Provider.CaSecret.Name, Namespace: l.Provider.CaSecret.Namespace}, caSecret)
+	providerCaResource := determineFromDeprecatedObjectRef(l.Provider.Ca, l.Provider.CaSecret)
+	if providerCaResource != nil {
+
+		caResource, err := getObjectRefData(l.Context, l.ReconcilerBase.GetClient(), providerCaResource)
 
 		if err != nil {
 			validationErrors = append(validationErrors, err)
 		}
 
-		var secretCaKey string
-		if l.Provider.CaSecret.Key != "" {
-			secretCaKey = l.Provider.CaSecret.Key
+		var resourceCaKey string
+		if providerCaResource.Key != "" {
+			resourceCaKey = providerCaResource.Key
 		} else {
-			secretCaKey = defaultResourceCaKey
+			resourceCaKey = defaultResourceCaKey
 		}
 
 		// Certificate key validation
-		if _, found := caSecret.Data[secretCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in secret '%s' in namespace '%s", secretCaKey, l.Provider.CaSecret.Name, l.Provider.CaSecret.Namespace))
+		if _, found := caResource[resourceCaKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
-		l.CaCertificate = caSecret.Data[secretCaKey]
-
+		l.CaCertificate = caResource[resourceCaKey]
 	}
 
 	if l.Provider.URL == nil {
