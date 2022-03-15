@@ -9,19 +9,22 @@ import (
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	msgraph "github.com/yaegashi/msgraph.go/beta"
-	"github.com/yaegashi/msgraph.go/msauth"
-	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	az "github.com/microsoft/kiota/authentication/go/azure"
+	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
+	msgroups "github.com/microsoftgraph/msgraph-sdk-go/groups"
+	msmembers "github.com/microsoftgraph/msgraph-sdk-go/groups/item/members"
+	graph "github.com/microsoftgraph/msgraph-sdk-go/models/microsoft/graph"
 )
 
 var (
 	azureLogger = logf.Log.WithName("syncer_azure")
-	Scopes      = []string{msauth.DefaultMSGraphScope}
 )
 
 const (
@@ -40,18 +43,18 @@ type AzureSyncer struct {
 	Name              string
 	GroupSync         *redhatcopv1alpha1.GroupSync
 	Provider          *redhatcopv1alpha1.AzureProvider
-	Client            *msgraph.GraphServiceRequestBuilder
+	Client            *msgraphsdk.GraphServiceClient
 	ReconcilerBase    util.ReconcilerBase
 	CredentialsSecret *corev1.Secret
-	CachedGroups      map[string]*msgraph.Group
-	CachedGroupUsers  map[string][]*msgraph.User
+	CachedGroups      map[string]*graph.Group
+	CachedGroupUsers  map[string][]*graph.User
 	Context           context.Context
 }
 
 func (a *AzureSyncer) Init() bool {
 
-	a.CachedGroups = make(map[string]*msgraph.Group)
-	a.CachedGroupUsers = make(map[string][]*msgraph.User)
+	a.CachedGroups = make(map[string]*graph.Group)
+	a.CachedGroupUsers = make(map[string][]*graph.User)
 	a.Context = context.Background()
 
 	return false
@@ -87,17 +90,29 @@ func (a *AzureSyncer) Validate() error {
 
 func (a *AzureSyncer) Bind() error {
 
-	m := msauth.NewManager()
+	opts := &azidentity.ClientSecretCredentialOptions{}
+	opts.AuthorityHost = azidentity.AuthorityHost(getAuthorityHost(a.Provider.AuthorityHost))
+	cred, err := azidentity.NewClientSecretCredential(
+		string(a.CredentialsSecret.Data[TenantID]), string(a.CredentialsSecret.Data[ClientID]), string(a.CredentialsSecret.Data[ClientSecret]),
+		opts)
 
-	ts, err := m.ClientCredentialsGrant(a.Context, string(a.CredentialsSecret.Data[TenantID]), string(a.CredentialsSecret.Data[ClientID]), string(a.CredentialsSecret.Data[ClientSecret]), Scopes)
 	if err != nil {
 		return err
 	}
 
-	httpClient := oauth2.NewClient(a.Context, ts)
-	graphClient := msgraph.NewClient(httpClient)
+	auth, err := az.NewAzureIdentityAuthenticationProvider(cred)
 
-	a.Client = graphClient
+	if err != nil {
+		return err
+	}
+
+	adapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
+	if err != nil {
+		return err
+
+	}
+
+	a.Client = msgraphsdk.NewGraphServiceClient(adapter)
 
 	return nil
 
@@ -106,20 +121,28 @@ func (a *AzureSyncer) Bind() error {
 func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 	ocpGroups := []userv1.Group{}
-	aadGroups := []msgraph.Group{}
+	aadGroups := []graph.Group{}
 
 	if a.Provider.BaseGroups != nil && len(a.Provider.BaseGroups) > 0 {
 
 		for _, baseGroup := range a.Provider.BaseGroups {
 
-			baseGroupRequest := a.Client.Groups().Request()
-			baseGroupRequest.Filter(fmt.Sprintf("displayName eq '%s'", baseGroup))
-			baseGroupResult, err := baseGroupRequest.Get(a.Context)
+			filter := fmt.Sprintf("displayName eq '%s'", baseGroup)
+			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
+				Filter: &filter,
+			}
+			groupOptions := &msgroups.GroupsRequestBuilderGetOptions{
+				Q: groupRequestParameters,
+			}
+
+			baseGroupRequest, err := a.Client.Groups().Get(groupOptions)
 
 			if err != nil {
 				azureLogger.Error(err, "Failed to get base group", "Provider", a.Name, "Base Group", baseGroup)
 				return nil, err
 			}
+
+			baseGroupResult := getGroupsFromResults(baseGroupRequest)
 
 			// Check that only 1 group was found
 			if len(baseGroupResult) != 1 {
@@ -130,33 +153,41 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			// Add Base Group
 			aadGroups = append(aadGroups, baseGroupResult[0])
 
-			baseGroupMembersRequest := a.Client.Groups().ID(*baseGroupResult[0].ID).Members().Request()
+			var baseGroupMemberOptions *msmembers.MembersRequestBuilderGetOptions
 
 			if a.Provider.Filter != "" {
-				baseGroupMembersRequest.Filter(a.Provider.Filter)
+				requestParameters := &msmembers.MembersRequestBuilderGetQueryParameters{
+					Filter: &a.Provider.Filter,
+				}
+				baseGroupMemberOptions = &msmembers.MembersRequestBuilderGetOptions{
+					Q: requestParameters,
+				}
+
 			}
 
-			baseGroupMembersResult, err := baseGroupMembersRequest.Get(a.Context)
+			baseGroupMembersRequest, err := a.Client.GroupsById(*baseGroupResult[0].GetId()).Members().Get(baseGroupMemberOptions)
 
 			if err != nil {
 				azureLogger.Error(err, "Failed to get base group members", "Provider", a.Name, "Base Group", baseGroup)
 				return nil, err
 			}
 
+			baseGroupMembersResult := getDirectoryObjectsFromResults(baseGroupMembersRequest)
+
 			for _, baseGroupMember := range baseGroupMembersResult {
 
-				baseGroupMemberODataType, _ := baseGroupMember.GetAdditionalData(GraphOdataType)
+				baseGroupMemberODataType, _ := baseGroupMember.GetAdditionalData()[GraphOdataType].(*string)
 
 				// Add base groups
-				if GraphGroupType == baseGroupMemberODataType {
+				if GraphGroupType == *baseGroupMemberODataType {
 
-					baseGroupDisplayNameRaw, _ := baseGroupMember.GetAdditionalData(GraphDisplayName)
-					baseGroupDisplayName := baseGroupDisplayNameRaw.(string)
-
-					aadGroups = append(aadGroups, msgraph.Group{
+					baseGroupDisplayNameRaw, _ := baseGroupMember.GetAdditionalData()[GraphDisplayName]
+					baseGroupDisplayName := baseGroupDisplayNameRaw.(*string)
+					baseGroup := graph.Group{
 						DirectoryObject: baseGroupMember,
-						DisplayName:     &baseGroupDisplayName,
-					})
+					}
+					baseGroup.SetDisplayName(baseGroupDisplayName)
+					aadGroups = append(aadGroups, baseGroup)
 				}
 			}
 
@@ -164,32 +195,41 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 	} else {
 
-		groupRequest := a.Client.Groups().Request()
+		var groupOptions *msgroups.GroupsRequestBuilderGetOptions
 
 		if a.Provider.Filter != "" {
-			groupRequest.Filter(a.Provider.Filter)
+			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
+				Filter: &a.Provider.Filter,
+			}
+			groupOptions = &msgroups.GroupsRequestBuilderGetOptions{
+				Q: groupRequestParameters,
+			}
+
 		}
 
-		groupResult, err := groupRequest.Get(a.Context)
+		groupRequest, err := a.Client.Groups().Get(groupOptions)
 
 		if err != nil {
-			azureLogger.Error(err, "Failed to get base group", "Provider", a.Name)
+			azureLogger.Error(err, "Failed to get groups", "Provider", a.Name)
 			return nil, err
 		}
+
+		groupResult := getGroupsFromResults(groupRequest)
 
 		aadGroups = append(aadGroups, groupResult...)
 
 	}
 
-	azureURL, err := url.Parse(a.Client.URL())
+	authorityHost := string(getAuthorityHost(a.Provider.AuthorityHost))
+	azureURL, err := url.Parse(authorityHost)
 	if err != nil {
-		azureLogger.Error(err, "Failed to parse Azure URL", "URL", a.Client.URL())
+		azureLogger.Error(err, "Failed to parse Azure URL", "URL", authorityHost)
 		return nil, err
 	}
 
 	for _, group := range aadGroups {
 
-		groupName := group.DisplayName
+		groupName := group.GetDisplayName()
 
 		if groupName == nil {
 			azureLogger.Info(fmt.Sprintf("Warning: Skipping Group record with empty displayName"))
@@ -215,12 +255,12 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = azureURL.Host
-		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *group.DirectoryObject.ID
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *group.DirectoryObject.GetId()
 
-		groupMembers, err := a.listGroupMembers(group.DirectoryObject.ID)
+		groupMembers, err := a.listGroupMembers(group.DirectoryObject.GetId())
 
 		if err != nil {
-			azureLogger.Error(err, "Failed to get Group members for Group", "Group", group.DisplayName, "Provider", a.Name)
+			azureLogger.Error(err, "Failed to get Group members for Group", "Group", group.GetDisplayName(), "Provider", a.Name)
 			return nil, err
 		}
 
@@ -242,18 +282,19 @@ func (a *AzureSyncer) GetProviderName() string {
 
 func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 	groupMembers := []string{}
-	memberRequest := a.Client.Groups().ID(*groupID).TransitiveMembers().Request()
-
-	members, err := memberRequest.Get(a.Context)
+	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().Get(nil)
 
 	if err != nil {
 		return nil, err
 	}
+
+	members := memberRequest.GetValue()
+
 	for _, member := range members {
 
-		memberODataType, _ := member.GetAdditionalData(GraphOdataType)
+		memberODataType, _ := member.GetAdditionalData()[GraphOdataType].(*string)
 
-		if memberODataType == GraphUserType {
+		if *memberODataType == GraphUserType {
 			if username, found := a.getUsernameForUser(member); found {
 				groupMembers = append(groupMembers, fmt.Sprintf("%v", username))
 			} else {
@@ -267,7 +308,7 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 
 }
 
-func (a *AzureSyncer) getUsernameForUser(user msgraph.DirectoryObject) (string, bool) {
+func (a *AzureSyncer) getUsernameForUser(user graph.DirectoryObjectable) (string, bool) {
 
 	if a.Provider.UserNameAttributes == nil {
 		return a.isUsernamePresent(user, GraphUserNameAttribute)
@@ -286,13 +327,49 @@ func (a *AzureSyncer) getUsernameForUser(user msgraph.DirectoryObject) (string, 
 
 }
 
-func (a *AzureSyncer) isUsernamePresent(user msgraph.DirectoryObject, field string) (string, bool) {
+func (a *AzureSyncer) isUsernamePresent(user graph.DirectoryObjectable, field string) (string, bool) {
 
-	value, ok := user.GetAdditionalData(field)
-
-	return fmt.Sprintf("%v", value), ok
+	value, ok := user.GetAdditionalData()[field].(*string)
+	return fmt.Sprintf("%v", *value), ok
 }
 
 func (a *AzureSyncer) GetPrune() bool {
 	return a.Provider.Prune
+}
+
+func getAuthorityHost(authorityHost *string) azidentity.AuthorityHost {
+
+	if authorityHost == nil {
+		return azidentity.AzurePublicCloud
+
+	} else {
+		return azidentity.AuthorityHost(*authorityHost)
+	}
+
+}
+
+func getGroupsFromResults(result graph.GroupCollectionResponseable) []graph.Group {
+	groups := []graph.Group{}
+
+	for _, g := range result.GetValue() {
+
+		group := g.(*graph.Group)
+		groups = append(groups, *group)
+
+	}
+
+	return groups
+}
+
+func getDirectoryObjectsFromResults(result graph.DirectoryObjectCollectionResponseable) []graph.DirectoryObject {
+	directoryObjects := []graph.DirectoryObject{}
+
+	for _, d := range result.GetValue() {
+
+		directoryObject := d.(*graph.DirectoryObject)
+		directoryObjects = append(directoryObjects, *directoryObject)
+
+	}
+
+	return directoryObjects
 }

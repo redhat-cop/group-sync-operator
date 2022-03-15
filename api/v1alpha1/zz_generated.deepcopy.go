@@ -45,8 +45,8 @@ func (in *AzureProvider) DeepCopyInto(out *AzureProvider) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.URL != nil {
-		in, out := &in.URL, &out.URL
+	if in.AuthorityHost != nil {
+		in, out := &in.AuthorityHost, &out.AuthorityHost
 		*out = new(string)
 		**out = **in
 	}

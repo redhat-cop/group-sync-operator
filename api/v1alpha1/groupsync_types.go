@@ -385,10 +385,10 @@ type AzureProvider struct {
 	// +kubebuilder:validation:Optional
 	Groups []string `json:"groups,omitempty"`
 
-	// URL is the location of the Azure platform
+	// AuthorityHost is the location of the Azure Active Directory endpoint
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
-	URL *string `json:"url,omitempty"`
+	AuthorityHost *string `json:"authorityHost,omitempty"`
 
 	// UserNameAttributes are the fields to consider on the User object containing the username
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure UserName Attributes",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
