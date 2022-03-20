@@ -72,6 +72,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 
 | Name | Description | Defaults | Required |
 | ----- | ---------- | -------- | ----- |
+| `authorityHost` | Azure Active Directory Endpoint | `https://login.microsoftonline.com` | No |
 | `baseGroups` | List of groups to start searching from instead of listing all groups in the directory | | No |
 | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
 | `filter` | Graph API filter | | No |
