@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/group-sync-operator/pkg/syncer"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -81,7 +80,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 	if changed := groupSyncMgr.SetDefaults(); changed {
 		err := r.GetClient().Update(context, instance)
 		if err != nil {
-			log.Error(err, "unable to update instance", "instance", instance)
+			r.Log.Error(err, "unable to update instance", "instance", instance)
 			return r.ManageError(context, instance, err)
 		}
 		return reconcile.Result{}, nil
@@ -139,7 +138,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			} else {
 				// Verify this group is not managed by another provider
 				if groupProviderLabel, exists := ocpGroup.Labels[constants.SyncProvider]; !exists || (groupProviderLabel != providerLabel) {
-					log.Info("Group Provider Label Did Not Match Expected Provider Label", "Group Name", ocpGroup.Name, "Expected Label", providerLabel, "Found Label", groupProviderLabel)
+					r.Log.Info("Group Provider Label Did Not Match Expected Provider Label", "Group Name", ocpGroup.Name, "Expected Label", providerLabel, "Found Label", groupProviderLabel)
 					continue
 				}
 			}
@@ -169,7 +168,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			err = r.CreateOrUpdateResource(context, nil, "", ocpGroup)
 
 			if err != nil {
-				log.Error(err, "Failed to Create or Update OpenShift Group")
+				r.Log.Error(err, "Failed to Create or Update OpenShift Group")
 				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 			}
 
@@ -180,7 +179,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			logger.Info("Start Pruning Groups")
 			prunedGroups, err = r.pruneGroups(context, instance, providerLabel, syncStartTime, logger)
 			if err != nil {
-				log.Error(err, "Failed to Prune Group")
+				r.Log.Error(err, "Failed to Prune Group")
 				return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 			}
 			logger.Info("Pruning Completed")
