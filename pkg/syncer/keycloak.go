@@ -9,7 +9,7 @@ import (
 
 	"crypto/x509"
 
-	"github.com/Nerzal/gocloak/v5"
+	"github.com/Nerzal/gocloak/v11"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
@@ -151,7 +151,7 @@ func (k *KeycloakSyncer) Bind() error {
 
 	k.GoCloak.SetRestyClient(restyClient)
 
-	token, err := k.GoCloak.LoginAdmin(string(k.CredentialsSecret.Data[secretUsernameKey]), string(k.CredentialsSecret.Data[secretPasswordKey]), k.Provider.LoginRealm)
+	token, err := k.GoCloak.LoginAdmin(k.Context, string(k.CredentialsSecret.Data[secretUsernameKey]), string(k.CredentialsSecret.Data[secretPasswordKey]), k.Provider.LoginRealm)
 
 	k.Token = token
 
@@ -186,13 +186,16 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 	for _, cachedGroup := range k.CachedGroups {
 
 		groupAttributes := map[string]string{}
+		if cachedGroup.Attributes != nil {
+			cachedGroupAttributes := *cachedGroup.Attributes
 
-		for key, value := range cachedGroup.Attributes {
-			// we add the annotation that qualify for OCP annotations and log for the ones that don't
-			if errs := validation.IsQualifiedName(key); len(errs) == 0 {
-				groupAttributes[key] = strings.Join(value, "'")
-			} else {
-				keycloakLogger.Info("unable to add annotation to", "group", cachedGroup.Name, "key", key, "value", value)
+			for key, value := range cachedGroupAttributes {
+				// we add the annotation that qualify for OCP annotations and log for the ones that don't
+				if errs := validation.IsQualifiedName(key); len(errs) == 0 {
+					groupAttributes[key] = strings.Join(value, "'")
+				} else {
+					keycloakLogger.Info("unable to add annotation to", "group", cachedGroup.Name, "key", key, "value", value)
+				}
 			}
 		}
 
@@ -217,14 +220,20 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 		childrenGroups := []string{}
 
-		for _, subgroup := range cachedGroup.SubGroups {
-			childrenGroups = append(childrenGroups, *subgroup.Name)
+		if cachedGroup.SubGroups != nil {
+			cachedGroupSubgroups := *cachedGroup.SubGroups
+
+			for _, subgroup := range cachedGroupSubgroups {
+
+				childrenGroups = append(childrenGroups, *subgroup.Name)
+			}
 		}
 
 		parentGroups := []string{}
 
 		for _, group := range k.CachedGroups {
-			for _, subgroup := range group.SubGroups {
+			groupSubGroups := *group.SubGroups
+			for _, subgroup := range groupSubGroups {
 				if *subgroup.Name == *cachedGroup.Name {
 					parentGroups = append(parentGroups, *group.Name)
 				}
@@ -279,9 +288,10 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 
 	// Process Subgroups
 	if redhatcopv1alpha1.SubSyncScope == scope {
-		for _, subGroup := range group.SubGroups {
+		groupSubGroups := *group.SubGroups
+		for _, subGroup := range groupSubGroups {
 			if _, subGroupFound := k.CachedGroups[*subGroup.ID]; !subGroupFound {
-				k.processGroupsAndMembers(subGroup, group, scope)
+				k.processGroupsAndMembers(&subGroup, group, scope)
 			}
 		}
 	}
@@ -314,18 +324,25 @@ func (k *KeycloakSyncer) singleDiff(lhsSlice, rhsSlice []*gocloak.User) (lhsOnly
 func (k *KeycloakSyncer) setGroupsAttributes(groups []*gocloak.Group) {
 	for _, group := range groups {
 
-		g, err := k.GoCloak.GetGroup(k.Token.AccessToken, k.Provider.Realm, *group.ID)
+		g, err := k.GoCloak.GetGroup(k.Context, k.Token.AccessToken, k.Provider.Realm, *group.ID)
 
 		if err != nil {
 			continue
 		}
 
-		if g.Attributes != nil && len(g.Attributes) > 0 {
+		if g.Attributes != nil && len(*g.Attributes) > 0 {
 			group.Attributes = g.Attributes
 		}
 
-		if group.SubGroups != nil && len(group.SubGroups) > 0 {
-			k.setGroupsAttributes(group.SubGroups)
+		if group.SubGroups != nil && len(*group.SubGroups) > 0 {
+			groupSubGroupsSlice := make([]*gocloak.Group, 0, len(*group.SubGroups))
+			groupSubGroups := *group.SubGroups
+
+			for _, group := range groupSubGroups {
+				groupSubGroupsSlice = append(groupSubGroupsSlice, &group)
+			}
+
+			k.setGroupsAttributes(groupSubGroupsSlice)
 		}
 	}
 }
@@ -338,7 +355,7 @@ func (k *KeycloakSyncer) getGroups() ([]*gocloak.Group, error) {
 	for {
 		gIteration := iteration * iterationMax
 		groupsParams := gocloak.GetGroupsParams{First: &gIteration, Max: &iterationMax, BriefRepresentation: &truthy}
-		groupsResponse, err := k.GoCloak.GetGroups(k.Token.AccessToken, k.Provider.Realm, groupsParams)
+		groupsResponse, err := k.GoCloak.GetGroups(k.Context, k.Token.AccessToken, k.Provider.Realm, groupsParams)
 
 		if err != nil {
 			return nil, err
@@ -367,7 +384,7 @@ func (k *KeycloakSyncer) getGroupMembers(groupId string) ([]*gocloak.User, error
 
 		uIteration := iteration * iterationMax
 		groupMemberParams := gocloak.GetGroupsParams{First: &uIteration, Max: &iterationMax, BriefRepresentation: &truthy}
-		groupMembers, err := k.GoCloak.GetGroupMembers(k.Token.AccessToken, k.Provider.Realm, groupId, groupMemberParams)
+		groupMembers, err := k.GoCloak.GetGroupMembers(k.Context, k.Token.AccessToken, k.Provider.Realm, groupId, groupMemberParams)
 
 		if err != nil {
 			return nil, err
