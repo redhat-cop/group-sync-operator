@@ -53,7 +53,7 @@ spec:
           - --health-probe-bind-address=:8081
           - --metrics-addr=127.0.0.1:8080
           - --leader-elect
-          image: "{{ template "group-sync-operator.image" .Values.image }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           name: {{ .Chart.Name }}
           env:
