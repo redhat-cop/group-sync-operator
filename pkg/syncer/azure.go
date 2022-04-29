@@ -193,13 +193,18 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 				// Add base groups
 				if GraphGroupType == *baseGroupMemberODataType {
 
-					baseGroupDisplayNameRaw, _ := baseGroupMember.GetAdditionalData()[GraphDisplayName]
-					baseGroupDisplayName := baseGroupDisplayNameRaw.(*string)
-					baseGroup := graph.Group{
-						DirectoryObject: baseGroupMember,
+					baseGroupDisplayNameRaw, ok := baseGroupMember.GetAdditionalData()[GraphDisplayName]
+
+					if ok {
+
+						baseGroupDisplayName := baseGroupDisplayNameRaw.(*string)
+						baseGroup := graph.Group{
+							DirectoryObject: baseGroupMember,
+						}
+						baseGroup.SetDisplayName(baseGroupDisplayName)
+						aadGroups = append(aadGroups, baseGroup)
+
 					}
-					baseGroup.SetDisplayName(baseGroupDisplayName)
-					aadGroups = append(aadGroups, baseGroup)
 				}
 			}
 
@@ -352,7 +357,13 @@ func (a *AzureSyncer) getUsernameForUser(user graph.DirectoryObject) (string, bo
 func (a *AzureSyncer) isUsernamePresent(user graph.DirectoryObject, field string) (string, bool) {
 
 	value, ok := user.GetAdditionalData()[field].(*string)
-	return fmt.Sprintf("%v", *value), ok
+
+	if ok {
+		return fmt.Sprintf("%v", *value), ok
+	} else {
+		return "", ok
+	}
+
 }
 
 func (a *AzureSyncer) GetPrune() bool {
