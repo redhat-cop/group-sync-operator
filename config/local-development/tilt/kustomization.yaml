@@ -1,0 +1,25 @@
+# Adds namespace to all resources.
+namespace: group-sync-operator
+
+# Labels to add to all resources and selectors.
+#commonLabels:
+#  someName: someValue
+
+bases:
+- ../../default
+- ./service-account.yaml
+
+
+patchesJson6902:
+- target:
+    group: ""
+    version: v1
+    kind: Service
+    name: group-sync-operator-webhook-service
+  path: ./secret-injection.yaml
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: group-sync-operator-controller-manager
+  path: ./replace-image.yaml       
