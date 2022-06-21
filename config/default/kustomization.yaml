@@ -24,13 +24,6 @@ bases:
   # [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
   - ../prometheus
 
-patchesJson6902:
-  - target:
-      version: v1
-      kind: Namespace
-      name: system
-    path: namespace_patch.yaml
-
 patchesStrategicMerge:
   # Protect the /metrics endpoint by putting it behind auth.
   # If you want your controller-manager to expose the /metrics
@@ -52,12 +45,12 @@ vars:
     objref:
       kind: Service
       version: v1
-      name: controller-manager-metrics-service
+      name: controller-manager-metrics
   - name: METRICS_SERVICE_NAMESPACE
     objref:
       kind: Service
       version: v1
-      name: controller-manager-metrics-service
+      name: controller-manager-metrics
     fieldref:
       fieldpath: metadata.namespace
   - name: ROLE_NAME

@@ -50,22 +50,3 @@ Selector labels
 app.kubernetes.io/name: {{ include "group-sync-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
-
-
-{{/*
-Service Acount Name
-*/}}
-{{- define "group-sync-operator.serviceAccountName" -}}
-{{- printf "%s-%s" (include "group-sync-operator.name" .) "controller-manager" }}
-{{- end }}
-
-{{/*
-Create the image path for the passed in image field
-*/}}
-{{- define "group-sync-operator.image" -}}
-{{- if eq (substr 0 7 .version) "sha256:" -}}
-{{- printf "%s@%s" .repository .version -}}
-{{- else -}}
-{{- printf "%s:%s" .repository .version -}}
-{{- end -}}
-{{- end -}}
