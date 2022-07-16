@@ -21,6 +21,7 @@ import (
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	msgroups "github.com/microsoftgraph/msgraph-sdk-go/groups"
 	msmembers "github.com/microsoftgraph/msgraph-sdk-go/groups/item/members"
+	"github.com/microsoftgraph/msgraph-sdk-go/groups/item/transitivemembers"
 	graph "github.com/microsoftgraph/msgraph-sdk-go/models/microsoft/graph"
 )
 
@@ -303,8 +304,22 @@ func (a *AzureSyncer) GetProviderName() string {
 }
 
 func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
-	groupMembers := []string{}
-	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().Get(nil)
+	var groupMembers []string
+	var selectParameter []string
+
+	if a.Provider.UserNameAttributes != nil {
+		selectParameter = *a.Provider.UserNameAttributes
+	} else {
+		selectParameter = []string{GraphUserNameAttribute}
+	}
+
+	queryParameters := transitivemembers.TransitiveMembersRequestBuilderGetQueryParameters{
+		Select: selectParameter,
+	}
+	getOptions := transitivemembers.TransitiveMembersRequestBuilderGetOptions{
+		Q: &queryParameters,
+	}
+	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().Get(&getOptions)
 
 	if err != nil {
 		return nil, err
@@ -325,7 +340,6 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 			if username, found := a.getUsernameForUser(member); found {
 				groupMembers = append(groupMembers, fmt.Sprintf("%v", username))
 			} else {
-				azureLogger.Info(fmt.Sprintf("Warning: Username for user cannot be found in Group ID '%v'", *groupID))
 			}
 		}
 
