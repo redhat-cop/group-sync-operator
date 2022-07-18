@@ -1,9 +1,10 @@
+
 # Prometheus Monitor Service (Metrics)
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    control-plane: controller-manager
+    operator: group-sync-operator
   name: controller-manager-metrics-monitor
   namespace: system
 spec:
@@ -13,8 +14,12 @@ spec:
       port: https
       scheme: https
       tlsConfig:
-        caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
+        ca:
+          secret:
+            key: 'tls.crt'
+            name: group-sync-operator-certs
+            optional: false
         serverName: $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc
   selector:
     matchLabels:
-      control-plane: controller-manager
+      operator: group-sync-operator

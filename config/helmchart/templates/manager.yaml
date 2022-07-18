@@ -17,67 +17,57 @@ spec:
     {{- end }}
       labels:
         {{- include "group-sync-operator.selectorLabels" . | nindent 8 }}
-        control-plane: controller-manager
+        operator: group-sync-operator
     spec:
-      serviceAccountName: {{ include "group-sync-operator.serviceAccountName" . }}
+      serviceAccountName: controller-manager
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - args:
+      - args:
           - --secure-listen-address=0.0.0.0:8443
           - --upstream=http://127.0.0.1:8080/
           - --logtostderr=true
           - --tls-cert-file=/etc/certs/tls/tls.crt
           - --tls-private-key-file=/etc/certs/tls/tls.key
           - --v=10
-          image: "{{ template "group-sync-operator.image" .Values.kube_rbac_proxy.image }}"
-          name: kube-rbac-proxy
-          ports:
-          - containerPort: 8443
-            name: https
-          volumeMounts:
-          - mountPath: /etc/certs/tls
-            name: tls-cert
-          imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
-          {{- with .Values.env }}
-          env:
-          {{- toYaml . | nindent 10 }}
-          {{- end }}          
-          resources:
-            {{- toYaml .Values.kube_rbac_proxy.resources | nindent 12 }}
-        - command:
-          - /manager
-          args:
-          - --health-probe-bind-address=:8081
-          - --metrics-addr=127.0.0.1:8080
-          - --leader-elect
-          image: "{{ template "group-sync-operator.image" .Values.image }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          name: {{ .Chart.Name }}
-          env:
-            - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            {{- with .Values.env }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8081
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          readinessProbe:
-            httpGet:
-              path: /readyz
-              port: 8081
-            initialDelaySeconds: 5
-            periodSeconds: 10
+        image: "{{ .Values.kube_rbac_proxy.image.repository }}:{{ .Values.kube_rbac_proxy.image.tag }}"
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+        volumeMounts:
+        - mountPath: /etc/certs/tls
+          name: tls-cert
+        imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
+        {{- with .Values.env }}
+        env:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.kube_rbac_proxy.resources | nindent 10 }}
+      - command:
+        - /manager
+        args:
+        - --leader-elect
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: {{ .Chart.Name }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

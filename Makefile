@@ -1,53 +1,10 @@
 CHART_REPO_URL ?= http://example.com
 HELM_REPO_DEST ?= /tmp/gh-pages
 OPERATOR_NAME ?=$(shell basename -z `pwd`)
-
-# Platform
-ifeq ($(OS),Windows_NT)
-  PLATFORM := windows
-else
-  UNAME_S = $(shell uname -s)
-  ifeq ($(UNAME_S),Linux)
-    PLATFORM := linux
-  endif
-  ifeq ($(UNAME_S),Darwin)
-    PLATFORM := darwin
-  endif
-endif
-
-
-SHELL := /bin/bash
-# Current Operator version
-VERSION ?= 0.0.1
-# Operator SDK
-OPERATOR_SDK ?= operator-sdk
-# YQ Version
+HELM_VERSION ?= v3.8.0
+KIND_VERSION ?= v0.11.1
+KUBECTL_VERSION ?= v1.21.1
 YQ_VERSION ?= 4.9.8
-
-# Default bundle image tag
-BUNDLE_IMG ?= quay.io/redhat-cop/group-sync-operator-bundle:$(VERSION)
-# Options for 'bundle-build'
-ifneq ($(origin CHANNELS), undefined)
-BUNDLE_CHANNELS := --channels=$(CHANNELS)
-endif
-ifneq ($(origin DEFAULT_CHANNEL), undefined)
-BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
-endif
-BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
-
-# Image URL to use all building/pushing image targets
-IMG ?= quay.io/redhat-cop/group-sync-operator:$(VERSION)
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
-
-
-
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
 
 # VERSION defines the project version for the bundle.
 # Update this value when you upgrade the version of your project.
@@ -91,11 +48,36 @@ IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
+# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
+ENVTEST_K8S_VERSION = 1.21
+
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
+
+
+# Platform
+ifeq ($(OS),Windows_NT)
+  PLATFORM := windows
+else
+  UNAME_S = $(shell uname -s)
+  ifeq ($(UNAME_S),Linux)
+    PLATFORM := linux
+  endif
+  ifeq ($(UNAME_S),Darwin)
+    PLATFORM := darwin
+  endif
+endif
+
 
 all: build
 
@@ -130,11 +112,17 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+test: manifests generate fmt vet envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+
+.PHONY: kind-setup
+kind-setup: kind kubectl helm
+	$(KIND) delete cluster
+	$(KIND) create cluster --image docker.io/kindest/node:$(KUBECTL_VERSION) --config=./integration/cluster-kind.yaml
+	$(HELM) upgrade ingress-nginx ./integration/helm/ingress-nginx -i --create-namespace -n ingress-nginx --atomic
+	$(KUBECTL) wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+
+
 
 YQ=$(shell pwd)/bin/yq
 yq:
@@ -163,27 +151,31 @@ docker-push: ## Push docker image with the manager.
 
 ##@ Deployment
 
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+install: manifests kustomize kubectl ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+uninstall: manifests kustomize kubectl ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete -f -
 
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize kubectl ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+undeploy: kustomize kubectl ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete -f -
 
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.1)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.2)
+
+ENVTEST = $(shell pwd)/bin/setup-envtest
+envtest: ## Download envtest-setup locally if necessary.
+	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 #go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -256,24 +248,93 @@ catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
 # Generate helm chart
-helmchart: kustomize
+helmchart: kustomize helm
 	mkdir -p ./charts/${OPERATOR_NAME}/templates
 	mkdir -p ./charts/${OPERATOR_NAME}/crds
+	repo=${OPERATOR_NAME} envsubst < ./config/local-development/tilt/env-replace-image.yaml > ./config/local-development/tilt/replace-image.yaml
+	$(KUSTOMIZE) build ./config/helmchart -o ./charts/${OPERATOR_NAME}/templates
+	sed -i 's/release-namespace/{{.Release.Namespace}}/' ./charts/${OPERATOR_NAME}/templates/*.yaml
+	rm ./charts/${OPERATOR_NAME}/templates/v1_namespace_release-namespace.yaml ./charts/${OPERATOR_NAME}/templates/apps_v1_deployment_${OPERATOR_NAME}-controller-manager.yaml
+	mv ./charts/${OPERATOR_NAME}/templates/apiextensions.k8s.io_v1_customresourcedefinition* ./charts/${OPERATOR_NAME}/crds
 	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
-	$(KUSTOMIZE) build ./config/helmchart | sed 's/release-namespace/{{.Release.Namespace}}/' > ./charts/${OPERATOR_NAME}/templates/metadata.yaml
-	$(KUSTOMIZE) build ./config/crd > ./charts/${OPERATOR_NAME}/crds/crds.yaml
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
 	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
-	helm lint ./charts/${OPERATOR_NAME}	
+	sed -i '1s/^/{{ if .Values.enableMonitoring }}/' ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
+	echo {{ end }} >> ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_${OPERATOR_NAME}-controller-manager-metrics-monitor.yaml
+	$(HELM) lint ./charts/${OPERATOR_NAME}
 
 helmchart-repo: helmchart
 	mkdir -p ${HELM_REPO_DEST}/${OPERATOR_NAME}
-	helm package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
-	helm repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
+	$(HELM) package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
+	$(HELM) repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
 
-helmchart-repo-push: helmchart-repo	
+helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} add .
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
-	git -C ${HELM_REPO_DEST} push origin "gh-pages"	
-	
+	git -C ${HELM_REPO_DEST} push origin "gh-pages"
+
+HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
+HELM_TEST_IMG_TAG ?= helmchart-test
+
+# Deploy the helmchart to a kind cluster to test deployment.
+# If the test-metrics sidecar in the prometheus pod is ready, the metrics work and the test is successful.
+.PHONY: helmchart-test
+helmchart-test: kind-setup helmchart
+	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
+	docker tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	$(KIND) load docker-image ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	$(HELM) repo add jetstack https://charts.jetstack.io
+	$(HELM) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
+	$(HELM) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(HELM) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace \
+	  --set enableCertManager=true \
+	  --set image.repository=${HELM_TEST_IMG_NAME} \
+	  --set image.tag=${HELM_TEST_IMG_TAG}
+	$(KUBECTL) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=90s
+	$(KUBECTL) wait --namespace default --for=condition=ready pod prometheus-kube-prometheus-stack-prometheus-0 --timeout=180s
+	$(KUBECTL) exec prometheus-kube-prometheus-stack-prometheus-0 -n default -c test-metrics -- /bin/sh -c "echo 'Example metrics...' && cat /tmp/ready"
+
+.PHONY: kind
+KIND = ./bin/kind
+kind: ## Download kind locally if necessary.
+ifeq (,$(wildcard $(KIND)))
+ifeq (,$(shell which kind 2>/dev/null))
+	$(call go-get-tool,$(KIND),sigs.k8s.io/kind@${KIND_VERSION})
+else
+KIND = $(shell which kind)
+endif
+endif
+
+.PHONY: kubectl
+KUBECTL = ./bin/kubectl
+kubectl: ## Download kubectl locally if necessary.
+ifeq (,$(wildcard $(KUBECTL)))
+ifeq (,$(shell which kubectl 2>/dev/null))
+	echo "Downloading ${KUBECTL} for managing k8s resources."
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${KUBECTL} https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/$${OS}/$${ARCH}/kubectl ;\
+	chmod +x ${KUBECTL}
+else
+KUBECTL = $(shell which kubectl)
+endif
+endif
+
+.PHONY: helm
+HELM = ./bin/helm
+helm: ## Download helm locally if necessary.
+ifeq (,$(wildcard $(HELM)))
+ifeq (,$(shell which helm 2>/dev/null))
+	echo "Downloading ${HELM}."
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo ${HELM}.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-$${OS}-$${ARCH}.tar.gz ;\
+	tar -xf ${HELM}.tar.gz -C ./bin/ ;\
+	mv ./bin/$${OS}-$${ARCH}/helm ${HELM}
+else
+HELM = $(shell which helm)
+endif
+endif

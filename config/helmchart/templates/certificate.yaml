@@ -1,0 +1,21 @@
+{{ if .Values.enableCertManager }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: metrics-serving-cert
+spec:
+  dnsNames:
+    - group-sync-operator-controller-manager-metrics.{{ .Release.Namespace }}.svc
+    - group-sync-operator-controller-manager-metrics.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: selfsigned-issuer
+  secretName: group-sync-operator-certs
+{{ end }}

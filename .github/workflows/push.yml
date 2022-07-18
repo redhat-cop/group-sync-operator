@@ -9,7 +9,7 @@ on:
 jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
-    uses: redhat-cop/github-workflows-operators/.github/workflows/release-operator.yml@v1.0.0
+    uses: redhat-cop/github-workflows-operators/.github/workflows/release-operator.yml@v1.0.4
     secrets:
       COMMUNITY_OPERATOR_PAT: ${{ secrets.COMMUNITY_OPERATOR_PAT }}
       REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
@@ -17,3 +17,6 @@ jobs:
     with:
       PR_ACTOR: "andy.block@gmail.com"
       GO_VERSION: ~1.17
+      RUN_UNIT_TESTS: true
+      RUN_INTEGRATION_TESTS: false
+      RUN_HELMCHART_TEST: true
