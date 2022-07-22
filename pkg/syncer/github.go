@@ -95,7 +95,7 @@ func (g *GitHubSyncer) Validate() error {
 		_, integrationIdFound := credentialsSecret.Data[appId]
 
 		if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
@@ -123,7 +123,7 @@ func (g *GitHubSyncer) Validate() error {
 
 		// Certificate key validation
 		if _, found := caResource[resourceCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s'", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
 		g.CaCertificate = caResource[resourceCaKey]
@@ -137,7 +137,7 @@ func (g *GitHubSyncer) Validate() error {
 		g.URL, err = url.Parse(*g.Provider.URL)
 
 		if err != nil {
-			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s", *g.Provider.URL))
+			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s'", *g.Provider.URL))
 		}
 	}
 

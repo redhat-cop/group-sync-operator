@@ -80,7 +80,7 @@ func (a *AzureSyncer) Validate() error {
 		_, clientSecretSecretFound := credentialsSecret.Data[ClientSecret]
 
 		if !tenantIDSecretFound || !clientIDSecretFound || !clientSecretSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `AZURE_TENANT_ID` or `AZURE_CLIENT_ID` or `AZURE_CLIENT_SECRET` key in secret '%s' in namespace '%s", a.Provider.CredentialsSecret.Name, a.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `AZURE_TENANT_ID` or `AZURE_CLIENT_ID` or `AZURE_CLIENT_SECRET` key in secret '%s' in namespace '%s'", a.Provider.CredentialsSecret.Name, a.Provider.CredentialsSecret.Namespace))
 		}
 
 		a.CredentialsSecret = credentialsSecret

@@ -63,7 +63,7 @@ func (g *GitLabSyncer) Validate() error {
 		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 
 		if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
@@ -88,7 +88,7 @@ func (g *GitLabSyncer) Validate() error {
 
 		// Certificate key validation
 		if _, found := caResource[resourceCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s'", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
 		g.CaCertificate = caResource[resourceCaKey]
@@ -99,7 +99,7 @@ func (g *GitLabSyncer) Validate() error {
 		g.URL, err = url.Parse(*g.Provider.URL)
 
 		if err != nil {
-			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitLab URL: '%s", *g.Provider.URL))
+			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitLab URL: '%s'", *g.Provider.URL))
 		}
 
 	}

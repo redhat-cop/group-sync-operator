@@ -84,12 +84,12 @@ func (k *KeycloakSyncer) Validate() error {
 
 		// Username key validation
 		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s'", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
 		}
 
 		// Password key validation
 		if _, found := credentialsSecret.Data[secretPasswordKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s'", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
 		}
 
 		k.CredentialsSecret = credentialsSecret
@@ -118,7 +118,7 @@ func (k *KeycloakSyncer) Validate() error {
 
 		// Certificate key validation
 		if _, found := caResource[resourceCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s'", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
 		k.CaCertificate = caResource[resourceCaKey]
