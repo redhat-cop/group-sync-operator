@@ -12,8 +12,6 @@ rules:
   - secrets
   verbs:
   - get
-  - list
-  - watch
 - apiGroups:
   - redhatcop.redhat.io
   resources:

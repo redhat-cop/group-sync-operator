@@ -50,7 +50,7 @@ type GroupSyncReconciler struct {
 // +kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupsyncs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=redhatcop.redhat.io,resources=groupsyncs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=user.openshift.io,resources=groups,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get
 
 func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("groupsync", req.NamespacedName)
