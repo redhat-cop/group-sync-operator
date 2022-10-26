@@ -12,7 +12,7 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/shurcooL/githubv4"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v45/github"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
