@@ -10,3 +10,4 @@ jobs:
     uses: redhat-cop/github-workflows-operators/.github/workflows/pr-operator.yml@v1.0.4
     with:
       GO_VERSION: ~1.18
+      RUN_UNIT_TESTS: true

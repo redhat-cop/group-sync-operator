@@ -17,3 +17,4 @@ jobs:
     with:
       PR_ACTOR: "andy.block@gmail.com"
       GO_VERSION: ~1.18
+      RUN_UNIT_TESTS: true
