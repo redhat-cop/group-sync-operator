@@ -12,7 +12,7 @@ The OpenShift Container Platform contains functionality to synchronize groups fo
 
 Group Synchronization is facilitated by creating a `GroupSync` resource. The following describes the high level schema for this resource:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -47,7 +47,7 @@ _Note:_ The `make deploy` command will execute the `manifests` target that will 
 
 In most cases, authentication details must be provided in order to communicate with providers. Authentication details are provider specific with regards to the required values. In supported providers, the secret can be referenced in the `credentialsSecret` by name and namespace where it has been created as shown below:
 
-```
+```yaml
 credentialsSecret:
   name: <secret_name>
   namespace: <secret_namespace>
@@ -82,7 +82,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -137,7 +137,7 @@ Teams stored within a GitHub organization can be synchronized into OpenShift. Th
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -209,7 +209,7 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -271,7 +271,7 @@ The configurations of the three primary schemas (`rfc2307`, `activeDirectory` an
 
 The following is an example using the `rfc2307` schema:
 
-```
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -326,7 +326,7 @@ oc create secret generic ldap-group-sync --from-literal=username=<username> --fr
 
 Groups can be explicitly whitelisted or blacklisted in order to control the groups that are eligible to be synchronized into OpenShift. When running LDAP group synchronization using the command line, this configuration is referenced via separate files, but these are instead specified in the `blacklist` and `whitelist` properties as shown below:
 
-```
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -341,7 +341,7 @@ spec:
     name: ldap
 ```
 
-```
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -375,7 +375,7 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 
 The following is an example of a minimal configuration that can be applied to integrate with a Keycloak provider:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -427,7 +427,7 @@ The following table describes the set of configuration options for the Okta prov
 
 The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -474,7 +474,7 @@ oc create secret generic keycloak-certs --from-file=ca.crt=<file>
 
 An example of how the CA certificate can be added to the Keycloak provider is shown below:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -499,13 +499,13 @@ Alteratively, a _ConfigMap_ can be used instead instead of a _Secret_. This is u
 
 The following command can be used to create a _ConfigMap_ containing the certificate:
 
-```
+```shell
 oc create configmap keycloak-certs --from-file=ca.crt=<file>
 ```
 
 An example of how the CA certificate can be added to the Keycloak provider is shown below:
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
@@ -530,7 +530,7 @@ spec:
 
 A cron style expression can be specified for which a synchronization event will occur. The following specifies that a synchronization should occur nightly at 3AM
 
-```shell
+```yaml
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GroupSync
 metadata:
