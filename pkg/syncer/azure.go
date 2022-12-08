@@ -24,8 +24,6 @@ import (
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	msgroups "github.com/microsoftgraph/msgraph-sdk-go/groups"
-	msmembers "github.com/microsoftgraph/msgraph-sdk-go/groups/item/members"
-	"github.com/microsoftgraph/msgraph-sdk-go/groups/item/transitivemembers"
 	graph "github.com/microsoftgraph/msgraph-sdk-go/models"
 )
 
@@ -167,13 +165,13 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			// Add Base Group
 			aadGroups = append(aadGroups, baseGroupResult[0])
 
-			var baseGroupMembersRequestConfiguration *msmembers.MembersRequestBuilderGetRequestConfiguration
+			var baseGroupMembersRequestConfiguration *msgroups.GroupsItemMembersRequestBuilderGetRequestConfiguration
 
 			if a.Provider.Filter != "" {
-				requestParameters := &msmembers.MembersRequestBuilderGetQueryParameters{
+				requestParameters := &msgroups.GroupsItemMembersRequestBuilderGetQueryParameters{
 					Filter: &a.Provider.Filter,
 				}
-				baseGroupMembersRequestConfiguration = &msmembers.MembersRequestBuilderGetRequestConfiguration{
+				baseGroupMembersRequestConfiguration = &msgroups.GroupsItemMembersRequestBuilderGetRequestConfiguration{
 					QueryParameters: requestParameters,
 				}
 
@@ -307,11 +305,11 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 		selectParameter = []string{GraphUserNameAttribute}
 	}
 
-	queryParameters := transitivemembers.TransitiveMembersRequestBuilderGetQueryParameters{
+	queryParameters := msgroups.GroupsItemTransitiveMembersRequestBuilderGetQueryParameters{
 		Select: selectParameter,
 	}
 
-	transitiveMembersGetConfiguration := transitivemembers.TransitiveMembersRequestBuilderGetRequestConfiguration{
+	transitiveMembersGetConfiguration := msgroups.GroupsItemTransitiveMembersRequestBuilderGetRequestConfiguration{
 		QueryParameters: &queryParameters,
 	}
 
