@@ -13,7 +13,7 @@ require (
 	github.com/microsoft/kiota-authentication-azure-go v0.5.0
 	github.com/microsoftgraph/msgraph-sdk-go v0.48.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.1
-	github.com/okta/okta-sdk-golang/v2 v2.14.0
+	github.com/okta/okta-sdk-golang/v2 v2.16.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
