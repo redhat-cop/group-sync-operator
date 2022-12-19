@@ -2,8 +2,22 @@ apiVersion: v1
 entries:
   group-sync-operator:
   - apiVersion: v1
+    appVersion: v0.0.21
+    created: "2022-12-19T19:07:33.856172059Z"
+    description: Helm chart that deploys the group-sync-operator
+    digest: fee172e9ae186dbfb262c54272c6a6bfd1859047b31a7b9d54d289f721c50307
+    keywords:
+    - authorization
+    - security
+    name: group-sync-operator
+    sources:
+    - https://github.com/redhat-cop/group-sync-operator
+    urls:
+    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.21.tgz
+    version: v0.0.21
+  - apiVersion: v1
     appVersion: v0.0.20
-    created: "2022-07-18T17:48:20.199576787Z"
+    created: "2022-12-19T19:07:33.85563436Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 98bdfaee5c4a482d8aff65fddf235320599ad20e441b1f690f190e1551d3f7be
     keywords:
@@ -17,7 +31,7 @@ entries:
     version: v0.0.20
   - apiVersion: v1
     appVersion: 0.0.20
-    created: "2022-07-18T17:48:20.191770883Z"
+    created: "2022-12-19T19:07:33.849106676Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 977e98561195cb120abb067edc4a2222e7a14cad33ec030b2bcae16d8b1afac6
     keywords:
@@ -30,22 +44,8 @@ entries:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-0.0.20.tgz
     version: 0.0.20
   - apiVersion: v1
-    appVersion: 0.0.19
-    created: "2022-07-18T17:48:20.191299977Z"
-    description: Helm chart that deploys the group-sync-operator
-    digest: 58569043d37c167a8295ae1101381976cb83044725a8168f9a44f920be37fe5d
-    keywords:
-    - authorization
-    - security
-    name: group-sync-operator
-    sources:
-    - https://github.com/redhat-cop/group-sync-operator
-    urls:
-    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-0.0.19.tgz
-    version: 0.0.19
-  - apiVersion: v1
     appVersion: v0.0.19
-    created: "2022-07-18T17:48:20.198942578Z"
+    created: "2022-12-19T19:07:33.854881862Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 3ab6ce431b8e50a97efd8534425756519dad5f866698be0067d6fa926e4d8715
     keywords:
@@ -58,10 +58,10 @@ entries:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.19.tgz
     version: v0.0.19
   - apiVersion: v1
-    appVersion: v0.0.18
-    created: "2022-07-18T17:48:20.19831657Z"
+    appVersion: 0.0.19
+    created: "2022-12-19T19:07:33.848576478Z"
     description: Helm chart that deploys the group-sync-operator
-    digest: 66712c233b21af4a549a01f33d3a1f850a46716c8a71767b2c77a62c024dc92f
+    digest: 58569043d37c167a8295ae1101381976cb83044725a8168f9a44f920be37fe5d
     keywords:
     - authorization
     - security
@@ -69,11 +69,11 @@ entries:
     sources:
     - https://github.com/redhat-cop/group-sync-operator
     urls:
-    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.18.tgz
-    version: v0.0.18
+    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-0.0.19.tgz
+    version: 0.0.19
   - apiVersion: v1
     appVersion: 0.0.18
-    created: "2022-07-18T17:48:20.190692669Z"
+    created: "2022-12-19T19:07:33.848004079Z"
     description: Helm chart that deploys the group-sync-operator
     digest: d99196a951c6a01d545dc68ed6e95d88a234727e66a5e8fbfc26b929fa8cbd15
     keywords:
@@ -86,8 +86,22 @@ entries:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-0.0.18.tgz
     version: 0.0.18
   - apiVersion: v1
+    appVersion: v0.0.18
+    created: "2022-12-19T19:07:33.854211364Z"
+    description: Helm chart that deploys the group-sync-operator
+    digest: 66712c233b21af4a549a01f33d3a1f850a46716c8a71767b2c77a62c024dc92f
+    keywords:
+    - authorization
+    - security
+    name: group-sync-operator
+    sources:
+    - https://github.com/redhat-cop/group-sync-operator
+    urls:
+    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.18.tgz
+    version: v0.0.18
+  - apiVersion: v1
     appVersion: 0.0.17
-    created: "2022-07-18T17:48:20.19005246Z"
+    created: "2022-12-19T19:07:33.84746208Z"
     description: Helm chart that deploys the group-sync-operator
     digest: e3113b661fdd8f610a1f700d3f4247b055521931a9d0029a79f7e2feeb17e88f
     keywords:
@@ -101,7 +115,7 @@ entries:
     version: 0.0.17
   - apiVersion: v1
     appVersion: v0.0.17
-    created: "2022-07-18T17:48:20.197463959Z"
+    created: "2022-12-19T19:07:33.853248766Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 99feeea353ec1237b503100eee5a19669a1da173d952952cead09252740fb721
     keywords:
@@ -115,7 +129,7 @@ entries:
     version: v0.0.17
   - apiVersion: v1
     appVersion: 0.0.16
-    created: "2022-07-18T17:48:20.189384852Z"
+    created: "2022-12-19T19:07:33.846895782Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 85f84e368e0a7f31ba87ee2970b36323fcecd3694ef3a83180f3116aaace6c83
     keywords:
@@ -129,7 +143,7 @@ entries:
     version: 0.0.16
   - apiVersion: v1
     appVersion: v0.0.16
-    created: "2022-07-18T17:48:20.196105041Z"
+    created: "2022-12-19T19:07:33.852348068Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 8b30dbb95e36f321321c42670a1f9dbda600012bd0127920e07435ee10421343
     keywords:
@@ -143,7 +157,7 @@ entries:
     version: v0.0.16
   - apiVersion: v1
     appVersion: 0.0.15
-    created: "2022-07-18T17:48:20.188632442Z"
+    created: "2022-12-19T19:07:33.846290283Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 41bcccc1eddfd9141222bf42d718bd32165ceb0c8b9528c6368007445553685b
     keywords:
@@ -157,7 +171,7 @@ entries:
     version: 0.0.15
   - apiVersion: v1
     appVersion: v0.0.15
-    created: "2022-07-18T17:48:20.194951725Z"
+    created: "2022-12-19T19:07:33.85183667Z"
     description: Helm chart that deploys the group-sync-operator
     digest: b44502dd833c2ec8c5166ba343007944205c1b49e636b85fe9e05fc6cecb7c9f
     keywords:
@@ -171,7 +185,7 @@ entries:
     version: v0.0.15
   - apiVersion: v1
     appVersion: v0.0.14
-    created: "2022-07-18T17:48:20.194443619Z"
+    created: "2022-12-19T19:07:33.851358271Z"
     description: Helm chart that deploys the group-sync-operator
     digest: b99d4485bb1e94b74a5d9d081e115a6017da4dc85321878dd6b78dc6a6d05e18
     keywords:
@@ -185,7 +199,7 @@ entries:
     version: v0.0.14
   - apiVersion: v1
     appVersion: v0.0.13
-    created: "2022-07-18T17:48:20.193892311Z"
+    created: "2022-12-19T19:07:33.850882772Z"
     description: Helm chart that deploys the group-sync-operator
     digest: d274656700e6378e723a28cd1fa3d14bb5a23447a1db67a8b1819ee22d408b59
     keywords:
@@ -199,7 +213,7 @@ entries:
     version: v0.0.13
   - apiVersion: v1
     appVersion: v0.0.12
-    created: "2022-07-18T17:48:20.193355804Z"
+    created: "2022-12-19T19:07:33.850400073Z"
     description: Helm chart that deploys the group-sync-operator
     digest: c4e674b48a592d10e927f329ec773738e275d9687c82735fee598b951b772764
     keywords:
@@ -213,7 +227,7 @@ entries:
     version: v0.0.12
   - apiVersion: v1
     appVersion: v0.0.11
-    created: "2022-07-18T17:48:20.192321491Z"
+    created: "2022-12-19T19:07:33.849942374Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 78db614e87d5a29edf9df0bdbde0a2a8583900904bb749a855446fd3f9296695
     keywords:
@@ -227,7 +241,7 @@ entries:
     version: v0.0.11
   - apiVersion: v1
     appVersion: v0.0.10
-    created: "2022-07-18T17:48:20.192048887Z"
+    created: "2022-12-19T19:07:33.849379476Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 33d1ee12b8b1f9eabc9ccd9da24ea5c4aa3a5e30e3cf9c8ff520389c68cd392d
     keywords:
@@ -241,7 +255,7 @@ entries:
     version: v0.0.10
   - apiVersion: v1
     appVersion: v0.0.9
-    created: "2022-07-18T17:48:20.199924691Z"
+    created: "2022-12-19T19:07:33.856475958Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 9a2fed700d978e42a1fd38e8258b096e282dc9e58e1746e9522a4b9eb902ca2a
     keywords:
@@ -253,4 +267,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.9.tgz
     version: v0.0.9
-generated: "2022-07-18T17:48:20.187849131Z"
+generated: "2022-12-19T19:07:33.844711987Z"
