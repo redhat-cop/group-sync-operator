@@ -18,8 +18,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
+	"time"
 
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -27,6 +27,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -42,6 +43,12 @@ var (
 	controllerName = "GroupSync"
 )
 
+const (
+	defaultLeaseDuration = 60 * time.Second
+	defaultRenewDeadline = 30 * time.Second
+	defaultRetryPeriod   = 10 * time.Second
+)
+
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
@@ -55,12 +62,22 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	var leaseDuration time.Duration
+	var renewDeadline time.Duration
+	var retryPeriod time.Duration
 	var probeAddr string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.DurationVar(&leaseDuration, "leaderLeaseDuration", defaultLeaseDuration,
+		"Configure leader election lease duration")
+	flag.DurationVar(&renewDeadline, "leaderRenewDeadline", defaultRenewDeadline,
+		"Configure leader election lease renew deadline")
+	flag.DurationVar(&retryPeriod, "leaderRetryPeriod", defaultRetryPeriod,
+		"Configure leader election lease retry period")
+
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
@@ -72,7 +89,10 @@ func main() {
 		HealthProbeBindAddress:     probeAddr,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "085c249a.redhat.io",
-		LeaderElectionResourceLock: "configmaps",
+		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
+		LeaseDuration:              &leaseDuration,
+		RenewDeadline:              &renewDeadline,
+		RetryPeriod:                &retryPeriod,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -102,18 +122,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-// getWatchNamespace returns the Namespace the operator should be watching for changes
-func getWatchNamespace() (string, error) {
-	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-	// which specifies the Namespace to watch.
-	// An empty value means the operator is running with cluster scope.
-	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
-
-	ns, found := os.LookupEnv(watchNamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
-	}
-	return ns, nil
 }
