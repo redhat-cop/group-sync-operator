@@ -55,14 +55,12 @@ spec:
           image: "{{ template "group-sync-operator.image" .Values.image }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           name: {{ .Chart.Name }}
+          {{- if .Values.env }}
           env:
-            - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             {{- with .Values.env }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
