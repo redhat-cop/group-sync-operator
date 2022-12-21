@@ -69,3 +69,14 @@ Create the image path for the passed in image field
 {{- printf "%s:%s" .repository .version -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Check if WATCH_NAMESPACE environment variable has been provided
+*/}}
+{{- define "group-sync-operator.checkWatchNamespace" -}}
+{{- range .Values.env -}}
+{{- if eq .name "WATCH_NAMESPACE" -}}
+{{- print "true" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

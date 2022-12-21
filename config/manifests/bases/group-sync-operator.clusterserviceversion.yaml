@@ -40,6 +40,11 @@ spec:
       - description: Azure represents the Azure provider
         displayName: Azure Provider
         path: providers[0].azure
+      - description: AuthorityHost is the location of the Azure Active Directory endpoint
+        displayName: Azure URL
+        path: providers[0].azure.authorityHost
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: BaseGroups allows for a set of groups to be specified to start
           searching from instead of searching all groups in the directory
         displayName: Base Groups
@@ -90,22 +95,18 @@ spec:
         path: providers[0].azure.insecure
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-      - description: URL is the location of the Azure platform
-        displayName: Azure URL
-        path: providers[0].azure.url
+      - description: Prune Whether to prune groups that are no longer in Azure. Default
+          is false
+        displayName: Prune
+        path: providers[0].azure.prune
         x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: UserNameAttributes are the fields to consider on the User object
           containing the username
         displayName: Azure UserName Attributes
         path: providers[0].azure.userNameAttributes
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Prune Whether to prune groups that are no longer in Azure. Default is false
-        displayName: Azure Prune
-        path: providers[0].azure.prune
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: GitHub represents the GitHub provider
         displayName: GitHub Provider
         path: providers[0].github
@@ -207,6 +208,12 @@ spec:
         path: providers[0].github.organization
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in GitHub. Default
+          is false
+        displayName: Prune
+        path: providers[0].github.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Teams represents a filtered list of teams to synchronize
         displayName: Teams to Synchronize
         path: providers[0].github.teams
@@ -222,11 +229,6 @@ spec:
         path: providers[0].github.v4url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Prune Whether to prune groups that are no longer in GitHub. Default is false
-        displayName: GitHub Prune
-        path: providers[0].github.prune
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: GitLab represents the GitLab provider
         displayName: GitLab Provider
         path: providers[0].gitlab
@@ -322,16 +324,17 @@ spec:
         path: providers[0].gitlab.insecure
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Prune Whether to prune groups that are no longer in GitLab. Default
+          is false
+        displayName: Prune
+        path: providers[0].gitlab.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: URL is the location of the GitLab server
         displayName: GitLab URL
         path: providers[0].gitlab.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Prune Whether to prune groups that are no longer in GitLab. Default is false
-        displayName: GitLab Prune
-        path: providers[0].gitlab.prune
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
         path: providers[0].keycloak
@@ -428,6 +431,12 @@ spec:
       - description: LoginRealm is the Keycloak realm to authenticate against
         displayName: Realm to Login Against
         path: providers[0].keycloak.loginRealm
+      - description: Prune Whether to prune groups that are no longer in Keycloak.
+          Default is false
+        displayName: Prune
+        path: providers[0].keycloak.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Realm is the realm containing the groups to synchronize against
         displayName: Realm to Synchronize
         path: providers[0].keycloak.realm
@@ -441,11 +450,6 @@ spec:
         path: providers[0].keycloak.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Prune Whether to prune groups that are no longer in Keycloak. Default is false
-        displayName: Keycloak Prune
-        path: providers[0].keycloak.prune
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Ldap represents the LDAP provider
         displayName: LDAP Provider
         path: providers[0].ldap
@@ -553,6 +557,12 @@ spec:
         path: providers[0].ldap.insecure
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Prune Whether to prune groups that are no longer in LDAP. Default
+          is false
+        displayName: Prune
+        path: providers[0].ldap.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: RFC2307Config represents the configuration for a RFC2307 schema
         displayName: RFC2307 configuration
         path: providers[0].ldap.rfc2307
@@ -566,11 +576,6 @@ spec:
         path: providers[0].ldap.whitelist
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Prune Whether to prune groups that are no longer in LDAP. Default is false
-        displayName: LDAP Prune
-        path: providers[0].ldap.prune
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Name represents the name of the provider
         displayName: Name of the Provider
         path: providers[0].name
@@ -615,8 +620,9 @@ spec:
         path: providers[0].okta.extractLoginUsername
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: GroupLimit is the maximum number of groups that are requested from OKTA per request.  Multiple requests will be made using pagination if you have more groups than this limit.
-          Default is "1000"
+      - description: GroupLimit is the maximum number of groups that are requested
+          from OKTA per request.  Multiple requests will be made using pagination
+          if you have more groups than this limit. Default is "1000"
         displayName: Group Limit
         path: providers[0].okta.groupLimit
         x-descriptors:
@@ -632,16 +638,17 @@ spec:
         path: providers[0].okta.profileKey
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Prune Whether to prune groups that are no longer in OKTA. Default
+          is false
+        displayName: Prune
+        path: providers[0].okta.prune
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: URL is the location of the Okta domain server
         displayName: Okta URL
         path: providers[0].okta.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Prune Whether to prune groups that are no longer in OKTA. Default is false
-        displayName: OKTA Prune
-        path: providers[0].okta.prune
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Schedule represents a cron based configuration for synchronization
         displayName: Schedule
         path: schedule
