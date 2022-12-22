@@ -543,6 +543,32 @@ spec:
 
 If a schedule is not provided, synchronization will occur only when the object is reconciled by the platform.
 
+## Accessing Secrets and ConfigMaps in Other Namespaces
+
+By default, the operator monitors resources in the namespace that it has been deployed within. This is defined by setting the `WATCH_NAMESPACE` environment variable. Support is available for accessing ConfigMaps and Secrets in other namespaces so that existing resources may be utilized as desired.
+
+To enable the operator to access resources across multiple, set the environment variable with a comma separate list of namespaces that include the namespace the operator is deployed within and any additional namespaces that are desired.
+
+To make use of this feature when deploying through the Operator Lifecycle Manager, set the following configuration on the `Subscription` resource:
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: group-sync-operator
+  namespace: group-sync-operator
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: group-sync-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  config:
+    env:
+      - name: WATCH_NAMESPACE
+        value: "<comma separated list of namespaces>"
+```
+
 ## Deploying the Operator
 
 This is a namespace level operator that you can deploy in any namespace. However, `group-sync-operator` is recommended.
