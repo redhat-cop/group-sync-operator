@@ -35,6 +35,16 @@ func (in *AzureProvider) DeepCopyInto(out *AzureProvider) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Ca != nil {
+		in, out := &in.Ca, &out.Ca
+		*out = new(ObjectRef)
+		**out = **in
+	}
+	if in.CaSecret != nil {
+		in, out := &in.CaSecret, &out.CaSecret
+		*out = new(ObjectRef)
+		**out = **in
+	}
 	if in.CredentialsSecret != nil {
 		in, out := &in.CredentialsSecret, &out.CredentialsSecret
 		*out = new(ObjectRef)

@@ -46,6 +46,52 @@ spec:
                             items:
                               type: string
                             type: array
+                          ca:
+                            description: Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to Azure
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          caSecret:
+                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to Azure Deprecated: Use Ca instead.'
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
                           credentialsSecret:
                             description: CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
                             properties:

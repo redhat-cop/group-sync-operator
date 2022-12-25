@@ -2,9 +2,13 @@ package syncer
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/url"
 	"reflect"
+
+	nethttp "net/http"
 
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
@@ -21,6 +25,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	az "github.com/microsoft/kiota-authentication-azure-go"
+	kiota "github.com/microsoft/kiota-http-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	msgroups "github.com/microsoftgraph/msgraph-sdk-go/groups"
@@ -55,6 +60,7 @@ type AzureSyncer struct {
 	CachedGroupUsers  map[string][]*graph.User
 	Context           context.Context
 	Adapter           *msgraphsdk.GraphRequestAdapter
+	CaCertificate     []byte
 }
 
 func (a *AzureSyncer) Init() bool {
@@ -90,11 +96,66 @@ func (a *AzureSyncer) Validate() error {
 
 	}
 
+	providerCaResource := determineFromDeprecatedObjectRef(a.Provider.Ca, a.Provider.CaSecret)
+	if providerCaResource != nil {
+
+		caResource, err := getObjectRefData(a.Context, a.ReconcilerBase.GetClient(), providerCaResource)
+
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		}
+
+		var resourceCaKey string
+		if providerCaResource.Key != "" {
+			resourceCaKey = providerCaResource.Key
+		} else {
+			resourceCaKey = defaultResourceCaKey
+		}
+
+		// Certificate key validation
+		if _, found := caResource[resourceCaKey]; !found {
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s'", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
+		}
+
+		a.CaCertificate = caResource[resourceCaKey]
+	}
+
 	return utilerrors.NewAggregate(validationErrors)
 
 }
 
 func (a *AzureSyncer) Bind() error {
+
+	var httpClient *nethttp.Client
+
+	if a.Provider.Insecure || len(a.CaCertificate) > 0 {
+
+		httpClient = kiota.GetDefaultClient()
+
+		defaultTransport := nethttp.DefaultTransport.(*nethttp.Transport).Clone()
+		defaultTransport.ForceAttemptHTTP2 = true
+		defaultTransport.DisableCompression = false
+
+		if a.Provider.Insecure {
+			defaultTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		} else {
+			if len(a.CaCertificate) > 0 {
+
+				tlsConfig := &tls.Config{}
+				if tlsConfig.RootCAs == nil {
+					tlsConfig.RootCAs = x509.NewCertPool()
+				}
+
+				tlsConfig.RootCAs.AppendCertsFromPEM(a.CaCertificate)
+
+				defaultTransport.TLSClientConfig = tlsConfig
+
+			}
+		}
+
+		httpClient.Transport = kiota.NewCustomTransportWithParentTransport(defaultTransport)
+
+	}
 
 	opts := &azidentity.ClientSecretCredentialOptions{}
 	opts.Cloud.ActiveDirectoryAuthorityHost = getAuthorityHost(a.Provider.AuthorityHost)
@@ -112,7 +173,7 @@ func (a *AzureSyncer) Bind() error {
 		return err
 	}
 
-	a.Adapter, err = msgraphsdk.NewGraphRequestAdapter(auth)
+	a.Adapter, err = msgraphsdk.NewGraphRequestAdapterWithParseNodeFactoryAndSerializationWriterFactoryAndHttpClient(auth, nil, nil, httpClient)
 	if err != nil {
 		return err
 
