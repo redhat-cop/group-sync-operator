@@ -148,6 +148,10 @@ func (g *GitLabSyncer) Bind() error {
 			string(tokenSecret),
 			clientFns...,
 		)
+
+		if err != nil {
+			return err
+		}
 	} else if usernameSecretFound && passwordSecretFound {
 		gitlabClient, err = gitlab.NewBasicAuthClient(
 			string(usernameSecret),
@@ -240,6 +244,16 @@ func (g *GitLabSyncer) getGroups() ([]*gitlab.Group, error) {
 
 		for _, t := range groups {
 			allGroups = append(allGroups, t)
+
+			// Get Decendent Groups
+			descendantGroups, err := g.getDescendantGroups(t.ID)
+
+			if err != nil {
+				return nil, err
+			}
+
+			allGroups = append(allGroups, descendantGroups...)
+
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
@@ -251,6 +265,37 @@ func (g *GitLabSyncer) getGroups() ([]*gitlab.Group, error) {
 	}
 
 	return allGroups, nil
+
+}
+
+func (g *GitLabSyncer) getDescendantGroups(groupId int) ([]*gitlab.Group, error) {
+
+	descendantGroups := []*gitlab.Group{}
+
+	opt := &gitlab.ListDescendantGroupsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 50,
+			Page:    1,
+		},
+	}
+
+	for {
+		groups, resp, err := g.Client.Groups.ListDescendantGroups(groupId, opt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		descendantGroups = append(descendantGroups, groups...)
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		opt.Page = resp.NextPage
+	}
+
+	return descendantGroups, nil
 
 }
 
@@ -272,13 +317,13 @@ func (g *GitLabSyncer) getGroupMembers(groupId int) ([]*gitlab.GroupMember, erro
 			return nil, err
 		}
 
-		for _, u := range members {
-			groupMembers = append(groupMembers, u)
-		}
+		groupMembers = append(groupMembers, members...)
 
 		if resp.CurrentPage >= resp.TotalPages {
 			break
 		}
+
+		opt.Page = resp.NextPage
 	}
 
 	return groupMembers, nil
