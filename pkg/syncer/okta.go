@@ -70,7 +70,7 @@ func (o *OktaSyncer) Validate() error {
 		validationErrors = append(validationErrors, err)
 	} else {
 		if _, found := credentialsSecret.Data[secretOktaTokenKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("could not find api token '%s' in namespace '%s", o.Provider.CredentialsSecret.Name, o.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("could not find api token '%s' in namespace '%s'", o.Provider.CredentialsSecret.Name, o.Provider.CredentialsSecret.Namespace))
 		}
 
 		o.credentialsSecret = credentialsSecret

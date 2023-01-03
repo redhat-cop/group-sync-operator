@@ -12,7 +12,7 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/shurcooL/githubv4"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v45/github"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
@@ -95,7 +95,7 @@ func (g *GitHubSyncer) Validate() error {
 		_, integrationIdFound := credentialsSecret.Data[appId]
 
 		if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
 		}
 
 		g.CredentialsSecret = credentialsSecret
@@ -123,7 +123,7 @@ func (g *GitHubSyncer) Validate() error {
 
 		// Certificate key validation
 		if _, found := caResource[resourceCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s'", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
 		g.CaCertificate = caResource[resourceCaKey]
@@ -137,7 +137,7 @@ func (g *GitHubSyncer) Validate() error {
 		g.URL, err = url.Parse(*g.Provider.URL)
 
 		if err != nil {
-			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s", *g.Provider.URL))
+			validationErrors = append(validationErrors, fmt.Errorf("Invalid GitHub URL: '%s'", *g.Provider.URL))
 		}
 	}
 

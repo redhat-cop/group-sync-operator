@@ -31,7 +31,6 @@ spec:
           - --logtostderr=true
           - --tls-cert-file=/etc/certs/tls/tls.crt
           - --tls-private-key-file=/etc/certs/tls/tls.key
-          - --v=10
           image: "{{ template "group-sync-operator.image" .Values.kube_rbac_proxy.image }}"
           name: kube-rbac-proxy
           ports:
@@ -57,10 +56,12 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           name: {{ .Chart.Name }}
           env:
+            {{- if eq (include "group-sync-operator.checkWatchNamespace" .) ""  }}
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            {{- end }}
             {{- with .Values.env }}
               {{- toYaml . | nindent 12 }}
             {{- end }}

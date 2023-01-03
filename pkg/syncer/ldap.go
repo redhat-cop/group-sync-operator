@@ -99,7 +99,7 @@ func (l *LdapSyncer) Validate() error {
 
 		// Certificate key validation
 		if _, found := caResource[resourceCaKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
+			validationErrors = append(validationErrors, fmt.Errorf("Could not find '%s' key in %s '%s' in namespace '%s'", resourceCaKey, providerCaResource.Kind, providerCaResource.Name, providerCaResource.Namespace))
 		}
 
 		l.CaCertificate = caResource[resourceCaKey]
@@ -114,7 +114,7 @@ func (l *LdapSyncer) Validate() error {
 		l.URL, err = url.Parse(*l.Provider.URL)
 
 		if err != nil {
-			validationErrors = append(validationErrors, fmt.Errorf("Invalid LDAP URL: '%s", *l.Provider.URL))
+			validationErrors = append(validationErrors, fmt.Errorf("Invalid LDAP URL: '%s'", *l.Provider.URL))
 		}
 
 		if l.Provider.Insecure {
