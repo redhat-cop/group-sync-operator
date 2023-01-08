@@ -365,6 +365,17 @@ type AzureProvider struct {
 	// +kubebuilder:validation:Optional
 	BaseGroups []string `json:"baseGroups,omitempty"`
 
+	// Ca is a reference to a Secret or ConfigMap containing a CA certificate to communicate to Azure
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Optional
+	Ca *ObjectRef `json:"ca,omitempty"`
+
+	// CaSecret is a reference to a secret containing a CA certificate to communicate to Azure
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Resource Containing the CA Certificate",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
+	// +kubebuilder:validation:Optional
+	// Deprecated: Use Ca instead.
+	CaSecret *ObjectRef `json:"caSecret,omitempty"`
+
 	// CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required

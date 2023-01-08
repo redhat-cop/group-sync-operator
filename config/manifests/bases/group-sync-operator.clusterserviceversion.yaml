@@ -51,6 +51,60 @@ spec:
         path: providers[0].azure.baseGroups
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Ca is a reference to a Secret or ConfigMap containing a CA certificate
+          to communicate to Azure
+        displayName: Resource Containing the CA Certificate
+        path: providers[0].azure.ca
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].azure.ca.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].azure.ca.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].azure.ca.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].azure.ca.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'CaSecret is a reference to a secret containing a CA certificate
+          to communicate to Azure Deprecated: Use Ca instead.'
+        displayName: Resource Containing the CA Certificate
+        path: providers[0].azure.caSecret
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].azure.caSecret.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].azure.caSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].azure.caSecret.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].azure.caSecret.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication
           details for communicating to Azure
         displayName: Secret Containing the Credentials
