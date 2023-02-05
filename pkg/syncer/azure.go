@@ -366,8 +366,10 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 		selectParameter = []string{GraphUserNameAttribute}
 	}
 
+	pageSize := int32(999)
 	queryParameters := msgroups.GroupsItemTransitiveMembersRequestBuilderGetQueryParameters{
 		Select: selectParameter,
+		Top:    &pageSize,
 	}
 
 	transitiveMembersGetConfiguration := msgroups.GroupsItemTransitiveMembersRequestBuilderGetRequestConfiguration{
