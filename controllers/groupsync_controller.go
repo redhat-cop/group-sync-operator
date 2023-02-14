@@ -177,6 +177,8 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		}
 
 		if groupSyncer.GetPrune() {
+			// Allow time for the last group annotation to be synced before starting to prune
+			time.Sleep(time.Second * 1)
 			logger.Info("Start Pruning Groups")
 			prunedGroups, err = r.pruneGroups(context, instance, providerLabel, syncStartTime, logger)
 			if err != nil {
