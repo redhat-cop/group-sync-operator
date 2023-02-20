@@ -311,7 +311,7 @@ func (g *GitLabSyncer) getGroupMembers(groupId int) ([]*gitlab.GroupMember, erro
 	}
 
 	for {
-		members, resp, err := g.Client.Groups.ListAllGroupMembers(groupId, opt)
+		members, resp, err := g.Client.Groups.ListGroupMembers(groupId, opt)
 
 		if err != nil {
 			return nil, err
