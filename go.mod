@@ -11,6 +11,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/microsoft/kiota-authentication-azure-go v0.5.0
+	github.com/microsoft/kiota-http-go v0.9.0
 	github.com/microsoftgraph/msgraph-sdk-go v0.48.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.1
 	github.com/okta/okta-sdk-golang/v2 v2.14.0
@@ -25,7 +26,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
 	github.com/xanzy/go-gitlab v0.73.1
-	golang.org/x/text v0.3.7
+	golang.org/x/text v0.7.0
 	gopkg.in/ldap.v2 v2.5.1
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
@@ -81,7 +82,6 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/microsoft/kiota-abstractions-go v0.14.0 // indirect
-	github.com/microsoft/kiota-http-go v0.9.0 // indirect
 	github.com/microsoft/kiota-serialization-json-go v0.7.2 // indirect
 	github.com/microsoft/kiota-serialization-text-go v0.6.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
