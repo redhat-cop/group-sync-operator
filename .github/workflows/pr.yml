@@ -7,7 +7,7 @@ on:
 jobs:
   shared-operator-workflow:
     name: shared-operator-workflow
-    uses: redhat-cop/github-workflows-operators/.github/workflows/pr-operator.yml@v1.0.4
+    uses: redhat-cop/github-workflows-operators/.github/workflows/pr-operator.yml@v1.0.5
     with:
       GO_VERSION: ~1.18
       RUN_UNIT_TESTS: true

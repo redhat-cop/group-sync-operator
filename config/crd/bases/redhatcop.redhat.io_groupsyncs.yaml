@@ -320,6 +320,12 @@ spec:
                           prune:
                             description: Prune Whether to prune groups that are no longer in GitLab. Default is false
                             type: boolean
+                          scope:
+                            description: Scope represents the depth for which groups will be synchronized
+                            enum:
+                              - one
+                              - sub
+                            type: string
                           url:
                             description: URL is the location of the GitLab server
                             type: string
