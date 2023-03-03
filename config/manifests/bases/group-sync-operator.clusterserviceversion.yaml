@@ -384,6 +384,9 @@ spec:
         path: providers[0].gitlab.prune
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Scope represents the depth for which groups will be synchronized
+        displayName: Scope to synchronize against
+        path: providers[0].gitlab.scope
       - description: URL is the location of the GitLab server
         displayName: GitLab URL
         path: providers[0].gitlab.url

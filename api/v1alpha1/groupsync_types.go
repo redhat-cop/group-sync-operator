@@ -270,25 +270,31 @@ type GitLabProvider struct {
 	// +kubebuilder:validation:Required
 	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
 
-	// Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
-	// +kubebuilder:validation:Optional
-	Insecure bool `json:"insecure,omitempty"`
-
 	// Groups represents a filtered list of groups to synchronize
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Groups to Synchronize",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	Groups []string `json:"groups,omitempty"`
 
-	// URL is the location of the GitLab server
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitLab URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// Insecure specifies whether to allow for unverified certificates to be used when communicating to GitLab
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	// +kubebuilder:validation:Optional
-	URL *string `json:"url,omitempty"`
+	Insecure bool `json:"insecure,omitempty"`
 
 	// Prune Whether to prune groups that are no longer in GitLab. Default is false
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	// +kubebuilder:validation:Optional
 	Prune bool `json:"prune"`
+
+	// Scope represents the depth for which groups will be synchronized
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Scope to synchronize against"
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=one;sub
+	Scope SyncScope `json:"scope,omitempty"`
+
+	// URL is the location of the GitLab server
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitLab URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	URL *string `json:"url,omitempty"`
 }
 
 // LdapProvider represents integration with an LDAP server

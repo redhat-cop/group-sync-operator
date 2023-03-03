@@ -43,6 +43,11 @@ func (g *GitLabSyncer) Init() bool {
 
 	g.Context = context.Background()
 
+	if g.Provider.Scope == "" {
+		g.Provider.Scope = redhatcopv1alpha1.SubSyncScope
+		return true
+	}
+
 	return false
 }
 
@@ -188,7 +193,7 @@ func (g *GitLabSyncer) Sync() ([]userv1.Group, error) {
 			continue
 		}
 
-		groupMembers, err := g.getGroupMembers(group.ID)
+		groupMembers, err := g.getGroupMembers(group.ID, g.Provider.Scope)
 
 		if err != nil {
 			return nil, err
@@ -299,7 +304,7 @@ func (g *GitLabSyncer) getDescendantGroups(groupId int) ([]*gitlab.Group, error)
 
 }
 
-func (g *GitLabSyncer) getGroupMembers(groupId int) ([]*gitlab.GroupMember, error) {
+func (g *GitLabSyncer) getGroupMembers(groupId int, scope redhatcopv1alpha1.SyncScope) ([]*gitlab.GroupMember, error) {
 
 	groupMembers := []*gitlab.GroupMember{}
 
@@ -311,7 +316,16 @@ func (g *GitLabSyncer) getGroupMembers(groupId int) ([]*gitlab.GroupMember, erro
 	}
 
 	for {
-		members, resp, err := g.Client.Groups.ListAllGroupMembers(groupId, opt)
+
+		var members []*gitlab.GroupMember
+		var resp *gitlab.Response
+		var err error
+
+		if redhatcopv1alpha1.SubSyncScope == scope {
+			members, resp, err = g.Client.Groups.ListAllGroupMembers(groupId, opt)
+		} else {
+			members, resp, err = g.Client.Groups.ListGroupMembers(groupId, opt)
+		}
 
 		if err != nil {
 			return nil, err
