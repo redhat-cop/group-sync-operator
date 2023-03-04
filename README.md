@@ -204,8 +204,9 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `insecure` | Ignore SSL verification | `false` | No |
 | `groups` | List of groups to filter against | | No |
-| `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
 | `prune` | Prune Whether to prune groups that are no longer in GitLab | `false` | No |
+| `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
+| `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
