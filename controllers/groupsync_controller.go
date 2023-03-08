@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -231,6 +232,14 @@ func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prome
 
 func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) (int, error) {
 	prunedGroups := 0
+
+	syncStartDatetime, syncStartParseError := time.Parse(constants.ISO8601Layout, syncStartTime)
+
+	// Should not occur
+	if syncStartParseError != nil {
+		return prunedGroups, syncStartParseError
+	}
+
 	ocpGroups := &userv1.GroupList{}
 	opts := []client.ListOption{
 		client.InNamespace(""),
@@ -242,13 +251,27 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 	}
 
 	for _, group := range ocpGroups.Items {
-		if group.Annotations[constants.SyncTimestamp] < syncStartTime {
-			logger.Info("pruneGroups", "Delete Group", group.Name)
-			err = r.GetClient().Delete(context, &group)
-			prunedGroups++
-			if err != nil {
-				return prunedGroups, err
+
+		if groupSyncTime, ok := group.Annotations[constants.SyncTimestamp]; ok {
+
+			groupSyncDatetime, groupSyncTimeParseErr := time.Parse(constants.ISO8601Layout, groupSyncTime)
+
+			if groupSyncTimeParseErr == nil {
+				if groupSyncDatetime.Before(syncStartDatetime) {
+					logger.Info("pruneGroups", "Delete Group", group.Name)
+					err = r.GetClient().Delete(context, &group)
+					prunedGroups++
+					if err != nil {
+						return prunedGroups, err
+					}
+				}
+			} else {
+				if groupSyncTimeParseErr != nil {
+					logger.Error(groupSyncTimeParseErr, "Error parsing group start time annotation", "Time", syncStartTime)
+				}
 			}
+		} else {
+			logger.Error(errors.New("unable to locate sync timestamp annotation"), "group Name", group.Name)
 		}
 	}
 	return prunedGroups, nil
@@ -256,7 +279,7 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 
 func ISO8601(t time.Time) string {
 	var tz string
-	if zone, offset := t.Zone(); zone == "UTC" {
+	if zone, offset := t.Zone(); zone == "UTgitC" {
 		tz = "Z"
 	} else {
 		tz = fmt.Sprintf("%03d00", offset/3600)
