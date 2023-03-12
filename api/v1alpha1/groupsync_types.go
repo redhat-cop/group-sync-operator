@@ -294,6 +294,7 @@ type GitLabProvider struct {
 	// URL is the location of the GitLab server
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="GitLab URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="https://gitlab.com"
 	URL *string `json:"url,omitempty"`
 }
 

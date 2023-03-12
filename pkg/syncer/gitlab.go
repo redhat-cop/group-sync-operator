@@ -23,8 +23,16 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
+type GitLabTokenType string
+
 var (
 	gitlabLogger = logf.Log.WithName("syncer_gitlab")
+)
+
+const (
+	JobGitLabTokenType      GitLabTokenType = "job"
+	PersonalGitLabTokenType GitLabTokenType = "personal"
+	OAuthGitLabTokenType    GitLabTokenType = "oauth"
 )
 
 type GitLabSyncer struct {
@@ -120,6 +128,7 @@ func (g *GitLabSyncer) Bind() error {
 	usernameSecret, usernameSecretFound := g.CredentialsSecret.Data[secretUsernameKey]
 	passwordSecret, passwordSecretFound := g.CredentialsSecret.Data[secretPasswordKey]
 	tokenSecret, tokenSecretFound := g.CredentialsSecret.Data[secretTokenKey]
+	tokenTypeSecret := g.CredentialsSecret.Data[secretTokenTypeKey]
 
 	clientFns := []gitlab.ClientOptionFunc{}
 
@@ -149,10 +158,23 @@ func (g *GitLabSyncer) Bind() error {
 	}
 
 	if tokenSecretFound {
-		gitlabClient, err = gitlab.NewOAuthClient(
-			string(tokenSecret),
-			clientFns...,
-		)
+
+		if string(PersonalGitLabTokenType) == string(tokenTypeSecret) {
+			gitlabClient, err = gitlab.NewClient(
+				string(tokenSecret),
+				clientFns...,
+			)
+		} else if string(JobGitLabTokenType) == string(tokenTypeSecret) {
+			gitlabClient, err = gitlab.NewJobClient(
+				string(tokenSecret),
+				clientFns...,
+			)
+		} else {
+			gitlabClient, err = gitlab.NewOAuthClient(
+				string(tokenSecret),
+				clientFns...,
+			)
+		}
 
 		if err != nil {
 			return err

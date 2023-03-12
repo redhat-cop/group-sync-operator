@@ -226,17 +226,37 @@ spec:
 
 #### Authenticating to GitLab
 
-Authentication to GitLab can be performed using an OAuth Personal Access Token or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
+Authentication to GitLab can be performed using a [Token](https://docs.gitlab.com/ee/security/token_overview.html) or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
 
-When using an OAuth token, the following key is required:
+When using an OAuth token, the following token types are supported:
+
+* Personal Access Token
+* OAuth Token
+* Job Token
+
+ the following key is required:
 
 * `token` - OAuth token
+
+Optionally, the `tokenType` key can be specified to indicate the type of token being provided from the following values:
+
+* OAuth - `oauth`
+* Personal Access Token - `personal`
+* Job Token - `job`
+
+If no `tokenType` is provided, `oauth` is used by default
 
 The secret can be created by executing the following command:
 
 ```shell
 oc create secret generic gitlab-group-sync --from-literal=token=<token>
 ```
+
+To specify a token type, such as a Personal Access Token, the following command can be executed:
+
+```shell
+oc create secret generic gitlab-group-sync --from-literal=token=<token> --from-literal=tokenType=personal
+``` 
 
 The following keys are required for username and password:
 
