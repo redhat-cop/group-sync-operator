@@ -370,7 +370,7 @@ Groups stored within Keycloak can be synchronized into OpenShift. The following 
 | `loginRealm` | Realm to authenticate against | `master` | No |
 | `realm` | Realm to synchronize | | Yes |
 | `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
-| `url` | URL Location for Keycloak | | Yes |
+| `url` | Base URL for the Keycloak server. Older versions (<17.0.0) including Red Hat SSO should include the context path `/auth` appended to the hostname  | | Yes |
 | `prune` | Prune Whether to prune groups that are no longer in Keycloak | `false` | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Keycloak provider:
@@ -388,7 +388,7 @@ spec:
       credentialsSecret:
         name: keycloak-group-sync
         namespace: group-sync-operator
-      url: https://keycloak-keycloak-operator.apps.openshift.com
+      url: https://keycloak-keycloak-operator.apps.openshift.com/auth
 ```
 
 #### Authenticating to Keycloak

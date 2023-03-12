@@ -38,6 +38,7 @@ type KeycloakSyncer struct {
 	Provider           *redhatcopv1alpha1.KeycloakProvider
 	GoCloak            gocloak.GoCloak
 	Context            context.Context
+	URL                *url.URL
 	Token              *gocloak.JWT
 	CachedGroups       map[string]*gocloak.Group
 	CachedGroupMembers map[string][]*gocloak.User
@@ -54,7 +55,6 @@ func (k *KeycloakSyncer) Init() bool {
 
 	k.CachedGroupMembers = make(map[string][]*gocloak.User)
 	k.CachedGroups = make(map[string]*gocloak.Group)
-	k.GoCloak = gocloak.NewClient(k.Provider.URL)
 
 	if k.Provider.LoginRealm == "" {
 		k.Provider.LoginRealm = masterRealm
@@ -96,7 +96,7 @@ func (k *KeycloakSyncer) Validate() error {
 
 	}
 
-	if _, err := url.ParseRequestURI(k.Provider.URL); err != nil {
+	if k.URL, err = url.ParseRequestURI(k.Provider.URL); err != nil {
 		validationErrors = append(validationErrors, err)
 	}
 
@@ -130,9 +130,10 @@ func (k *KeycloakSyncer) Validate() error {
 
 func (k *KeycloakSyncer) Bind() error {
 
+	k.GoCloak = gocloak.NewClient(k.Provider.URL, gocloak.SetAuthAdminRealms("admin/realms"), gocloak.SetAuthRealms("realms"))
 	restyClient := k.GoCloak.RestyClient()
 
-	if k.Provider.Insecure == true {
+	if k.Provider.Insecure {
 		restyClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	}
 
@@ -212,12 +213,6 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 			Users: []string{},
 		}
 
-		url, err := url.Parse(k.Provider.URL)
-
-		if err != nil {
-			return nil, err
-		}
-
 		childrenGroups := []string{}
 
 		if cachedGroup.SubGroups != nil {
@@ -241,7 +236,7 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 		}
 
 		// Set Host Specific Details
-		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = url.Host
+		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = k.URL.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *cachedGroup.ID
 		if len(childrenGroups) > 0 {
 			ocpGroup.GetAnnotations()[constants.HierarchyChildren] = strings.Join(childrenGroups, ",")
