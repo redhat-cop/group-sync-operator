@@ -204,8 +204,9 @@ Groups stored within a GitLab can be synchronized into OpenShift. The following 
 | `credentialsSecret` | Reference to a secret containing authentication details (See below) | | Yes |
 | `insecure` | Ignore SSL verification | `false` | No |
 | `groups` | List of groups to filter against | | No |
-| `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
 | `prune` | Prune Whether to prune groups that are no longer in GitLab | `false` | No |
+| `scope` | Scope for group synchronization. Options are `one` for one level or `sub` to include subgroups | `sub` | No |
+| `url` | Base URL for the GitLab instance | `https://gitlab.com` | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a GitHub provider:
 
@@ -225,17 +226,37 @@ spec:
 
 #### Authenticating to GitLab
 
-Authentication to GitLab can be performed using an OAuth Personal Access Token or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
+Authentication to GitLab can be performed using a [Token](https://docs.gitlab.com/ee/security/token_overview.html) or a Username and Password (Note: 2FA not supported). A secret must be created in the same namespace that contains the `GroupSync` resource:
 
-When using an OAuth token, the following key is required:
+When using an OAuth token, the following token types are supported:
+
+* Personal Access Token
+* OAuth Token
+* Job Token
+
+ the following key is required:
 
 * `token` - OAuth token
+
+Optionally, the `tokenType` key can be specified to indicate the type of token being provided from the following values:
+
+* OAuth - `oauth`
+* Personal Access Token - `personal`
+* Job Token - `job`
+
+If no `tokenType` is provided, `oauth` is used by default
 
 The secret can be created by executing the following command:
 
 ```shell
 oc create secret generic gitlab-group-sync --from-literal=token=<token>
 ```
+
+To specify a token type, such as a Personal Access Token, the following command can be executed:
+
+```shell
+oc create secret generic gitlab-group-sync --from-literal=token=<token> --from-literal=tokenType=personal
+``` 
 
 The following keys are required for username and password:
 
@@ -264,7 +285,7 @@ The configurations of the three primary schemas (`rfc2307`, `activeDirectory` an
 | `rfc2307` | Configuration using the [rfc2307](https://docs.openshift.com/container-platform/latest/authentication/ldap-syncing.html#ldap-syncing-rfc2307_ldap-syncing-groups) schema | | No |
 | `activeDirectory` | Configuration using the [activeDirectory](https://docs.openshift.com/container-platform/4.5/authentication/ldap-syncing.html#ldap-syncing-activedir_ldap-syncing-groups) schema | | No |
 | `augmentedActiveDirectory` | Configuration using the [activeDirectory](https://docs.openshift.com/container-platform/4.5/authentication/ldap-syncing.html#ldap-syncing-augmented-activedir_ldap-syncing-groups) schema | | No |
-| `url` | Connection URL for the LDAP server | `https://gitlab.cldap://ldapserver:389om` | No |
+| `url` | Connection URL for the LDAP server | `ldap://ldapserver:389` | No |
 | `whitelist` | Explicit list of groups to synchronize |  | No |
 | `blacklist` | Explicit list of groups to not synchronize |  | No |
 | `prune` | Prune Whether to prune groups that are no longer in LDAP | `false` | No |

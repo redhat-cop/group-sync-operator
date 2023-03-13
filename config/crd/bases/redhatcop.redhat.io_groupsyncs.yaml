@@ -327,6 +327,7 @@ spec:
                               - sub
                             type: string
                           url:
+                            default: https://gitlab.com
                             description: URL is the location of the GitLab server
                             type: string
                         required:
