@@ -433,7 +433,12 @@ func (a *AzureSyncer) isUsernamePresent(value reflect.Value, field string) (stri
 	method := value.MethodByName(fmt.Sprintf("Get%s", caser.String(field)))
 
 	if method.IsValid() {
-		return fmt.Sprintf("%s", method.Call(nil)[0].Elem().Interface()), true
+
+		attr := method.Call(nil)[0]
+
+		if !attr.IsNil() {
+			return fmt.Sprintf("%s", attr.Elem().Interface()), true
+		}
 	}
 
 	return "", false
