@@ -438,6 +438,8 @@ func (a *AzureSyncer) isUsernamePresent(value reflect.Value, field string) (stri
 
 		if !attr.IsNil() {
 			return fmt.Sprintf("%s", attr.Elem().Interface()), true
+		} else {
+			azureLogger.Info(fmt.Sprintf("Warning: Skipping User record with empty %s.", field))
 		}
 	}
 
