@@ -16,6 +16,10 @@ fullnameOverride: ""
 env: []
 podAnnotations: {}
 
+podLabels: {}
+
+commonLabels: {}
+
 resources:
   requests:
     cpu: 300m
@@ -41,4 +45,4 @@ kube_rbac_proxy:
       cpu: 100m
       memory: 20Mi
 
-enableMonitoring: true      
+enableMonitoring: true
