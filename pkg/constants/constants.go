@@ -10,5 +10,4 @@ const (
 	HierarchyChildren = "hierarchy_children"
 	HierarchyParent   = "hierarchy_parent"
 	HierarchyParents  = "hierarchy_parents"
-	ISO8601Layout     = "2006-01-02T15:04:05Z0700"
 )

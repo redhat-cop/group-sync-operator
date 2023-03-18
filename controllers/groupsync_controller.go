@@ -108,7 +108,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			return r.wrapMetricsErrorWithMetrics(prometheusLabels, context, instance, err)
 		}
 
-		syncStartTime := ISO8601(time.Now())
+		syncStartTime := time.Now().Format(time.RFC3339)
 		// Perform Sync
 		groups, err := groupSyncer.Sync()
 
@@ -163,7 +163,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			ocpGroup.Labels[constants.SyncProvider] = providerLabel
 
 			// Add Gloabl Annotations/Labels
-			ocpGroup.Annotations[constants.SyncTimestamp] = ISO8601(time.Now())
+			ocpGroup.Annotations[constants.SyncTimestamp] = time.Now().UTC().Format(time.RFC3339)
 
 			ocpGroup.Users = group.Users
 
@@ -206,7 +206,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 	if err == nil && instance.Spec.Schedule != "" {
 		sched, _ := cron.ParseStandard(instance.Spec.Schedule)
 
-		currentTime := time.Now()
+		currentTime := time.Now().UTC()
 		nextScheduledTime := sched.Next(currentTime)
 		nextScheduledSynchronization.With(prometheus.Labels{METRICS_CR_NAMESPACE_LABEL: instance.GetNamespace(), METRICS_CR_NAME_LABEL: instance.GetName()}).Set(float64(nextScheduledTime.UTC().Unix()))
 		successResult.RequeueAfter = nextScheduledTime.Sub(currentTime)
@@ -233,7 +233,7 @@ func (r *GroupSyncReconciler) wrapMetricsErrorWithMetrics(prometheusLabels prome
 func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, providerLabel string, syncStartTime string, logger logr.Logger) (int, error) {
 	prunedGroups := 0
 
-	syncStartDatetime, syncStartParseError := time.Parse(constants.ISO8601Layout, syncStartTime)
+	syncStartDatetime, syncStartParseError := time.Parse(time.RFC3339, syncStartTime)
 
 	// Should not occur
 	if syncStartParseError != nil {
@@ -254,7 +254,7 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 
 		if groupSyncTime, ok := group.Annotations[constants.SyncTimestamp]; ok {
 
-			groupSyncDatetime, groupSyncTimeParseErr := time.Parse(constants.ISO8601Layout, groupSyncTime)
+			groupSyncDatetime, groupSyncTimeParseErr := time.Parse(time.RFC3339, groupSyncTime)
 
 			if groupSyncTimeParseErr == nil {
 				if groupSyncDatetime.Before(syncStartDatetime) {
@@ -267,25 +267,14 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 				}
 			} else {
 				if groupSyncTimeParseErr != nil {
-					logger.Error(groupSyncTimeParseErr, "Error parsing group start time annotation", "Time", syncStartTime)
+					logger.Error(groupSyncTimeParseErr, "Error parsing group start time annotation", "Group Name", group.Name, "Time", syncStartTime)
 				}
 			}
 		} else {
-			logger.Error(errors.New("unable to locate sync timestamp annotation"), "group Name", group.Name)
+			logger.Error(errors.New("unable to locate sync timestamp annotation"), "Group Name", group.Name)
 		}
 	}
 	return prunedGroups, nil
-}
-
-func ISO8601(t time.Time) string {
-	var tz string
-	if zone, offset := t.Zone(); zone == "UTgitC" {
-		tz = "Z"
-	} else {
-		tz = fmt.Sprintf("%03d00", offset/3600)
-	}
-	return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%02d%s",
-		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), tz)
 }
 
 func mergeMap(m1, m2 map[string]string) map[string]string {

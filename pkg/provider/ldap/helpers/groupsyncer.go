@@ -172,19 +172,7 @@ func (s *LDAPGroupSyncer) makeOpenShiftGroup(ldapGroupUID string, usernames []st
 
 	// overwrite Group Users data
 	group.Users = usernames
-	group.Annotations[LDAPSyncTimeAnnotation] = ISO8601(time.Now())
+	group.Annotations[LDAPSyncTimeAnnotation] = time.Now().UTC().Format(time.RFC3339)
 
 	return group, nil
-}
-
-// ISO8601 returns an ISO 6801 formatted string from a time.
-func ISO8601(t time.Time) string {
-	var tz string
-	if zone, offset := t.Zone(); zone == "UTC" {
-		tz = "Z"
-	} else {
-		tz = fmt.Sprintf("%03d00", offset/3600)
-	}
-	return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%02d%s",
-		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), tz)
 }
