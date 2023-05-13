@@ -5,8 +5,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net"
 	"net/url"
 	"reflect"
+	"time"
 
 	nethttp "net/http"
 
@@ -128,30 +130,43 @@ func (a *AzureSyncer) Bind() error {
 
 	var httpClient *nethttp.Client
 
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
+	defaultTransport := &nethttp.Transport{
+		Proxy:                 nethttp.ProxyFromEnvironment,
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
 	if a.Provider.Insecure || len(a.CaCertificate) > 0 {
 
 		httpClient = kiota.GetDefaultClient()
 
-		defaultTransport := nethttp.DefaultTransport.(*nethttp.Transport).Clone()
-		defaultTransport.ForceAttemptHTTP2 = true
-		defaultTransport.DisableCompression = false
+		var tlsConfig *tls.Config
 
 		if a.Provider.Insecure {
-			defaultTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+			tlsConfig = &tls.Config{InsecureSkipVerify: true}
 		} else {
 			if len(a.CaCertificate) > 0 {
 
-				tlsConfig := &tls.Config{}
+				tlsConfig = &tls.Config{}
 				if tlsConfig.RootCAs == nil {
 					tlsConfig.RootCAs = x509.NewCertPool()
 				}
 
 				tlsConfig.RootCAs.AppendCertsFromPEM(a.CaCertificate)
 
-				defaultTransport.TLSClientConfig = tlsConfig
-
 			}
 		}
+
+		defaultTransport.TLSClientConfig = tlsConfig
 
 		httpClient.Transport = kiota.NewCustomTransportWithParentTransport(defaultTransport)
 
@@ -159,6 +174,9 @@ func (a *AzureSyncer) Bind() error {
 
 	opts := &azidentity.ClientSecretCredentialOptions{}
 	opts.Cloud.ActiveDirectoryAuthorityHost = getAuthorityHost(a.Provider.AuthorityHost)
+	opts.Transport = &nethttp.Client{
+		Transport: defaultTransport,
+	}
 	cred, err := azidentity.NewClientSecretCredential(
 		string(a.CredentialsSecret.Data[TenantID]), string(a.CredentialsSecret.Data[ClientID]), string(a.CredentialsSecret.Data[ClientSecret]),
 		opts)
@@ -226,13 +244,13 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			// Add Base Group
 			aadGroups = append(aadGroups, baseGroupResult[0])
 
-			var baseGroupMembersRequestConfiguration *msgroups.GroupsItemMembersRequestBuilderGetRequestConfiguration
+			var baseGroupMembersRequestConfiguration *msgroups.ItemMembersRequestBuilderGetRequestConfiguration
 
 			if a.Provider.Filter != "" {
-				requestParameters := &msgroups.GroupsItemMembersRequestBuilderGetQueryParameters{
+				requestParameters := &msgroups.ItemMembersRequestBuilderGetQueryParameters{
 					Filter: &a.Provider.Filter,
 				}
-				baseGroupMembersRequestConfiguration = &msgroups.GroupsItemMembersRequestBuilderGetRequestConfiguration{
+				baseGroupMembersRequestConfiguration = &msgroups.ItemMembersRequestBuilderGetRequestConfiguration{
 					QueryParameters: requestParameters,
 				}
 
@@ -245,7 +263,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 				return nil, err
 			}
 
-			pageIterator, err := msgraphcore.NewPageIterator(baseGroupMembersRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+			pageIterator, err := msgraphcore.NewPageIterator[interface{}](baseGroupMembersRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 			if err != nil {
 				return nil, err
@@ -367,12 +385,12 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 	}
 
 	pageSize := int32(999)
-	queryParameters := msgroups.GroupsItemTransitiveMembersRequestBuilderGetQueryParameters{
+	queryParameters := msgroups.ItemTransitiveMembersRequestBuilderGetQueryParameters{
 		Select: selectParameter,
 		Top:    &pageSize,
 	}
 
-	transitiveMembersGetConfiguration := msgroups.GroupsItemTransitiveMembersRequestBuilderGetRequestConfiguration{
+	transitiveMembersGetConfiguration := msgroups.ItemTransitiveMembersRequestBuilderGetRequestConfiguration{
 		QueryParameters: &queryParameters,
 	}
 
@@ -382,7 +400,7 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 		return nil, err
 	}
 
-	pageIterator, err := msgraphcore.NewPageIterator(memberRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+	pageIterator, err := msgraphcore.NewPageIterator[interface{}](memberRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 	if err != nil {
 		return nil, err
@@ -465,7 +483,7 @@ func getAuthorityHost(authorityHost *string) string {
 func (a *AzureSyncer) getGroupsFromResults(result graph.GroupCollectionResponseable) ([]graph.Group, error) {
 	groups := []graph.Group{}
 
-	pageIterator, err := msgraphcore.NewPageIterator(result, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+	pageIterator, err := msgraphcore.NewPageIterator[interface{}](result, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 	if err != nil {
 		return nil, err
