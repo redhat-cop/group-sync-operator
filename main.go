@@ -18,7 +18,9 @@ package main
 
 import (
 	"flag"
+	v1 "k8s.io/api/core/v1"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 
 	userv1 "github.com/openshift/api/user/v1"
@@ -86,6 +88,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                     scheme,
+		ClientDisableCacheFor:      []client.Object{&v1.Secret{}},
 		MetricsBindAddress:         metricsAddr,
 		Port:                       9443,
 		HealthProbeBindAddress:     probeAddr,
