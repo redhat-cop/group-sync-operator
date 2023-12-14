@@ -227,10 +227,12 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 		parentGroups := []string{}
 
 		for _, group := range k.CachedGroups {
-			groupSubGroups := *group.SubGroups
-			for _, subgroup := range groupSubGroups {
-				if *subgroup.Name == *cachedGroup.Name {
-					parentGroups = append(parentGroups, *group.Name)
+			if group.SubGroups != nil {
+				groupSubGroups := *group.SubGroups
+				for _, subgroup := range groupSubGroups {
+					if *subgroup.Name == *cachedGroup.Name {
+						parentGroups = append(parentGroups, *group.Name)
+					}
 				}
 			}
 		}
@@ -282,7 +284,7 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 	}
 
 	// Process Subgroups
-	if redhatcopv1alpha1.SubSyncScope == scope {
+	if redhatcopv1alpha1.SubSyncScope == scope && group.SubGroups != nil {
 		groupSubGroups := *group.SubGroups
 		for _, subGroup := range groupSubGroups {
 			if _, subGroupFound := k.CachedGroups[*subGroup.ID]; !subGroupFound {
