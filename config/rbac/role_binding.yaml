@@ -8,5 +8,5 @@ roleRef:
   name: manager-role
 subjects:
 - kind: ServiceAccount
-  name: controller-manager
-  namespace: system
+  name: group-sync-operator-controller-manager
+  namespace: release-namespace
