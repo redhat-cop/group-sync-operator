@@ -12,6 +12,9 @@ namePrefix: group-sync-operator-
 #commonLabels:
 #  someName: someValue
 
+resources:
+  - service-account.yaml
+
 bases:
   - ../rbac
   - ../prometheus
