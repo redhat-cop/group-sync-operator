@@ -155,6 +155,7 @@ spec:
 #### Authenticating to GitHub
 
 Authentication to GitHub can be performed using an [OAuth Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) or as an [GitHub App](https://docs.github.com/en/developers/apps/getting-started-with-apps/about-apps#about-github-apps), using a secret key and appId.
+The OAuth Personal Access Token needs to scope of `admin:org/read:org`.
 A secret must be created in the same namespace that contains the `GroupSync` resource:
 
 ##### OAuth
