@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.1.0
-	github.com/Nerzal/gocloak/v11 v11.2.0
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-github/v45 v45.2.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
@@ -33,8 +32,6 @@ require (
 	k8s.io/client-go v0.24.2
 	sigs.k8s.io/controller-runtime v0.12.2
 )
-
-require github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
@@ -65,6 +62,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
