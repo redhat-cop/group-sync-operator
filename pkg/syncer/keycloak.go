@@ -9,7 +9,7 @@ import (
 
 	"crypto/x509"
 
-	"github.com/Nerzal/gocloak/v11"
+	"github.com/Nerzal/gocloak/v13"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
@@ -36,7 +36,7 @@ type KeycloakSyncer struct {
 	Name               string
 	GroupSync          *redhatcopv1alpha1.GroupSync
 	Provider           *redhatcopv1alpha1.KeycloakProvider
-	GoCloak            gocloak.GoCloak
+	GoCloak            *gocloak.GoCloak
 	Context            context.Context
 	URL                *url.URL
 	Token              *gocloak.JWT
@@ -130,7 +130,7 @@ func (k *KeycloakSyncer) Validate() error {
 
 func (k *KeycloakSyncer) Bind() error {
 
-	k.GoCloak = gocloak.NewClient(k.Provider.URL, gocloak.SetAuthAdminRealms("admin/realms"), gocloak.SetAuthRealms("realms"))
+	k.GoCloak = gocloak.NewClient(k.Provider.URL)
 	restyClient := k.GoCloak.RestyClient()
 
 	if k.Provider.Insecure {
