@@ -35,8 +35,9 @@ import (
 )
 
 var (
-	azureLogger = logf.Log.WithName("syncer_azure")
-	caser       = cases.Title(language.Und, cases.NoLower)
+	azureLogger   = logf.Log.WithName("syncer_azure")
+	caser         = cases.Title(language.Und, cases.NoLower)
+	azurePageSize = int32(999)
 )
 
 const (
@@ -215,6 +216,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			filter := fmt.Sprintf("displayName eq '%s'", baseGroup)
 			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
 				Filter: &filter,
+				Top:    &azurePageSize,
 			}
 
 			groupRequestConfiguration := &msgroups.GroupsRequestBuilderGetRequestConfiguration{
@@ -249,6 +251,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			if a.Provider.Filter != "" {
 				requestParameters := &msgroups.ItemMembersRequestBuilderGetQueryParameters{
 					Filter: &a.Provider.Filter,
+					Top:    &azurePageSize,
 				}
 				baseGroupMembersRequestConfiguration = &msgroups.ItemMembersRequestBuilderGetRequestConfiguration{
 					QueryParameters: requestParameters,
@@ -291,6 +294,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 		if a.Provider.Filter != "" {
 			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
 				Filter: &a.Provider.Filter,
+				Top:    &azurePageSize,
 			}
 			groupConfiguration.QueryParameters = groupRequestParameters
 
@@ -384,10 +388,9 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 		selectParameter = []string{GraphUserNameAttribute}
 	}
 
-	pageSize := int32(999)
 	queryParameters := msgroups.ItemTransitiveMembersRequestBuilderGetQueryParameters{
 		Select: selectParameter,
-		Top:    &pageSize,
+		Top:    &azurePageSize,
 	}
 
 	transitiveMembersGetConfiguration := msgroups.ItemTransitiveMembersRequestBuilderGetRequestConfiguration{
