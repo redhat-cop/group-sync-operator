@@ -16,5 +16,8 @@ jobs:
       REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
     with:
       PR_ACTOR: "andy.block@gmail.com"
-      GO_VERSION: ~1.18
+      GO_VERSION: ~1.21
       RUN_UNIT_TESTS: true
+      RUN_INTEGRATION_TESTS: false
+      RUN_HELMCHART_TEST: false
+      OPERATOR_SDK_VERSION: v1.25.2
