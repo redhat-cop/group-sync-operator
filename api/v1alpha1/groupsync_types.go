@@ -46,6 +46,11 @@ type GroupSyncSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Schedule",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Optional
 	Schedule string `json:"schedule,omitempty"`
+
+	// ExcludeInvalidGroupNames excludes Groups with names that are not RFC 1035 compliant.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Exclude Invalid Group Names",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
+	ExcludeInvalidGroupNames bool `json:"excludeInvalidGroupNames,omitempty"`
 }
 
 // GroupSyncStatus defines the observed state of GroupSync

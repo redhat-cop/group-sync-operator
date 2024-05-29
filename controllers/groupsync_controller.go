@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -32,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	apimachineryvalidation "k8s.io/apimachinery/pkg/util/validation"
 	kubeclock "k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -124,6 +126,15 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		prunedGroups := 0
 
 		for i, group := range groups {
+
+			// Verify valid Group Names
+			if instance.Spec.ExcludeInvalidGroupNames {
+				msgs := apimachineryvalidation.IsDNS1035Label(group.Name)
+				if len(msgs) > 0 {
+					r.Log.Info(fmt.Sprintf("Group '%s' contains invalid name: %s", group.Name, strings.Join(msgs, ",")))
+					continue
+				}
+			}
 
 			ocpGroup := &userv1.Group{}
 			err := r.GetClient().Get(context, types.NamespacedName{Name: group.Name, Namespace: ""}, ocpGroup)
