@@ -759,4 +759,3 @@ operator-sdk cleanup group-sync-operator -n group-sync-operator
 oc delete operatorgroup operator-sdk-og
 oc delete catalogsource group-sync-operator-catalog
 ```
-
