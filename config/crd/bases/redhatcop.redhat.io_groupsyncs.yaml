@@ -31,6 +31,9 @@ spec:
             spec:
               description: GroupSyncSpec defines the desired state of GroupSync
               properties:
+                excludeInvalidGroupNames:
+                  description: ExcludeInvalidGroupNames excludes Groups with names that are not RFC 1035 compliant.
+                  type: boolean
                 providers:
                   description: List of Providers that can be mounted by containers belonging to the pod.
                   items:

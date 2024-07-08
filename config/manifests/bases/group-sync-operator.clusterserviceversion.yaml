@@ -33,6 +33,12 @@ spec:
       kind: GroupSync
       name: groupsyncs.redhatcop.redhat.io
       specDescriptors:
+      - description: ExcludeInvalidGroupNames excludes Groups with names that are
+          not RFC 1035 compliant.
+        displayName: Exclude Invalid Group Names
+        path: excludeInvalidGroupNames
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: List of Providers that can be mounted by containers belonging
           to the pod.
         displayName: Providers
@@ -721,7 +727,7 @@ spec:
         displayName: Last Sync Success Time
         path: lastSyncSuccessTime
       version: v1alpha1
-  description: |-
+  description: |
     Synchronizes groups from external providers into OpenShift
 
     ## Overview
@@ -881,7 +887,7 @@ spec:
 
     ```shell
     oc create secret generic gitlab-group-sync --from-literal=token=<token> --from-literal=tokenType=personal
-    ``` 
+    ```
 
     The following keys are required for username and password:
 
