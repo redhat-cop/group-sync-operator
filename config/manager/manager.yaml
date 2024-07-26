@@ -23,7 +23,7 @@ spec:
       labels:
         control-plane: group-sync-operator
     spec:
-      serviceAccountName: group-sync-operator
+      serviceAccountName: controller-manager
       containers:
         - command:
             - /manager
