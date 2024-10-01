@@ -23,7 +23,7 @@ require (
 	github.com/redhat-cop/operator-utils v1.3.5
 	github.com/robfig/cron v1.2.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
+	github.com/shurcooL/githubv4 v0.0.0-20240120211514-18a1ae0e79dc
 	github.com/xanzy/go-gitlab v0.73.1
 	golang.org/x/text v0.14.0
 	gopkg.in/ldap.v2 v2.5.1
