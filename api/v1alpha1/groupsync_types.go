@@ -138,6 +138,11 @@ type ProviderType struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Okta Provider"
 	// +kubebuilder:validation:Optional
 	Okta *OktaProvider `json:"okta,omitempty"`
+
+	// Okta represents the Okta provider
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Okta Provider"
+	// +kubebuilder:validation:Optional
+	IbmSecurityVerify *OktaProvider `json:"okta,omitempty"`
 }
 
 // KeycloakProvider represents integration with Keycloak

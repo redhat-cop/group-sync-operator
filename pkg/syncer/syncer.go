@@ -86,7 +86,6 @@ func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider 
 			return &LdapSyncer{GroupSync: groupSync, Provider: provider.Ldap, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
 		}
 	}
-
 	return nil, fmt.Errorf("Could not find syncer for provider '%s'", provider.Name)
 }
 
