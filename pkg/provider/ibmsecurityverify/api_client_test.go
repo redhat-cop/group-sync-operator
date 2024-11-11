@@ -49,7 +49,9 @@ func TestGetGroupSuccess(t *testing.T) {
 	}	
     httpClient.On("Do").Return(mockGroupResponse, nil).Once()
 	
-	client := ibmsecurityverify.NewApiClient(credentialsSecret, httpClient)
+	client := ibmsecurityverify.ApiClient{}
+	client.SetHttpClient(httpClient)
+	client.SetCredentialsSecret(credentialsSecret)
     group := client.GetGroup("https://test.ibm.com", "testGroup")
 	if assert.NotNil(t, group) {
 		assert.Equal(t, groupId, group.Id)
@@ -71,7 +73,9 @@ func TestGetGroupFailureOnFetchingAccessToken(t *testing.T) {
 	}	
     httpClient.On("Do").Return(mockAccessTokenResponse, nil).Once()
 
-	client := ibmsecurityverify.NewApiClient(credentialsSecret, httpClient)
+	client := ibmsecurityverify.ApiClient{}
+	client.SetHttpClient(httpClient)
+	client.SetCredentialsSecret(credentialsSecret)
     group := client.GetGroup("https://test.ibm.com", "testGroup")
 	if assert.NotNil(t, group) {
 		assert.Equal(t, "", group.Id)
@@ -100,7 +104,9 @@ func TestGetGroupFailureOnFetchingGroup(t *testing.T) {
 	}	
     httpClient.On("Do").Return(mockGroupResponse, nil).Once()
 	
-	client := ibmsecurityverify.NewApiClient(credentialsSecret, httpClient)
+	client := ibmsecurityverify.ApiClient{}
+	client.SetHttpClient(httpClient)
+	client.SetCredentialsSecret(credentialsSecret)
     group := client.GetGroup("https://test.ibm.com", "testGroup")
 	if assert.NotNil(t, group) {
 		assert.Equal(t, "", group.Id)
