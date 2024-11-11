@@ -6,7 +6,6 @@ import (
 	"strings"
 	"net/url"
 	"net/http"
-	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -16,6 +15,8 @@ var (
 )
 
 type IbmSecurityVerifyClient interface {
+	SetHttpClient(client HttpClient)
+	SetCredentialsSecret(secret *corev1.Secret)
 	GetGroup(tenantUrl string, groupId string) IsvGroup
 }
 
@@ -28,15 +29,19 @@ type ApiClient struct {
 	httpClient HttpClient
 }
 
-func NewApiClient(credentialsSecret *corev1.Secret, httpClient HttpClient) IbmSecurityVerifyClient {
-    return &ApiClient{credentialsSecret, httpClient}
-}
-
 type accessTokenResponse struct {
 	AccessToken string
 	GrantId string
 	TokenType string
 	ExpiresIn int 
+}
+
+func (apiClient *ApiClient) SetHttpClient(client HttpClient) {
+	apiClient.httpClient = client
+}
+
+func (apiClient *ApiClient) SetCredentialsSecret(secret *corev1.Secret) {
+	apiClient.credentialsSecret = secret
 }
 
 func (apiClient *ApiClient) GetGroup(tenantUrl string, groupId string) IsvGroup {
@@ -46,12 +51,6 @@ func (apiClient *ApiClient) GetGroup(tenantUrl string, groupId string) IsvGroup 
 		group = apiClient.fetchGroup(token, tenantUrl, groupId)
 	}
 	return group
-}
-
-func (apiClient *ApiClient) buildHttpClient() HttpClient {
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 10
-	return retryClient.StandardClient()
 }
 
 func (apiClient *ApiClient) fetchAccessToken(tenantUrl string) string {

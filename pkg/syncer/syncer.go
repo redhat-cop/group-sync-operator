@@ -6,6 +6,7 @@ import (
 
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
+	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
@@ -86,6 +87,11 @@ func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider 
 	case provider.Ldap != nil:
 		{
 			return &LdapSyncer{GroupSync: groupSync, Provider: provider.Ldap, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
+		}
+	case provider.IbmSecurityVerify != nil:
+		{	
+			apiClient := &ibmsecurityverify.ApiClient{}
+			return &IbmSecurityVerifySyncer{GroupSync: groupSync, Provider: provider.IbmSecurityVerify, Name: provider.Name, ReconcilerBase: reconcilerBase, ApiClient: apiClient}, nil
 		}
 	}
 	return nil, fmt.Errorf("Could not find syncer for provider '%s'", provider.Name)
