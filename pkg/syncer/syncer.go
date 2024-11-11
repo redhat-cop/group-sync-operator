@@ -15,13 +15,15 @@ import (
 )
 
 const (
-	secretUsernameKey    = "username"
-	secretPasswordKey    = "password"
-	secretTokenKey       = "token"
-	secretTokenTypeKey   = "tokenType"
-	privateKey           = "privateKey"
-	appId                = "appId"
-	defaultResourceCaKey = "ca.crt"
+	secretUsernameKey     = "username"
+	secretPasswordKey     = "password"
+	secretTokenKey        = "token"
+	secretTokenTypeKey    = "tokenType"
+	secretClientIdKey     = "clientId"
+	secretClientSecretKey = "clientSecret"
+	privateKey            = "privateKey"
+	appId                 = "appId"
+	defaultResourceCaKey  = "ca.crt"
 )
 
 type GroupSyncer interface {
