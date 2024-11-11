@@ -3,11 +3,13 @@ package syncer
 import (
 	"context"
 	"fmt"
-
+	"net/url"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
+	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/operator-utils/pkg/util"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -30,9 +32,6 @@ type IbmSecurityVerifySyncer struct {
 
 func (g *IbmSecurityVerifySyncer) Init() bool {
 	g.Context = context.Background()
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 10
-	g.ApiClient.SetHttpClient(retryClient.StandardClient())
 	return false
 }
 
@@ -66,11 +65,39 @@ func (g *IbmSecurityVerifySyncer) Validate() error {
 }
 
 func (g *IbmSecurityVerifySyncer) Bind() error {
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 10
+	g.ApiClient.SetHttpClient(retryClient.StandardClient())
 	return nil
 }
 
 func (g *IbmSecurityVerifySyncer) Sync() ([]userv1.Group, error) {
 	ocpGroups := []userv1.Group{}
+	for _, groupId := range g.Provider.Groups {
+		isvGroup := g.ApiClient.GetGroup(g.Provider.TenantURL, groupId)
+		// TODO validate
+		ocpGroup := userv1.Group{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "Group",
+				APIVersion: userv1.GroupVersion.String(),
+			},
+			ObjectMeta: v1.ObjectMeta{
+				Name:        isvGroup.DisplayName,
+				Annotations: map[string]string{},
+				Labels:      map[string]string{},
+			},
+			Users: []string{},
+		}
+
+		sourceUrl, _ := url.Parse(g.Provider.TenantURL)
+		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = sourceUrl.Host
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = groupId
+
+		for _, member := range isvGroup.Members {
+			ocpGroup.Users = append(ocpGroup.Users, member.Id)
+		}
+		ocpGroups = append(ocpGroups, ocpGroup)
+	}
 	return ocpGroups, nil
 }
 
