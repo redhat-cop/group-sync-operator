@@ -33,15 +33,19 @@ func NewApiClient(credentialsSecret *corev1.Secret, httpClient HttpClient) IbmSe
 }
 
 type accessTokenResponse struct {
-	accessToken string
-	grantId string
-	tokenType string
-	expiresIn int 
+	AccessToken string
+	GrantId string
+	TokenType string
+	ExpiresIn int 
 }
 
 func (apiClient *ApiClient) GetGroup(tenantUrl string, groupId string) IsvGroup {
 	token := apiClient.fetchAccessToken(tenantUrl)
-	return apiClient.fetchGroup(token, tenantUrl, groupId)
+	var group IsvGroup
+	if token != "" {
+		group = apiClient.fetchGroup(token, tenantUrl, groupId)
+	}
+	return group
 }
 
 func (apiClient *ApiClient) buildHttpClient() HttpClient {
@@ -59,38 +63,39 @@ func (apiClient *ApiClient) fetchAccessToken(tenantUrl string) string {
 	request, _ := http.NewRequest("POST", tokenUrl, strings.NewReader(requestData.Encode()))
 	request.Header.Add("accept", "application/scim+json")
 	response, err := apiClient.httpClient.Do(request)
-	responseCode := response.StatusCode
-	if response.StatusCode != 200 {
-		logger.Error(err, fmt.Sprint("Failed to request API access token. Response code: %d", responseCode))
-	}
-	if err != nil {
-		panic(err)
-	}
-	decoder := json.NewDecoder(response.Body)
-    var data accessTokenResponse
-    err = decoder.Decode(&data)
-	if err != nil {
-		panic(err)
+	var accessToken string
+	if err != nil || response.StatusCode != 200 {
+		logger.Error(err, fmt.Sprint("Failed to request API access token. Response code: %d", response.StatusCode))
+	} else {
+		decoder := json.NewDecoder(response.Body)
+		var data accessTokenResponse
+		err = decoder.Decode(&data)
+		if err == nil {
+			accessToken = data.AccessToken
+		} else {
+			logger.Error(err, fmt.Sprint("Failed to decode access token response"))
+		}
 	}
 	defer response.Body.Close()
-	return data.accessToken
+	return accessToken
 }
 
-func (apiClient *ApiClient) fetchGroup(accessToken string, tenantUrl string, groupId string) IsvGroup { // TODO return type
+func (apiClient *ApiClient) fetchGroup(accessToken string, tenantUrl string, groupId string) IsvGroup {
 	groupUrl := fmt.Sprintf("%s/v2.0/Groups/%s?membershipType=firstLevelUsersAndGroups", tenantUrl, groupId)
 	logger.Info(fmt.Sprintf("Requesting members from group %s from %s", groupId, groupUrl))
 	request, err := http.NewRequest("GET", groupUrl, nil)
-	if err != nil {
-		panic(err)
-	}
 	request.Header.Add("accept", "application/scim+json")
 	request.Header.Add("authorization", "bearer " + accessToken)
 	response, err := apiClient.httpClient.Do(request)
-	decoder := json.NewDecoder(response.Body)
-    var group IsvGroup
-    err = decoder.Decode(&group)
-	if err != nil {
-		panic(err)
+	var group IsvGroup
+	if err != nil || response.StatusCode != 200 {
+		logger.Error(err, fmt.Sprint("Failed to fetch group %s. Response code: %d", groupId, response.StatusCode))
+	} else {
+		decoder := json.NewDecoder(response.Body)
+		err = decoder.Decode(&group)
+		if err != nil {
+			logger.Error(err, fmt.Sprint("Failed to decode group response"))
+		}
 	}
 	defer response.Body.Close()
 	return group

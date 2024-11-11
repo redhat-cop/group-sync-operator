@@ -56,3 +56,54 @@ func TestGetGroupSuccess(t *testing.T) {
 		assert.Equal(t, groupDisplayName, group.DisplayName)
 	}
 }
+
+func TestGetGroupFailureOnFetchingAccessToken(t *testing.T) {
+	credentialsSecret := &corev1.Secret{}
+	credentialsSecret.Data = make(map[string][]byte)
+	credentialsSecret.Data["clientId"] = []byte("testClientId")
+	credentialsSecret.Data["clientSecret"] = []byte("testClientSecret")
+
+	httpClient := new(HttpClientMock)
+	jsonResponse := `{ "accessToken": "token", "grantId": "grantId", "tokenType": "type", "expiresIn": 10000 }`
+	mockAccessTokenResponse := &http.Response{
+		StatusCode: 400,
+		Body: io.NopCloser(bytes.NewReader([]byte(jsonResponse))),
+	}	
+    httpClient.On("Do").Return(mockAccessTokenResponse, nil).Once()
+
+	client := ibmsecurityverify.NewApiClient(credentialsSecret, httpClient)
+    group := client.GetGroup("https://test.ibm.com", "testGroup")
+	if assert.NotNil(t, group) {
+		assert.Equal(t, "", group.Id)
+		assert.Equal(t, "", group.DisplayName)
+	}
+}
+
+func TestGetGroupFailureOnFetchingGroup(t *testing.T) {
+	credentialsSecret := &corev1.Secret{}
+	credentialsSecret.Data = make(map[string][]byte)
+	credentialsSecret.Data["clientId"] = []byte("testClientId")
+	credentialsSecret.Data["clientSecret"] = []byte("testClientSecret")
+
+	httpClient := new(HttpClientMock)
+	jsonResponse := `{ "accessToken": "token", "grantId": "grantId", "tokenType": "type", "expiresIn": 10000 }`
+	mockAccessTokenResponse := &http.Response{
+		StatusCode: 200,
+		Body: io.NopCloser(bytes.NewReader([]byte(jsonResponse))),
+	}	
+    httpClient.On("Do").Return(mockAccessTokenResponse, nil).Once()
+
+	jsonResponse = `{ "error": "test" }`
+	mockGroupResponse := &http.Response{
+		StatusCode: 400,
+		Body: io.NopCloser(bytes.NewReader([]byte(jsonResponse))),
+	}	
+    httpClient.On("Do").Return(mockGroupResponse, nil).Once()
+	
+	client := ibmsecurityverify.NewApiClient(credentialsSecret, httpClient)
+    group := client.GetGroup("https://test.ibm.com", "testGroup")
+	if assert.NotNil(t, group) {
+		assert.Equal(t, "", group.Id)
+		assert.Equal(t, "", group.DisplayName)
+	}
+}
