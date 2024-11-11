@@ -8,6 +8,15 @@ import (
 	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
 	corev1 "k8s.io/api/core/v1"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/assert"
+)
+
+const (
+	groupId = "testGroup"
+	groupDisplayName = "testDisplayName"
+	userId = "testUserId"
+	userExternalId = "testExternalId"
+	userName = "testUserName"
 )
 
 type HttpClientMock struct {
@@ -19,20 +28,31 @@ func (client *HttpClientMock) Do(req *http.Request) (*http.Response, error) {
     return args.Get(0).(*http.Response), args.Error(1)
 }
 
-func TestGetGroupMembersSuccess(t *testing.T) {
+func TestGetGroupSuccess(t *testing.T) {
 	credentialsSecret := &corev1.Secret{}
 	credentialsSecret.Data = make(map[string][]byte)
 	credentialsSecret.Data["clientId"] = []byte("testClientId")
 	credentialsSecret.Data["clientSecret"] = []byte("testClientSecret")
 
-	jsonResponse := "{ \"accessToken\": \"token\",  \"grantId\": \"grantId\",  \"tokenType\": \"type\", \"expiresIn\": 10000 }"
 	httpClient := new(HttpClientMock)
-	mockResponse := &http.Response{
+	jsonResponse := `{ "accessToken": "token", "grantId": "grantId", "tokenType": "type", "expiresIn": 10000 }`
+	mockAccessTokenResponse := &http.Response{
 		StatusCode: 200,
 		Body: io.NopCloser(bytes.NewReader([]byte(jsonResponse))),
 	}	
-    httpClient.On("Do").Return(mockResponse, nil)
+    httpClient.On("Do").Return(mockAccessTokenResponse, nil).Once()
 
+	jsonResponse = `{ "id": "testGroup", "displayName": "testDisplayName", "members": [{ "id": "testUserId", "externalId": "testExternalId", "userName": "testUserName" }] }`
+	mockGroupResponse := &http.Response{
+		StatusCode: 200,
+		Body: io.NopCloser(bytes.NewReader([]byte(jsonResponse))),
+	}	
+    httpClient.On("Do").Return(mockGroupResponse, nil).Once()
+	
 	client := ibmsecurityverify.NewApiClient(credentialsSecret, httpClient)
-    client.GetGroupMembers("https://test.ibm.com", "testGroup")
+    group := client.GetGroup("https://test.ibm.com", "testGroup")
+	if assert.NotNil(t, group) {
+		assert.Equal(t, groupId, group.Id)
+		assert.Equal(t, groupDisplayName, group.DisplayName)
+	}
 }

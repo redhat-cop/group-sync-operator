@@ -16,7 +16,7 @@ var (
 )
 
 type IbmSecurityVerifyClient interface {
-	GetGroupMembers(tenantUrl string, groupId string) []string
+	GetGroup(tenantUrl string, groupId string) IsvGroup
 }
 
 type HttpClient interface {
@@ -32,18 +32,16 @@ func NewApiClient(credentialsSecret *corev1.Secret, httpClient HttpClient) IbmSe
     return &ApiClient{credentialsSecret, httpClient}
 }
 
-type AccessTokenResponse struct {
-	AccessToken string
-	GrantId string
-	TokenType string
-	ExpiresIn int 
+type accessTokenResponse struct {
+	accessToken string
+	grantId string
+	tokenType string
+	expiresIn int 
 }
 
-func (apiClient *ApiClient) GetGroupMembers(tenantUrl string, groupId string) []string {
-	token := apiClient.getAccessToken(tenantUrl)
-	array := make([]string, 0)
-	array = append(array, "test")
-	return array
+func (apiClient *ApiClient) GetGroup(tenantUrl string, groupId string) IsvGroup {
+	token := apiClient.fetchAccessToken(tenantUrl)
+	return apiClient.fetchGroup(token, tenantUrl, groupId)
 }
 
 func (apiClient *ApiClient) buildHttpClient() HttpClient {
@@ -52,9 +50,9 @@ func (apiClient *ApiClient) buildHttpClient() HttpClient {
 	return retryClient.StandardClient()
 }
 
-func (apiClient *ApiClient) getAccessToken(tenantUrl string) string {
+func (apiClient *ApiClient) fetchAccessToken(tenantUrl string) string {
 	tokenUrl := tenantUrl + "/v1.0/endpoint/default/token"
-	logger.Info(fmt.Sprint("Requesting API access token from %s", tokenUrl))
+	logger.Info(fmt.Sprintf("Requesting API access token from %s", tokenUrl))
 	requestData := url.Values{}
     requestData.Set("client_id", string(apiClient.credentialsSecret.Data["clientId"]))
     requestData.Set("client_secret", string(apiClient.credentialsSecret.Data["clientSecret"]))
@@ -69,11 +67,31 @@ func (apiClient *ApiClient) getAccessToken(tenantUrl string) string {
 		panic(err)
 	}
 	decoder := json.NewDecoder(response.Body)
-    var data AccessTokenResponse
+    var data accessTokenResponse
     err = decoder.Decode(&data)
 	if err != nil {
 		panic(err)
 	}
 	defer response.Body.Close()
-	return data.AccessToken
+	return data.accessToken
+}
+
+func (apiClient *ApiClient) fetchGroup(accessToken string, tenantUrl string, groupId string) IsvGroup { // TODO return type
+	groupUrl := fmt.Sprintf("%s/v2.0/Groups/%s?membershipType=firstLevelUsersAndGroups", tenantUrl, groupId)
+	logger.Info(fmt.Sprintf("Requesting members from group %s from %s", groupId, groupUrl))
+	request, err := http.NewRequest("GET", groupUrl, nil)
+	if err != nil {
+		panic(err)
+	}
+	request.Header.Add("accept", "application/scim+json")
+	request.Header.Add("authorization", "bearer " + accessToken)
+	response, err := apiClient.httpClient.Do(request)
+	decoder := json.NewDecoder(response.Body)
+    var group IsvGroup
+    err = decoder.Decode(&group)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+	return group
 }
