@@ -4,30 +4,31 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
-	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
+	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	retryablehttp "github.com/hashicorp/go-retryablehttp"
 )
 
 var (
-	isvLogger   = logf.Log.WithName("syncer_ibmsecurityverify")
+	isvLogger = logf.Log.WithName("syncer_ibmsecurityverify")
 )
 
 type IbmSecurityVerifySyncer struct {
-	Name              string
-	GroupSync         *redhatcopv1alpha1.GroupSync
-	Provider          *redhatcopv1alpha1.IbmSecurityVerifyProvider
-	Context           context.Context
-	ReconcilerBase    util.ReconcilerBase
-	ApiClient		  ibmsecurityverify.IbmSecurityVerifyClient
+	Name           string
+	GroupSync      *redhatcopv1alpha1.GroupSync
+	Provider       *redhatcopv1alpha1.IbmSecurityVerifyProvider
+	Context        context.Context
+	ReconcilerBase util.ReconcilerBase
+	ApiClient      ibmsecurityverify.IbmSecurityVerifyClient
 }
 
 func (g *IbmSecurityVerifySyncer) Init() bool {
@@ -57,8 +58,8 @@ func (g *IbmSecurityVerifySyncer) Validate() error {
 		validationErrors = append(validationErrors, fmt.Errorf("tenant URL not provided"))
 	}
 
-	if len(g.Provider.Groups) == 0 {
-		validationErrors = append(validationErrors, fmt.Errorf("ISV group IDs not provided"))
+	if len(g.Provider.GroupNames) == 0 {
+		validationErrors = append(validationErrors, fmt.Errorf("ISV group names not provided"))
 	}
 
 	return utilerrors.NewAggregate(validationErrors)
@@ -73,30 +74,29 @@ func (g *IbmSecurityVerifySyncer) Bind() error {
 
 func (g *IbmSecurityVerifySyncer) Sync() ([]userv1.Group, error) {
 	ocpGroups := []userv1.Group{}
-	for _, groupId := range g.Provider.Groups {
-		isvGroup := g.ApiClient.GetGroup(g.Provider.TenantURL, groupId)
-		// TODO validate
-		ocpGroup := userv1.Group{
-			TypeMeta: v1.TypeMeta{
-				Kind:       "Group",
-				APIVersion: userv1.GroupVersion.String(),
-			},
-			ObjectMeta: v1.ObjectMeta{
-				Name:        isvGroup.DisplayName,
-				Annotations: map[string]string{},
-				Labels:      map[string]string{},
-			},
-			Users: []string{},
+	for _, groupName := range g.Provider.GroupNames {
+		isvGroup := g.ApiClient.GetGroup(g.Provider.TenantURL, groupName)
+		if isvGroup.Id != "" {
+			ocpGroup := userv1.Group{
+				TypeMeta: v1.TypeMeta{
+					Kind:       "Group",
+					APIVersion: userv1.GroupVersion.String(),
+				},
+				ObjectMeta: v1.ObjectMeta{
+					Name:        isvGroup.DisplayName,
+					Annotations: map[string]string{},
+					Labels:      map[string]string{},
+				},
+				Users: []string{},
+			}
+			sourceUrl, _ := url.Parse(g.Provider.TenantURL)
+			ocpGroup.GetAnnotations()[constants.SyncSourceHost] = sourceUrl.Host
+			ocpGroup.GetAnnotations()[constants.SyncSourceUID] = isvGroup.Id
+			for _, member := range isvGroup.Members {
+				ocpGroup.Users = append(ocpGroup.Users, member.Id)
+			}
+			ocpGroups = append(ocpGroups, ocpGroup)
 		}
-
-		sourceUrl, _ := url.Parse(g.Provider.TenantURL)
-		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = sourceUrl.Host
-		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = groupId
-
-		for _, member := range isvGroup.Members {
-			ocpGroup.Users = append(ocpGroup.Users, member.Id)
-		}
-		ocpGroups = append(ocpGroups, ocpGroup)
 	}
 	return ocpGroups, nil
 }

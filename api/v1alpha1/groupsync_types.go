@@ -474,14 +474,14 @@ type IbmSecurityVerifyProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
 	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
-	// Groups represents a filtered list of groups to synchronize
+	// GroupNames is the list of ISV group display names to synchronize
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Groups to Synchronize",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
-	Groups []string `json:"groups,omitempty"`
+	GroupNames []string `json:"groupNames,omitempty"`
 	// TenantURL is the location of the IBM Security Verify tenant
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Tenant URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
-	TenantURL string `json:"url"`
+	TenantURL string `json:"tenantUrl"`
 }
 
 // ObjectRef represents a reference to an item within a Secret

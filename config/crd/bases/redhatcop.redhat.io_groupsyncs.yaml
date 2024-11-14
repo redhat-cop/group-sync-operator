@@ -440,6 +440,45 @@ spec:
                           - realm
                           - url
                         type: object
+                      ibmsecurityverify:
+                        description: The IBM Security Verify (ISV) provider
+                        properties:
+                          credentialsSecret:
+                            description: CredentialsSecret is a reference to a secret containing authentication details for the ISV server
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          groupNames:
+                            description: The names of the ISV groups to synchronize
+                            items:
+                              type: string
+                            type: array
+                          tenantUrl:
+                            description: URL for the ISV server of the tenant
+                            type: string
+                        required:
+                          - credentialsSecret
+                          - tenantUrl
+                          - groupNames
+                        type: object
                       ldap:
                         description: Ldap represents the LDAP provider
                         properties:
