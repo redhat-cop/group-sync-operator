@@ -480,7 +480,7 @@ oc create secret generic okta-api-token --from-literal=okta-api-token=<OKTA_API_
 
 ### IBM Security Verify
 
-Groups defined in [IBM Security Verify](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) (ISV) can be synchronized into OpenShift. The developer docs for the ISV API can be found [here](https://docs.verify.ibm.com/verify/page/api-documentation).
+Groups defined in [IBM Security Verify](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) (ISV) can be synchronized into OpenShift. Currently only the `userName` field from ISV will be synchronized. The developer docs for the ISV API can be found [here](https://docs.verify.ibm.com/verify/page/api-documentation).
 The following table describes the set of configuration options for the provider:
 
 | Name | Description | Defaults | Required |
