@@ -31,10 +31,10 @@ type ApiClient struct {
 }
 
 type accessTokenResponse struct {
-	AccessToken string
-	GrantId     string
-	TokenType   string
-	ExpiresIn   int
+	AccessToken string `json:"access_token"`
+	GrantId     string `json:"grant_id"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 func (apiClient *ApiClient) SetHttpClient(client HttpClient) {
@@ -60,20 +60,22 @@ func (apiClient *ApiClient) fetchAccessToken(tenantUrl string) string {
 	requestData := url.Values{}
 	requestData.Set("client_id", string(apiClient.credentialsSecret.Data["clientId"]))
 	requestData.Set("client_secret", string(apiClient.credentialsSecret.Data["clientSecret"]))
+	requestData.Set("grant_type", "client_credentials")
 	request, _ := http.NewRequest("POST", tokenUrl, strings.NewReader(requestData.Encode()))
-	request.Header.Add("accept", "application/scim+json")
+	request.Header.Add("content-type", "application/x-www-form-urlencoded")
 	response, err := apiClient.httpClient.Do(request)
 	var accessToken string
 	if err != nil || response.StatusCode != 200 {
-		logger.Error(err, fmt.Sprint("Failed to request API access token. Response code: %d", response.StatusCode))
+		logger.Error(err, fmt.Sprintf("Failed to request API access token. Response code: %d", response.StatusCode))
 	} else {
 		decoder := json.NewDecoder(response.Body)
 		var data accessTokenResponse
 		err = decoder.Decode(&data)
 		if err == nil {
 			accessToken = data.AccessToken
+			logger.Info(fmt.Sprintf("Access token retrieved. Expires in %d seconds", data.ExpiresIn))
 		} else {
-			logger.Error(err, fmt.Sprint("Failed to decode access token response"))
+			logger.Error(err, "Failed to decode access token response")
 		}
 	}
 	defer response.Body.Close()
@@ -89,12 +91,14 @@ func (apiClient *ApiClient) fetchGroup(accessToken string, tenantUrl string, gro
 	response, err := apiClient.httpClient.Do(request)
 	var group IsvGroup
 	if err != nil || response.StatusCode != 200 {
-		logger.Error(err, fmt.Sprint("Failed to fetch group %s. Response code: %d", groupName, response.StatusCode))
+		logger.Error(err, fmt.Sprintf("Failed to fetch group %s. Response code: %d", groupName, response.StatusCode))
 	} else {
 		decoder := json.NewDecoder(response.Body)
 		err = decoder.Decode(&group)
 		if err != nil {
-			logger.Error(err, fmt.Sprint("Failed to decode group response"))
+			logger.Error(err, "Failed to decode group response")
+		} else {
+			logger.Info(fmt.Sprintf("ISV group '%s' (%s) retrieved and contains %d members", group.DisplayName, group.Id, len(group.Members)))
 		}
 	}
 	defer response.Body.Close()

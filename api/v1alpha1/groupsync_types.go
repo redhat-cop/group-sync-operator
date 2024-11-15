@@ -474,14 +474,26 @@ type IbmSecurityVerifyProvider struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
 	// +kubebuilder:validation:Required
 	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
-	// GroupNames is the list of ISV group display names to synchronize
+	// Groups is the list of ISV groups to synchronize
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Groups to Synchronize",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
-	GroupNames []string `json:"groupNames,omitempty"`
+	Groups []IsvGroupSpec `json:"groups,omitempty"`
 	// TenantURL is the location of the IBM Security Verify tenant
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Tenant URL",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	// +kubebuilder:validation:Required
 	TenantURL string `json:"tenantUrl"`
+}
+
+// +k8s:openapi-gen=true
+type IsvGroupSpec struct {
+	// The display name of the group as defined in IBM Security Verify
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Name",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+	// The ID of the group as defined in IBM Security Verify. This value can be found by using the API.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Id",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Required
+	Id string `json:"id,omitempty"`
 }
 
 // ObjectRef represents a reference to an item within a Secret

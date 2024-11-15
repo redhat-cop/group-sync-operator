@@ -466,18 +466,27 @@ spec:
                               - name
                               - namespace
                             type: object
-                          groupNames:
-                            description: The names of the ISV groups to synchronize
-                            items:
-                              type: string
+                          groups:
+                            description: The ISV groups to synchronize
                             type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  description: Name of the ISV group
+                                  type: string
+                                id:
+                                  description: ID of the ISV group
+                                  type: string
+                              required:
+                                - id
                           tenantUrl:
                             description: URL for the ISV server of the tenant
                             type: string
                         required:
                           - credentialsSecret
                           - tenantUrl
-                          - groupNames
+                          - groups
                         type: object
                       ldap:
                         description: Ldap represents the LDAP provider

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	userv1 "github.com/openshift/api/user/v1"
@@ -58,8 +59,8 @@ func (g *IbmSecurityVerifySyncer) Validate() error {
 		validationErrors = append(validationErrors, fmt.Errorf("tenant URL not provided"))
 	}
 
-	if len(g.Provider.GroupNames) == 0 {
-		validationErrors = append(validationErrors, fmt.Errorf("ISV group names not provided"))
+	if len(g.Provider.Groups) == 0 {
+		validationErrors = append(validationErrors, fmt.Errorf("ISV groups not provided"))
 	}
 
 	return utilerrors.NewAggregate(validationErrors)
@@ -74,8 +75,9 @@ func (g *IbmSecurityVerifySyncer) Bind() error {
 
 func (g *IbmSecurityVerifySyncer) Sync() ([]userv1.Group, error) {
 	ocpGroups := []userv1.Group{}
-	for _, groupName := range g.Provider.GroupNames {
-		isvGroup := g.ApiClient.GetGroup(g.Provider.TenantURL, groupName)
+	for _, group := range g.Provider.Groups {
+		isvGroup := g.ApiClient.GetGroup(g.Provider.TenantURL, group.Id)
+		g.validateGroupName(isvGroup, group.Name)
 		if isvGroup.Id != "" {
 			ocpGroup := userv1.Group{
 				TypeMeta: v1.TypeMeta{
@@ -83,7 +85,7 @@ func (g *IbmSecurityVerifySyncer) Sync() ([]userv1.Group, error) {
 					APIVersion: userv1.GroupVersion.String(),
 				},
 				ObjectMeta: v1.ObjectMeta{
-					Name:        isvGroup.DisplayName,
+					Name:        g.normalizeName(isvGroup.DisplayName),
 					Annotations: map[string]string{},
 					Labels:      map[string]string{},
 				},
@@ -93,7 +95,7 @@ func (g *IbmSecurityVerifySyncer) Sync() ([]userv1.Group, error) {
 			ocpGroup.GetAnnotations()[constants.SyncSourceHost] = sourceUrl.Host
 			ocpGroup.GetAnnotations()[constants.SyncSourceUID] = isvGroup.Id
 			for _, member := range isvGroup.Members {
-				ocpGroup.Users = append(ocpGroup.Users, member.Id)
+				ocpGroup.Users = append(ocpGroup.Users, member.UserName)
 			}
 			ocpGroups = append(ocpGroups, ocpGroup)
 		}
@@ -107,4 +109,14 @@ func (g *IbmSecurityVerifySyncer) GetProviderName() string {
 
 func (g *IbmSecurityVerifySyncer) GetPrune() bool {
 	return false
+}
+
+func (g *IbmSecurityVerifySyncer) normalizeName(name string) string {
+	return strings.ReplaceAll(name, " ", "-")
+}
+
+func (g *IbmSecurityVerifySyncer) validateGroupName(group ibmsecurityverify.IsvGroup, expectedName string) {
+	if expectedName != "" && (group.DisplayName != expectedName) {
+		isvLogger.Error(nil, fmt.Sprintf("Retrieved group name '%s' does not match name '%s' in config", group.DisplayName, expectedName))
+	}
 }
