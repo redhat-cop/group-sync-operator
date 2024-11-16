@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
@@ -50,7 +49,7 @@ func TestGetGroupSuccess(t *testing.T) {
 	}
 	httpClient.On("Do").Return(mockGroupResponse, nil).Once()
 
-	client := ibmsecurityverify.ApiClient{}
+	client := ApiClient{}
 	client.SetHttpClient(httpClient)
 	client.SetCredentialsSecret(credentialsSecret)
 	group := client.GetGroup("https://test.ibm.com", "testGroup")
@@ -74,7 +73,7 @@ func TestGetGroupFailureOnFetchingAccessToken(t *testing.T) {
 	}
 	httpClient.On("Do").Return(mockAccessTokenResponse, nil).Once()
 
-	client := ibmsecurityverify.ApiClient{}
+	client := ApiClient{}
 	client.SetHttpClient(httpClient)
 	client.SetCredentialsSecret(credentialsSecret)
 	group := client.GetGroup("https://test.ibm.com", "testGroup")
@@ -105,7 +104,7 @@ func TestGetGroupFailureOnFetchingGroup(t *testing.T) {
 	}
 	httpClient.On("Do").Return(mockGroupResponse, nil).Once()
 
-	client := ibmsecurityverify.ApiClient{}
+	client := ApiClient{}
 	client.SetHttpClient(httpClient)
 	client.SetCredentialsSecret(credentialsSecret)
 	group := client.GetGroup("https://test.ibm.com", "testGroup")

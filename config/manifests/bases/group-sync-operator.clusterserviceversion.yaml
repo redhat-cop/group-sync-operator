@@ -766,6 +766,7 @@ spec:
     * [LDAP](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol)
     * [Keycloak](https://www.keycloak.org/)/[Red Hat Single Sign On](https://access.redhat.com/products/red-hat-single-sign-on)
     * [Okta](https://www.okta.com/)
+    * [IBM Security Verify](https://docs.verify.ibm.com/verify)
 
     The following sections describe the configuration options available for each provider
 
@@ -1162,6 +1163,54 @@ spec:
       ```shell
       oc create secret generic okta-api-token --from-literal=okta-api-token=<OKTA_API_TOKEN> -n group-sync-operator
       ```
+    
+    ### IBM Security Verify
+
+    Groups defined in [IBM Security Verify](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) (ISV) can be synchronized into OpenShift. Currently only the `userName` field from ISV will be synchronized. The developer docs for the ISV API can be found [here](https://docs.verify.ibm.com/verify/page/api-documentation).
+    The following table describes the set of configuration options for the provider:
+
+      | Name | Description | Defaults | Required |
+      | ----- | ---------- | -------- | ----- |
+      | `credentialsSecret` | Reference to a secret containing authentication details (see below) | `''`  | Yes |
+      | `groups` | List of groups to synchronize (see below) | `nil`  | Yes |
+      | `tenantUrl` | The ISV tenant URL, for example `https://my-isv.verify.ibm.com`) | `''`  | Yes |
+
+    The following is an example of a minimal configuration that can be applied to integrate with an Okta provider:
+
+    ```yaml
+    apiVersion: redhatcop.redhat.io/v1alpha1
+    kind: GroupSync
+    metadata:
+      name: ibmsecurityverify-sync
+    spec:
+        providers:
+        - name: ibmsecurityverify
+          ibmsecurityverify:
+            credentialsSecret:
+              name: isv-group-sync
+              namespace: group-sync-operator
+            tenantUrl: https://my-isv.verify.ibm.com
+            groups:
+              - name: 'application owners'
+                id: 645001V3V9
+              - name: developer
+                id: 645001V3VA
+    ```
+
+    #### Group Objects
+    Each group object in the `groups` array must contain an `id` field. The group ID can be retrieved by pulling the group information from the ISV API. Optionally, the object may also contain a `name` which corresponds to the group's display name. When defined, the operator will confirm that the name defined in the YAML matches that received from the API when synchronization occurs; as the group IDs are not human-friendly, using the name can confirm the correct groups are configured. If the names do not match an error will be logged.
+
+    #### Group Names
+    The name of each groups created in OpenShift will match the group name in ISV. Any whitespace in the ISV group name will be replaced with a hyphen.
+
+    #### Authenticating to IBM Security Verify
+
+    A secret must be created in the same namespace as the group-sync-operator pod. It must contain the following keys:
+
+    * `clientId` - The API client ID.
+    * `clientSecret`- The API client secret.
+
+    See the IBM Security Verify [API documentation](https://docs.verify.ibm.com/verify/docs/api-access) for setting up authentication.
 
     ### Support for Additional Metadata (Beta)
 
