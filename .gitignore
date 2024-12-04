@@ -35,3 +35,10 @@ bin
 *.swo
 *~
 buildtools/yq
+
+# binaries
+manager
+group-sync-operator
+
+# temporary files
+tmp/
