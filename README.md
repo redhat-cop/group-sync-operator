@@ -1,8 +1,10 @@
 Group Sync Operator
 ===================
 
-[![Build Status](https://github.com/redhat-cop/group-sync-operator/workflows/push/badge.svg?branch=master)](https://github.com/redhat-cop/group-sync-operator/actions?workflow=push)
- [![Docker Repository on Quay](https://quay.io/repository/redhat-cop/group-sync-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-cop/group-sync-operator)
+![build status](https://github.com/redhat-cop/group-sync-operator/workflows/push/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/redhat-cop/group-sync-operator)](https://goreportcard.com/report/github.com/redhat-cop/group-sync-operator)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/redhat-cop/group-sync-operator)
+[![CRD Docs](https://img.shields.io/badge/CRD-Docs-brightgreen)](https://doc.crds.dev/github.com/redhat-cop/group-sync-operator)
 
 Synchronizes groups from external providers into OpenShift
 
