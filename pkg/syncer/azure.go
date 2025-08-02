@@ -26,6 +26,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	abstractions "github.com/microsoft/kiota-abstractions-go"
 	az "github.com/microsoft/kiota-authentication-azure-go"
 	kiota "github.com/microsoft/kiota-http-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
@@ -35,9 +36,10 @@ import (
 )
 
 var (
-	azureLogger   = logf.Log.WithName("syncer_azure")
-	caser         = cases.Title(language.Und, cases.NoLower)
-	azurePageSize = int32(999)
+	azureLogger             = logf.Log.WithName("syncer_azure")
+	caser                   = cases.Title(language.Und, cases.NoLower)
+	azurePageSize           = int32(999)
+	transitiveMemberHeaders = abstractions.NewRequestHeaders()
 )
 
 const (
@@ -71,6 +73,7 @@ func (a *AzureSyncer) Init() bool {
 	a.CachedGroups = make(map[string]*graph.Group)
 	a.CachedGroupUsers = make(map[string][]*graph.User)
 	a.Context = context.Background()
+	transitiveMemberHeaders.Add("ConsistencyLevel", "eventual")
 
 	return false
 }
@@ -390,11 +393,12 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 
 	queryParameters := msgroups.ItemTransitiveMembersRequestBuilderGetQueryParameters{
 		Select: selectParameter,
-		Top:    &azurePageSize,
+		Count:  &truthy,
 	}
 
 	transitiveMembersGetConfiguration := msgroups.ItemTransitiveMembersRequestBuilderGetRequestConfiguration{
 		QueryParameters: &queryParameters,
+		Headers:         transitiveMemberHeaders,
 	}
 
 	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().Get(a.Context, &transitiveMembersGetConfiguration)
