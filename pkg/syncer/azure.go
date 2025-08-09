@@ -12,6 +12,7 @@ import (
 
 	nethttp "net/http"
 
+	abstractions "github.com/microsoft/kiota-abstractions-go"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	abstractions "github.com/microsoft/kiota-abstractions-go"
 	az "github.com/microsoft/kiota-authentication-azure-go"
 	kiota "github.com/microsoft/kiota-http-go"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
@@ -36,10 +36,10 @@ import (
 )
 
 var (
-	azureLogger             = logf.Log.WithName("syncer_azure")
-	caser                   = cases.Title(language.Und, cases.NoLower)
-	azurePageSize           = int32(999)
-	transitiveMemberHeaders = abstractions.NewRequestHeaders()
+	azureLogger   = logf.Log.WithName("syncer_azure")
+	caser         = cases.Title(language.Und, cases.NoLower)
+	azurePageSize = int32(999)
+	headers       = abstractions.NewRequestHeaders()
 )
 
 const (
@@ -73,7 +73,7 @@ func (a *AzureSyncer) Init() bool {
 	a.CachedGroups = make(map[string]*graph.Group)
 	a.CachedGroupUsers = make(map[string][]*graph.User)
 	a.Context = context.Background()
-	transitiveMemberHeaders.Add("ConsistencyLevel", "eventual")
+	headers.Add("ConsistencyLevel", "eventual")
 
 	return false
 }
@@ -219,7 +219,6 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			filter := fmt.Sprintf("displayName eq '%s'", baseGroup)
 			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
 				Filter: &filter,
-				Top:    &azurePageSize,
 			}
 
 			groupRequestConfiguration := &msgroups.GroupsRequestBuilderGetRequestConfiguration{
@@ -249,37 +248,35 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			// Add Base Group
 			aadGroups = append(aadGroups, baseGroupResult[0])
 
-			var baseGroupMembersRequestConfiguration *msgroups.ItemMembersRequestBuilderGetRequestConfiguration
+			var baseGroupMembersRequestConfiguration *msgroups.ItemMembersGraphGroupRequestBuilderGetRequestConfiguration
 
 			if a.Provider.Filter != "" {
-				requestParameters := &msgroups.ItemMembersRequestBuilderGetQueryParameters{
+				requestParameters := &msgroups.ItemMembersGraphGroupRequestBuilderGetQueryParameters{
 					Filter: &a.Provider.Filter,
 					Top:    &azurePageSize,
 				}
-				baseGroupMembersRequestConfiguration = &msgroups.ItemMembersRequestBuilderGetRequestConfiguration{
+				baseGroupMembersRequestConfiguration = &msgroups.ItemMembersGraphGroupRequestBuilderGetRequestConfiguration{
 					QueryParameters: requestParameters,
 				}
 
 			}
 
-			baseGroupMembersRequest, err := a.Client.GroupsById(*baseGroupResult[0].GetId()).Members().Get(a.Context, baseGroupMembersRequestConfiguration)
+			baseGroupMembersRequest, err := a.Client.GroupsById(*baseGroupResult[0].GetId()).Members().GraphGroup().Get(a.Context, baseGroupMembersRequestConfiguration)
 
 			if err != nil {
 				azureLogger.Error(err, "Failed to get base group members", "Provider", a.Name, "Base Group", baseGroup)
 				return nil, err
 			}
 
-			pageIterator, err := msgraphcore.NewPageIterator[interface{}](baseGroupMembersRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+			pageIterator, err := msgraphcore.NewPageIterator[*graph.Group](baseGroupMembersRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 			if err != nil {
 				return nil, err
 			}
 
-			err = pageIterator.Iterate(a.Context, func(pageItem interface{}) bool {
+			err = pageIterator.Iterate(a.Context, func(group *graph.Group) bool {
 
-				if member, ok := pageItem.(*graph.Group); ok {
-					aadGroups = append(aadGroups, *member)
-				}
+				aadGroups = append(aadGroups, *group)
 				return true
 			})
 
@@ -292,7 +289,11 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 	} else {
 
-		var groupConfiguration = msgroups.GroupsRequestBuilderGetRequestConfiguration{}
+		var groupConfiguration = msgroups.GroupsRequestBuilderGetRequestConfiguration{
+			QueryParameters: &msgroups.GroupsRequestBuilderGetQueryParameters{
+				Top: &azurePageSize,
+			},
+		}
 
 		if a.Provider.Filter != "" {
 			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
@@ -391,50 +392,56 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 		selectParameter = []string{GraphUserNameAttribute}
 	}
 
-	queryParameters := msgroups.ItemTransitiveMembersRequestBuilderGetQueryParameters{
+	queryParameters := msgroups.ItemTransitiveMembersGraphUserRequestBuilderGetQueryParameters{
 		Select: selectParameter,
+		Top:    &azurePageSize,
 		Count:  &truthy,
 	}
 
-	transitiveMembersGetConfiguration := msgroups.ItemTransitiveMembersRequestBuilderGetRequestConfiguration{
+	transitiveMembersConfiguration := msgroups.ItemTransitiveMembersGraphUserRequestBuilderGetRequestConfiguration{
 		QueryParameters: &queryParameters,
-		Headers:         transitiveMemberHeaders,
+		Headers:         headers,
 	}
 
-	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().Get(a.Context, &transitiveMembersGetConfiguration)
+	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().GraphUser().Get(a.Context, &transitiveMembersConfiguration)
 
 	if err != nil {
 		return nil, err
 	}
 
-	pageIterator, err := msgraphcore.NewPageIterator[interface{}](memberRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+	for {
 
-	if err != nil {
-		return nil, err
-	}
-
-	err = pageIterator.Iterate(a.Context, func(pageItem interface{}) bool {
-
-		if member, ok := pageItem.(*graph.User); ok {
-			if username, found := a.getUsernameForUser(*member); found {
+		for _, member := range memberRequest.GetValue() {
+			if username, found := a.getUsernameForUser(member); found {
 				groupMembers = append(groupMembers, fmt.Sprintf("%v", username))
 			}
 		}
-		return true
-	})
 
-	if err != nil {
-		azureLogger.Error(err, "Failed to get iterate over group members", "Provider", a.Name, "Group ID", groupID)
-		return nil, err
+		nextPageUrl := memberRequest.GetOdataNextLink()
+		if nextPageUrl != nil {
+			transitiveMembersConfiguration := msgroups.ItemTransitiveMembersGraphUserRequestBuilderGetRequestConfiguration{
+				Headers: headers,
+			}
+
+			memberRequest, err = msgroups.NewItemTransitiveMembersGraphUserRequestBuilder(*nextPageUrl, a.Client.GetAdapter()).Get(context.Background(), &transitiveMembersConfiguration)
+
+			if err != nil {
+				azureLogger.Error(err, "Failed to get iterate over group members", "Provider", a.Name, "Group ID", groupID)
+				return nil, err
+			}
+		} else {
+			break
+		}
+
 	}
 
 	return groupMembers, nil
 
 }
 
-func (a *AzureSyncer) getUsernameForUser(user graph.User) (string, bool) {
+func (a *AzureSyncer) getUsernameForUser(user graph.Userable) (string, bool) {
 
-	userValue := reflect.ValueOf(&user)
+	userValue := reflect.ValueOf(user)
 
 	if a.Provider.UserNameAttributes == nil {
 		return a.isUsernamePresent(userValue, GraphUserNameAttribute)
@@ -490,14 +497,13 @@ func getAuthorityHost(authorityHost *string) string {
 func (a *AzureSyncer) getGroupsFromResults(result graph.GroupCollectionResponseable) ([]graph.Group, error) {
 	groups := []graph.Group{}
 
-	pageIterator, err := msgraphcore.NewPageIterator[interface{}](result, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+	pageIterator, err := msgraphcore.NewPageIterator[*graph.Group](result, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 	if err != nil {
 		return nil, err
 	}
 
-	iterateErr := pageIterator.Iterate(a.Context, func(pageItem interface{}) bool {
-		group := pageItem.(*graph.Group)
+	iterateErr := pageIterator.Iterate(a.Context, func(group *graph.Group) bool {
 		groups = append(groups, *group)
 		return true
 	})
