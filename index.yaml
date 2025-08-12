@@ -2,8 +2,22 @@ apiVersion: v1
 entries:
   group-sync-operator:
   - apiVersion: v1
+    appVersion: v0.0.36
+    created: "2025-08-12T19:21:08.461122704Z"
+    description: Helm chart that deploys the group-sync-operator
+    digest: 55444c43010a517f41bd03d3bfe28b891def48cfe1ef128219acdfd86deef1ff
+    keywords:
+    - authorization
+    - security
+    name: group-sync-operator
+    sources:
+    - https://github.com/redhat-cop/group-sync-operator
+    urls:
+    - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.36.tgz
+    version: v0.0.36
+  - apiVersion: v1
     appVersion: v0.0.35
-    created: "2025-08-05T18:42:40.280300423Z"
+    created: "2025-08-12T19:21:08.460742954Z"
     description: Helm chart that deploys the group-sync-operator
     digest: bc972656e0825b268c911c6c2d81755c4e46f7ac373c223226737bbd904324df
     keywords:
@@ -17,7 +31,7 @@ entries:
     version: v0.0.35
   - apiVersion: v1
     appVersion: v0.0.34
-    created: "2025-08-05T18:42:40.279946841Z"
+    created: "2025-08-12T19:21:08.460384395Z"
     description: Helm chart that deploys the group-sync-operator
     digest: cb65e16e4b6963bb9e6c2daa4c2b3194a38137acee3a78dce235c01ca21aef9d
     keywords:
@@ -31,7 +45,7 @@ entries:
     version: v0.0.34
   - apiVersion: v1
     appVersion: v0.0.33
-    created: "2025-08-05T18:42:40.279591927Z"
+    created: "2025-08-12T19:21:08.459978136Z"
     description: Helm chart that deploys the group-sync-operator
     digest: ab4ef6ae17bc4c33a1b4035b105e62d484f4c955ceea1cb0ce0105003f303cb4
     keywords:
@@ -45,7 +59,7 @@ entries:
     version: v0.0.33
   - apiVersion: v1
     appVersion: v0.0.32
-    created: "2025-08-05T18:42:40.27919841Z"
+    created: "2025-08-12T19:21:08.459578249Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 0b5fa55644c951f3fa1945603db4e756c3c5cf3c8eac014287a9cf60d2165fc1
     keywords:
@@ -59,7 +73,7 @@ entries:
     version: v0.0.32
   - apiVersion: v1
     appVersion: v0.0.31
-    created: "2025-08-05T18:42:40.278844027Z"
+    created: "2025-08-12T19:21:08.459169485Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 7612e0a822a390f5d004f936dfceb9242b8417c7e0cc652a9457b6dbd4c304c1
     keywords:
@@ -73,7 +87,7 @@ entries:
     version: v0.0.31
   - apiVersion: v1
     appVersion: v0.0.30
-    created: "2025-08-05T18:42:40.278423039Z"
+    created: "2025-08-12T19:21:08.458210579Z"
     description: Helm chart that deploys the group-sync-operator
     digest: fcbc40c81b716353ef0ab9f18da381ca893ecff7bf97679fbe94767511944393
     keywords:
@@ -87,7 +101,7 @@ entries:
     version: v0.0.30
   - apiVersion: v1
     appVersion: v0.0.29
-    created: "2025-08-05T18:42:40.277930186Z"
+    created: "2025-08-12T19:21:08.457613313Z"
     description: Helm chart that deploys the group-sync-operator
     digest: d5d765513642e3bbdaf5162f0ffeeb1f9d0cd5d9a3c81d637bf76f97b0276659
     keywords:
@@ -101,7 +115,7 @@ entries:
     version: v0.0.29
   - apiVersion: v1
     appVersion: v0.0.28
-    created: "2025-08-05T18:42:40.272665873Z"
+    created: "2025-08-12T19:21:08.457185253Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 4f3c8cb57d7eab7d823fe3f8db6c95f462f400d95abfeabafd4ae155c7a752a0
     keywords:
@@ -115,7 +129,7 @@ entries:
     version: v0.0.28
   - apiVersion: v1
     appVersion: v0.0.27
-    created: "2025-08-05T18:42:40.272271735Z"
+    created: "2025-08-12T19:21:08.456777822Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 1ef9a0f0532422471fe8bd4799677f331c0aafb3c59c51b5cdce2b3aa2df7f3b
     keywords:
@@ -129,7 +143,7 @@ entries:
     version: v0.0.27
   - apiVersion: v1
     appVersion: v0.0.26
-    created: "2025-08-05T18:42:40.271907393Z"
+    created: "2025-08-12T19:21:08.45640714Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 12285c71497a2049356bb15203600b1f624ccd53c88981f631a183439494f8ad
     keywords:
@@ -143,7 +157,7 @@ entries:
     version: v0.0.26
   - apiVersion: v1
     appVersion: v0.0.25
-    created: "2025-08-05T18:42:40.271501633Z"
+    created: "2025-08-12T19:21:08.456020337Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 8c25a01c5078984ff1ef7da26c821b3c11121bba297bf2e5e591d66492de32b9
     keywords:
@@ -157,7 +171,7 @@ entries:
     version: v0.0.25
   - apiVersion: v1
     appVersion: v0.0.24
-    created: "2025-08-05T18:42:40.271133615Z"
+    created: "2025-08-12T19:21:08.455633704Z"
     description: Helm chart that deploys the group-sync-operator
     digest: dc2fdf94080ed4d35bc76ff2a595cc762ceaea1dbdd58b980419a4ae04412a86
     keywords:
@@ -171,7 +185,7 @@ entries:
     version: v0.0.24
   - apiVersion: v1
     appVersion: v0.0.23
-    created: "2025-08-05T18:42:40.270744757Z"
+    created: "2025-08-12T19:21:08.455254566Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 805ac8c4fb76459979b3f205cbab4fecb7776962e75fbe319a4409721c69741c
     keywords:
@@ -185,7 +199,7 @@ entries:
     version: v0.0.23
   - apiVersion: v1
     appVersion: v0.0.22
-    created: "2025-08-05T18:42:40.270335431Z"
+    created: "2025-08-12T19:21:08.454845291Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 721f0d255da2b4cb09ce46e7f4809c7c3410e33fe2647256313c7e77b12652fa
     keywords:
@@ -199,7 +213,7 @@ entries:
     version: v0.0.22
   - apiVersion: v1
     appVersion: v0.0.21
-    created: "2025-08-05T18:42:40.269964035Z"
+    created: "2025-08-12T19:21:08.454462607Z"
     description: Helm chart that deploys the group-sync-operator
     digest: fee172e9ae186dbfb262c54272c6a6bfd1859047b31a7b9d54d289f721c50307
     keywords:
@@ -213,7 +227,7 @@ entries:
     version: v0.0.21
   - apiVersion: v1
     appVersion: v0.0.20
-    created: "2025-08-05T18:42:40.268966869Z"
+    created: "2025-08-12T19:21:08.453784103Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 98bdfaee5c4a482d8aff65fddf235320599ad20e441b1f690f190e1551d3f7be
     keywords:
@@ -227,7 +241,7 @@ entries:
     version: v0.0.20
   - apiVersion: v1
     appVersion: 0.0.20
-    created: "2025-08-05T18:42:40.264680155Z"
+    created: "2025-08-12T19:21:08.449337205Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 977e98561195cb120abb067edc4a2222e7a14cad33ec030b2bcae16d8b1afac6
     keywords:
@@ -241,7 +255,7 @@ entries:
     version: 0.0.20
   - apiVersion: v1
     appVersion: v0.0.19
-    created: "2025-08-05T18:42:40.268400599Z"
+    created: "2025-08-12T19:21:08.452825052Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 3ab6ce431b8e50a97efd8534425756519dad5f866698be0067d6fa926e4d8715
     keywords:
@@ -255,7 +269,7 @@ entries:
     version: v0.0.19
   - apiVersion: v1
     appVersion: 0.0.19
-    created: "2025-08-05T18:42:40.263921195Z"
+    created: "2025-08-12T19:21:08.448026781Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 58569043d37c167a8295ae1101381976cb83044725a8168f9a44f920be37fe5d
     keywords:
@@ -269,7 +283,7 @@ entries:
     version: 0.0.19
   - apiVersion: v1
     appVersion: v0.0.18
-    created: "2025-08-05T18:42:40.268026098Z"
+    created: "2025-08-12T19:21:08.452445933Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 66712c233b21af4a549a01f33d3a1f850a46716c8a71767b2c77a62c024dc92f
     keywords:
@@ -283,7 +297,7 @@ entries:
     version: v0.0.18
   - apiVersion: v1
     appVersion: 0.0.18
-    created: "2025-08-05T18:42:40.263502912Z"
+    created: "2025-08-12T19:21:08.447608148Z"
     description: Helm chart that deploys the group-sync-operator
     digest: d99196a951c6a01d545dc68ed6e95d88a234727e66a5e8fbfc26b929fa8cbd15
     keywords:
@@ -297,7 +311,7 @@ entries:
     version: 0.0.18
   - apiVersion: v1
     appVersion: v0.0.17
-    created: "2025-08-05T18:42:40.267666114Z"
+    created: "2025-08-12T19:21:08.452065012Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 99feeea353ec1237b503100eee5a19669a1da173d952952cead09252740fb721
     keywords:
@@ -311,7 +325,7 @@ entries:
     version: v0.0.17
   - apiVersion: v1
     appVersion: 0.0.17
-    created: "2025-08-05T18:42:40.263085911Z"
+    created: "2025-08-12T19:21:08.447165902Z"
     description: Helm chart that deploys the group-sync-operator
     digest: e3113b661fdd8f610a1f700d3f4247b055521931a9d0029a79f7e2feeb17e88f
     keywords:
@@ -325,7 +339,7 @@ entries:
     version: 0.0.17
   - apiVersion: v1
     appVersion: v0.0.16
-    created: "2025-08-05T18:42:40.267287315Z"
+    created: "2025-08-12T19:21:08.451645758Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 8b30dbb95e36f321321c42670a1f9dbda600012bd0127920e07435ee10421343
     keywords:
@@ -339,7 +353,7 @@ entries:
     version: v0.0.16
   - apiVersion: v1
     appVersion: 0.0.16
-    created: "2025-08-05T18:42:40.262688167Z"
+    created: "2025-08-12T19:21:08.446755375Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 85f84e368e0a7f31ba87ee2970b36323fcecd3694ef3a83180f3116aaace6c83
     keywords:
@@ -353,7 +367,7 @@ entries:
     version: 0.0.16
   - apiVersion: v1
     appVersion: v0.0.15
-    created: "2025-08-05T18:42:40.266940256Z"
+    created: "2025-08-12T19:21:08.451300223Z"
     description: Helm chart that deploys the group-sync-operator
     digest: b44502dd833c2ec8c5166ba343007944205c1b49e636b85fe9e05fc6cecb7c9f
     keywords:
@@ -367,7 +381,7 @@ entries:
     version: v0.0.15
   - apiVersion: v1
     appVersion: 0.0.15
-    created: "2025-08-05T18:42:40.262271026Z"
+    created: "2025-08-12T19:21:08.446369213Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 41bcccc1eddfd9141222bf42d718bd32165ceb0c8b9528c6368007445553685b
     keywords:
@@ -381,7 +395,7 @@ entries:
     version: 0.0.15
   - apiVersion: v1
     appVersion: v0.0.14
-    created: "2025-08-05T18:42:40.266572127Z"
+    created: "2025-08-12T19:21:08.450931544Z"
     description: Helm chart that deploys the group-sync-operator
     digest: b99d4485bb1e94b74a5d9d081e115a6017da4dc85321878dd6b78dc6a6d05e18
     keywords:
@@ -395,7 +409,7 @@ entries:
     version: v0.0.14
   - apiVersion: v1
     appVersion: v0.0.13
-    created: "2025-08-05T18:42:40.266197255Z"
+    created: "2025-08-12T19:21:08.450585818Z"
     description: Helm chart that deploys the group-sync-operator
     digest: d274656700e6378e723a28cd1fa3d14bb5a23447a1db67a8b1819ee22d408b59
     keywords:
@@ -409,7 +423,7 @@ entries:
     version: v0.0.13
   - apiVersion: v1
     appVersion: v0.0.12
-    created: "2025-08-05T18:42:40.265855766Z"
+    created: "2025-08-12T19:21:08.450227969Z"
     description: Helm chart that deploys the group-sync-operator
     digest: c4e674b48a592d10e927f329ec773738e275d9687c82735fee598b951b772764
     keywords:
@@ -423,7 +437,7 @@ entries:
     version: v0.0.12
   - apiVersion: v1
     appVersion: v0.0.11
-    created: "2025-08-05T18:42:40.26546281Z"
+    created: "2025-08-12T19:21:08.449842269Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 78db614e87d5a29edf9df0bdbde0a2a8583900904bb749a855446fd3f9296695
     keywords:
@@ -437,7 +451,7 @@ entries:
     version: v0.0.11
   - apiVersion: v1
     appVersion: v0.0.10
-    created: "2025-08-05T18:42:40.265221719Z"
+    created: "2025-08-12T19:21:08.449619813Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 33d1ee12b8b1f9eabc9ccd9da24ea5c4aa3a5e30e3cf9c8ff520389c68cd392d
     keywords:
@@ -451,7 +465,7 @@ entries:
     version: v0.0.10
   - apiVersion: v1
     appVersion: v0.0.9
-    created: "2025-08-05T18:42:40.280499616Z"
+    created: "2025-08-12T19:21:08.461326395Z"
     description: Helm chart that deploys the group-sync-operator
     digest: 9a2fed700d978e42a1fd38e8258b096e282dc9e58e1746e9522a4b9eb902ca2a
     keywords:
@@ -463,4 +477,4 @@ entries:
     urls:
     - https://redhat-cop.github.io/group-sync-operator/group-sync-operator/group-sync-operator-v0.0.9.tgz
     version: v0.0.9
-generated: "2025-08-05T18:42:40.261759118Z"
+generated: "2025-08-12T19:21:08.445828313Z"
