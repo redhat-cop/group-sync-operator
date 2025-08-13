@@ -20,7 +20,7 @@ require (
 	github.com/openshift/library-go v0.0.0-20210615164315-be4204e96f56
 	github.com/palantir/go-githubapp v0.13.2
 	github.com/prometheus/client_golang v1.12.2
-	github.com/redhat-cop/operator-utils v1.3.5
+	github.com/redhat-cop/operator-utils v1.3.8
 	github.com/robfig/cron v1.2.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
