@@ -3,7 +3,7 @@ module github.com/redhat-cop/group-sync-operator
 go 1.21.13
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.4.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.1.0
 	github.com/go-logr/logr v1.4.1
 	github.com/google/go-github/v45 v45.2.0
