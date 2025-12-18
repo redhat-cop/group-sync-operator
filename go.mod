@@ -27,9 +27,9 @@ require (
 	github.com/xanzy/go-gitlab v0.73.1
 	golang.org/x/text v0.14.0
 	gopkg.in/ldap.v2 v2.5.1
-	k8s.io/api v0.25.16
-	k8s.io/apimachinery v0.25.16
-	k8s.io/client-go v0.25.16
+	k8s.io/api v0.35.0
+	k8s.io/apimachinery v0.35.0
+	k8s.io/client-go v0.35.0
 	sigs.k8s.io/controller-runtime v0.13.1
 )
 
