@@ -163,7 +163,7 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 				if userName, ok := profile[o.Provider.ProfileKey].(string); !ok {
 					oktaLogger.Info("attribute unavailable on okta user profile " + o.Provider.ProfileKey)
 				} else if o.Provider.ExtractLoginUsername {
-					userName = strings.Split(userName, "@")[0]
+					userName, _, _ = strings.Cut(userName, "@")
 					ocpGroup.Users = append(ocpGroup.Users, userName)
 				} else {
 					ocpGroup.Users = append(ocpGroup.Users, userName)
