@@ -403,6 +403,17 @@ type AzureProvider struct {
 	// +kubebuilder:validation:Optional
 	Filter string `json:"filter,omitempty"`
 
+	// ClientFilter is a CEL expression for client-side filtering of groups after retrieval from Azure.
+	// The expression evaluates against a 'group' object with fields derived from the Azure Group object.
+	// String fields absent from the API response default to "", bool fields to false, int fields to 0.
+	// Supported fields: displayName, mailNickname, id, securityEnabled, mailEnabled, description,
+	// groupTypes, createdDateTime, visibility, membershipRule, onPremisesSyncEnabled, mail.
+	// Example: 'group.mailNickname == group.displayName' filters to groups where these fields match.
+	// Example: 'group.securityEnabled && group.description == ""' filters to security groups without descriptions.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Client Filter (CEL Expression)",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	ClientFilter string `json:"clientFilter,omitempty"`
+
 	// Insecure specifies whether to allow for unverified certificates to be used when communicating to Azure
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Ignore SSL Verification",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	// +kubebuilder:validation:Optional

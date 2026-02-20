@@ -20,7 +20,7 @@ import (
 	"github.com/redhat-cop/group-sync-operator/pkg/provider/ldap/helpers/interfaces"
 	syncerror "github.com/redhat-cop/group-sync-operator/pkg/provider/ldap/helpers/syncerror"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"

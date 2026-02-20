@@ -3,7 +3,7 @@ package rfc2307
 import (
 	"fmt"
 
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -127,7 +127,11 @@ func (e *LDAPInterface) GroupEntryFor(ldapGroupUID string) (*ldap.Entry, error) 
 		return nil, err
 	}
 
-	group, err = ldapquery.QueryForUniqueEntry(e.clientConfig, searchRequest)
+	ldapClientG, err := e.connect()
+	if err != nil {
+		return nil, err
+	}
+	group, err = ldapquery.QueryForUniqueEntry(ldapClientG, searchRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +143,11 @@ func (e *LDAPInterface) GroupEntryFor(ldapGroupUID string) (*ldap.Entry, error) 
 // LDAP group UIDs. This also satisfies the LDAPGroupLister interface
 func (e *LDAPInterface) ListGroups() ([]string, error) {
 	searchRequest := e.groupQuery.LDAPQuery.NewSearchRequest(e.requiredGroupAttributes())
-	groups, err := ldapquery.QueryForEntries(e.clientConfig, searchRequest)
+	ldapClient, err := e.connect()
+	if err != nil {
+		return nil, err
+	}
+	groups, err := ldapquery.QueryForEntries(ldapClient, searchRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +185,11 @@ func (e *LDAPInterface) userEntryFor(ldapUserUID string) (user *ldap.Entry, err 
 		return nil, err
 	}
 
-	user, err = ldapquery.QueryForUniqueEntry(e.clientConfig, searchRequest)
+	ldapClientU, err := e.connect()
+	if err != nil {
+		return nil, err
+	}
+	user, err = ldapquery.QueryForUniqueEntry(ldapClientU, searchRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +202,10 @@ func (e *LDAPInterface) requiredUserAttributes() []string {
 	allAttributes.Insert(e.userQuery.QueryAttribute)         // this is used for extracting the user UID (otherwise an entry isn't self-describing)
 
 	return allAttributes.List()
+}
+
+func (e *LDAPInterface) connect() (ldap.Client, error) {
+	return ldapclient.ConnectMaybeBind(e.clientConfig)
 }
 
 // Exists determines if a group idenified with its LDAP group UID exists on the LDAP server

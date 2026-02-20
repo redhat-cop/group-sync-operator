@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.10.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.20.1
   name: groupsyncs.redhatcop.redhat.io
 spec:
   group: redhatcop.redhat.io
@@ -21,10 +20,19 @@ spec:
           description: GroupSync is the Schema for the groupsyncs API
           properties:
             apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
               type: string
             kind:
-              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
               type: string
             metadata:
               type: object
@@ -74,7 +82,9 @@ spec:
                               - namespace
                             type: object
                           caSecret:
-                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to Azure Deprecated: Use Ca instead.'
+                            description: |-
+                              CaSecret is a reference to a secret containing a CA certificate to communicate to Azure
+                              Deprecated: Use Ca instead.
                             properties:
                               key:
                                 description: Key represents the specific key to reference from the resource
@@ -96,6 +106,16 @@ spec:
                               - name
                               - namespace
                             type: object
+                          clientFilter:
+                            description: |-
+                              ClientFilter is a CEL expression for client-side filtering of groups after retrieval from Azure.
+                              The expression evaluates against a 'group' object with fields derived from the Azure Group object.
+                              String fields absent from the API response default to "", bool fields to false, int fields to 0.
+                              Supported fields: displayName, mailNickname, id, securityEnabled, mailEnabled, description,
+                              groupTypes, createdDateTime, visibility, membershipRule, onPremisesSyncEnabled, mail.
+                              Example: 'group.mailNickname == group.displayName' filters to groups where these fields match.
+                              Example: 'group.securityEnabled && group.description == ""' filters to security groups without descriptions.
+                            type: string
                           credentialsSecret:
                             description: CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
                             properties:
@@ -168,7 +188,9 @@ spec:
                               - namespace
                             type: object
                           caSecret:
-                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server Deprecated: Use Ca instead.'
+                            description: |-
+                              CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
+                              Deprecated: Use Ca instead.
                             properties:
                               key:
                                 description: Key represents the specific key to reference from the resource
@@ -240,6 +262,7 @@ spec:
                             type: string
                         required:
                           - credentialsSecret
+                          - url
                         type: object
                       gitlab:
                         description: GitLab represents the GitLab provider
@@ -268,7 +291,9 @@ spec:
                               - namespace
                             type: object
                           caSecret:
-                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server Deprecated: Use Ca instead.'
+                            description: |-
+                              CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+                              Deprecated: Use Ca instead.
                             properties:
                               key:
                                 description: Key represents the specific key to reference from the resource
@@ -337,6 +362,55 @@ spec:
                         required:
                           - credentialsSecret
                         type: object
+                      ibmsecurityverify:
+                        description: IbmSecurityVerify represents the IBM Security Verify provider
+                        properties:
+                          credentialsSecret:
+                            description: CredentialsSecret is a reference to a secret containing authentication details for the IBM Security Verify server
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          groups:
+                            description: Groups is the list of ISV groups to synchronize
+                            items:
+                              properties:
+                                id:
+                                  description: The ID of the group as defined in IBM Security Verify. This value can be found by using the API.
+                                  type: string
+                                name:
+                                  description: The display name of the group as defined in IBM Security Verify
+                                  type: string
+                              required:
+                                - id
+                                - name
+                              type: object
+                            type: array
+                          tenantUrl:
+                            description: TenantURL is the location of the IBM Security Verify tenant
+                            type: string
+                        required:
+                          - credentialsSecret
+                          - groups
+                          - tenantUrl
+                        type: object
                       keycloak:
                         description: Keycloak represents the Keycloak provider
                         properties:
@@ -364,7 +438,9 @@ spec:
                               - namespace
                             type: object
                           caSecret:
-                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server Deprecated: Use Ca instead.'
+                            description: |-
+                              CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
+                              Deprecated: Use Ca instead.
                             properties:
                               key:
                                 description: Key represents the specific key to reference from the resource
@@ -440,54 +516,6 @@ spec:
                           - realm
                           - url
                         type: object
-                      ibmsecurityverify:
-                        description: The IBM Security Verify (ISV) provider
-                        properties:
-                          credentialsSecret:
-                            description: CredentialsSecret is a reference to a secret containing authentication details for the ISV server
-                            properties:
-                              key:
-                                description: Key represents the specific key to reference from the resource
-                                type: string
-                              kind:
-                                default: Secret
-                                description: Kind is a string value representing the resource type
-                                enum:
-                                  - ConfigMap
-                                  - Secret
-                                type: string
-                              name:
-                                description: Name represents the name of the resource
-                                type: string
-                              namespace:
-                                description: Namespace represents the namespace containing the resource
-                                type: string
-                            required:
-                              - name
-                              - namespace
-                            type: object
-                          groups:
-                            description: The ISV groups to synchronize
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                name:
-                                  description: Name of the ISV group
-                                  type: string
-                                id:
-                                  description: ID of the ISV group
-                                  type: string
-                              required:
-                                - id
-                          tenantUrl:
-                            description: URL for the ISV server of the tenant
-                            type: string
-                        required:
-                          - credentialsSecret
-                          - tenantUrl
-                          - groups
-                        type: object
                       ldap:
                         description: Ldap represents the LDAP provider
                         properties:
@@ -495,12 +523,14 @@ spec:
                             description: ActiveDirectoryConfig represents the configuration for Active Directory
                             properties:
                               groupMembershipAttributes:
-                                description: GroupMembershipAttributes defines which attributes on an LDAP user entry will be interpreted as the groups it is a member of
+                                description: |-
+                                  groupMembershipAttributes defines which attributes on an LDAP user entry will be interpreted
+                                  as the groups it is a member of
                                 items:
                                   type: string
                                 type: array
                               userNameAttributes:
-                                description: UserNameAttributes defines which attributes on an LDAP user entry will be interpreted as its OpenShift user name.
+                                description: userNameAttributes defines which attributes on an LDAP user entry will be interpreted as its OpenShift user name.
                                 items:
                                   type: string
                                 type: array
@@ -511,19 +541,32 @@ spec:
                                     description: The DN of the branch of the directory where all searches should start from
                                     type: string
                                   derefAliases:
-                                    description: 'The (optional) behavior of the search with regards to alisases. Can be: never:  never dereference aliases, search: only dereference in searching, base:   only dereference in finding the base object, always: always dereference Defaults to always dereferencing if not set'
+                                    description: |-
+                                      The (optional) behavior of the search with regards to alisases. Can be:
+                                      never:  never dereference aliases,
+                                      search: only dereference in searching,
+                                      base:   only dereference in finding the base object,
+                                      always: always dereference
+                                      Defaults to always dereferencing if not set
                                     type: string
                                   filter:
-                                    description: Filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
+                                    description: filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
                                     type: string
                                   pageSize:
-                                    description: PageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
+                                    description: pageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
                                     type: integer
                                   scope:
-                                    description: 'The (optional) scope of the search. Can be: base: only the base object, one:  all object on the base level, sub:  the entire subtree Defaults to the entire subtree if not set'
+                                    description: |-
+                                      The (optional) scope of the search. Can be:
+                                      base: only the base object,
+                                      one:  all object on the base level,
+                                      sub:  the entire subtree
+                                      Defaults to the entire subtree if not set
                                     type: string
                                   timeout:
-                                    description: TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding before the wait for a response is given up. If this is 0, no client-side limit is imposed
+                                    description: |-
+                                      TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding
+                                      before the wait for a response is given up. If this is 0, no client-side limit is imposed
                                     type: integer
                                 required:
                                   - baseDN
@@ -537,17 +580,23 @@ spec:
                             description: ActiveDirectoryConfig represents the configuration for Augmented Active Directory
                             properties:
                               groupMembershipAttributes:
-                                description: GroupMembershipAttributes defines which attributes on an LDAP user entry will be interpreted as the groups it is a member of
+                                description: |-
+                                  groupMembershipAttributes defines which attributes on an LDAP user entry will be interpreted
+                                  as the groups it is a member of
                                 items:
                                   type: string
                                 type: array
                               groupNameAttributes:
-                                description: GroupNameAttributes defines which attributes on an LDAP group entry will be interpreted as its name to use for an OpenShift group
+                                description: |-
+                                  groupNameAttributes defines which attributes on an LDAP group entry will be interpreted as its name to use for
+                                  an OpenShift group
                                 items:
                                   type: string
                                 type: array
                               groupUIDAttribute:
-                                description: GroupUIDAttributes defines which attribute on an LDAP group entry will be interpreted as its unique identifier. (ldapGroupUID)
+                                description: |-
+                                  GroupUIDAttributes defines which attribute on an LDAP group entry will be interpreted as its unique identifier.
+                                  (ldapGroupUID)
                                 type: string
                               groupsQuery:
                                 description: AllGroupsQuery holds the template for an LDAP query that returns group entries.
@@ -556,25 +605,38 @@ spec:
                                     description: The DN of the branch of the directory where all searches should start from
                                     type: string
                                   derefAliases:
-                                    description: 'The (optional) behavior of the search with regards to alisases. Can be: never:  never dereference aliases, search: only dereference in searching, base:   only dereference in finding the base object, always: always dereference Defaults to always dereferencing if not set'
+                                    description: |-
+                                      The (optional) behavior of the search with regards to alisases. Can be:
+                                      never:  never dereference aliases,
+                                      search: only dereference in searching,
+                                      base:   only dereference in finding the base object,
+                                      always: always dereference
+                                      Defaults to always dereferencing if not set
                                     type: string
                                   filter:
-                                    description: Filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
+                                    description: filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
                                     type: string
                                   pageSize:
-                                    description: PageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
+                                    description: pageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
                                     type: integer
                                   scope:
-                                    description: 'The (optional) scope of the search. Can be: base: only the base object, one:  all object on the base level, sub:  the entire subtree Defaults to the entire subtree if not set'
+                                    description: |-
+                                      The (optional) scope of the search. Can be:
+                                      base: only the base object,
+                                      one:  all object on the base level,
+                                      sub:  the entire subtree
+                                      Defaults to the entire subtree if not set
                                     type: string
                                   timeout:
-                                    description: TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding before the wait for a response is given up. If this is 0, no client-side limit is imposed
+                                    description: |-
+                                      TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding
+                                      before the wait for a response is given up. If this is 0, no client-side limit is imposed
                                     type: integer
                                 required:
                                   - baseDN
                                 type: object
                               userNameAttributes:
-                                description: UserNameAttributes defines which attributes on an LDAP user entry will be interpreted as its OpenShift user name.
+                                description: userNameAttributes defines which attributes on an LDAP user entry will be interpreted as its OpenShift user name.
                                 items:
                                   type: string
                                 type: array
@@ -585,19 +647,32 @@ spec:
                                     description: The DN of the branch of the directory where all searches should start from
                                     type: string
                                   derefAliases:
-                                    description: 'The (optional) behavior of the search with regards to alisases. Can be: never:  never dereference aliases, search: only dereference in searching, base:   only dereference in finding the base object, always: always dereference Defaults to always dereferencing if not set'
+                                    description: |-
+                                      The (optional) behavior of the search with regards to alisases. Can be:
+                                      never:  never dereference aliases,
+                                      search: only dereference in searching,
+                                      base:   only dereference in finding the base object,
+                                      always: always dereference
+                                      Defaults to always dereferencing if not set
                                     type: string
                                   filter:
-                                    description: Filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
+                                    description: filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
                                     type: string
                                   pageSize:
-                                    description: PageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
+                                    description: pageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
                                     type: integer
                                   scope:
-                                    description: 'The (optional) scope of the search. Can be: base: only the base object, one:  all object on the base level, sub:  the entire subtree Defaults to the entire subtree if not set'
+                                    description: |-
+                                      The (optional) scope of the search. Can be:
+                                      base: only the base object,
+                                      one:  all object on the base level,
+                                      sub:  the entire subtree
+                                      Defaults to the entire subtree if not set
                                     type: string
                                   timeout:
-                                    description: TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding before the wait for a response is given up. If this is 0, no client-side limit is imposed
+                                    description: |-
+                                      TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding
+                                      before the wait for a response is given up. If this is 0, no client-side limit is imposed
                                     type: integer
                                 required:
                                   - baseDN
@@ -639,7 +714,9 @@ spec:
                               - namespace
                             type: object
                           caSecret:
-                            description: 'CaSecret is a reference to a secret containing a CA certificate to communicate to LDAP Deprecated: Use Ca instead.'
+                            description: |-
+                              CaSecret is a reference to a secret containing a CA certificate to communicate to LDAP
+                              Deprecated: Use Ca instead.
                             properties:
                               key:
                                 description: Key represents the specific key to reference from the resource
@@ -699,17 +776,23 @@ spec:
                             description: RFC2307Config represents the configuration for a RFC2307 schema
                             properties:
                               groupMembershipAttributes:
-                                description: GroupMembershipAttributes defines which attributes on an LDAP group entry will be interpreted  as its members. The values contained in those attributes must be queryable by your UserUIDAttribute
+                                description: |-
+                                  groupMembershipAttributes defines which attributes on an LDAP group entry will be interpreted  as its members.
+                                  The values contained in those attributes must be queryable by your UserUIDAttribute
                                 items:
                                   type: string
                                 type: array
                               groupNameAttributes:
-                                description: GroupNameAttributes defines which attributes on an LDAP group entry will be interpreted as its name to use for an OpenShift group
+                                description: |-
+                                  groupNameAttributes defines which attributes on an LDAP group entry will be interpreted as its name to use for
+                                  an OpenShift group
                                 items:
                                   type: string
                                 type: array
                               groupUIDAttribute:
-                                description: GroupUIDAttributes defines which attribute on an LDAP group entry will be interpreted as its unique identifier. (ldapGroupUID)
+                                description: |-
+                                  GroupUIDAttributes defines which attribute on an LDAP group entry will be interpreted as its unique identifier.
+                                  (ldapGroupUID)
                                 type: string
                               groupsQuery:
                                 description: AllGroupsQuery holds the template for an LDAP query that returns group entries.
@@ -718,36 +801,64 @@ spec:
                                     description: The DN of the branch of the directory where all searches should start from
                                     type: string
                                   derefAliases:
-                                    description: 'The (optional) behavior of the search with regards to alisases. Can be: never:  never dereference aliases, search: only dereference in searching, base:   only dereference in finding the base object, always: always dereference Defaults to always dereferencing if not set'
+                                    description: |-
+                                      The (optional) behavior of the search with regards to alisases. Can be:
+                                      never:  never dereference aliases,
+                                      search: only dereference in searching,
+                                      base:   only dereference in finding the base object,
+                                      always: always dereference
+                                      Defaults to always dereferencing if not set
                                     type: string
                                   filter:
-                                    description: Filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
+                                    description: filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
                                     type: string
                                   pageSize:
-                                    description: PageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
+                                    description: pageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
                                     type: integer
                                   scope:
-                                    description: 'The (optional) scope of the search. Can be: base: only the base object, one:  all object on the base level, sub:  the entire subtree Defaults to the entire subtree if not set'
+                                    description: |-
+                                      The (optional) scope of the search. Can be:
+                                      base: only the base object,
+                                      one:  all object on the base level,
+                                      sub:  the entire subtree
+                                      Defaults to the entire subtree if not set
                                     type: string
                                   timeout:
-                                    description: TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding before the wait for a response is given up. If this is 0, no client-side limit is imposed
+                                    description: |-
+                                      TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding
+                                      before the wait for a response is given up. If this is 0, no client-side limit is imposed
                                     type: integer
                                 required:
                                   - baseDN
                                 type: object
                               tolerateMemberNotFoundErrors:
-                                description: TolerateMemberNotFoundErrors determines the behavior of the LDAP sync job when missing user entries are encountered. If 'true', an LDAP query for users that doesn't find any will be tolerated and an only and error will be logged. If 'false', the LDAP sync job will fail if a query for users doesn't find any. The default value is 'false'. Misconfigured LDAP sync jobs with this flag set to 'true' can cause group membership to be removed, so it is recommended to use this flag with caution.
+                                description: |-
+                                  tolerateMemberNotFoundErrors determines the behavior of the LDAP sync job when missing user entries are
+                                  encountered. If 'true', an LDAP query for users that doesn't find any will be tolerated and an only
+                                  and error will be logged. If 'false', the LDAP sync job will fail if a query for users doesn't find
+                                  any. The default value is 'false'. Misconfigured LDAP sync jobs with this flag set to 'true' can cause
+                                  group membership to be removed, so it is recommended to use this flag with caution.
                                 type: boolean
                               tolerateMemberOutOfScopeErrors:
-                                description: TolerateMemberOutOfScopeErrors determines the behavior of the LDAP sync job when out-of-scope user entries are encountered. If 'true', an LDAP query for a user that falls outside of the base DN given for the all user query will be tolerated and only an error will be logged. If 'false', the LDAP sync job will fail if a user query would search outside of the base DN specified by the all user query. Misconfigured LDAP sync jobs with this flag set to 'true' can result in groups missing users, so it is recommended to use this flag with caution.
+                                description: |-
+                                  tolerateMemberOutOfScopeErrors determines the behavior of the LDAP sync job when out-of-scope user entries
+                                  are encountered. If 'true', an LDAP query for a user that falls outside of the base DN given for the all
+                                  user query will be tolerated and only an error will be logged. If 'false', the LDAP sync job will fail
+                                  if a user query would search outside of the base DN specified by the all user query. Misconfigured LDAP
+                                  sync jobs with this flag set to 'true' can result in groups missing users, so it is recommended to use
+                                  this flag with caution.
                                 type: boolean
                               userNameAttributes:
-                                description: UserNameAttributes defines which attributes on an LDAP user entry will be used, in order, as its OpenShift user name. The first attribute with a non-empty value is used. This should match your PreferredUsername setting for your LDAPPasswordIdentityProvider
+                                description: |-
+                                  userNameAttributes defines which attributes on an LDAP user entry will be used, in order, as its OpenShift user name.
+                                  The first attribute with a non-empty value is used. This should match your PreferredUsername setting for your LDAPPasswordIdentityProvider
                                 items:
                                   type: string
                                 type: array
                               userUIDAttribute:
-                                description: UserUIDAttribute defines which attribute on an LDAP user entry will be interpreted as its unique identifier. It must correspond to values that will be found from the GroupMembershipAttributes
+                                description: |-
+                                  userUIDAttribute defines which attribute on an LDAP user entry will be interpreted as its unique identifier.
+                                  It must correspond to values that will be found from the GroupMembershipAttributes
                                 type: string
                               usersQuery:
                                 description: AllUsersQuery holds the template for an LDAP query that returns user entries.
@@ -756,19 +867,32 @@ spec:
                                     description: The DN of the branch of the directory where all searches should start from
                                     type: string
                                   derefAliases:
-                                    description: 'The (optional) behavior of the search with regards to alisases. Can be: never:  never dereference aliases, search: only dereference in searching, base:   only dereference in finding the base object, always: always dereference Defaults to always dereferencing if not set'
+                                    description: |-
+                                      The (optional) behavior of the search with regards to alisases. Can be:
+                                      never:  never dereference aliases,
+                                      search: only dereference in searching,
+                                      base:   only dereference in finding the base object,
+                                      always: always dereference
+                                      Defaults to always dereferencing if not set
                                     type: string
                                   filter:
-                                    description: Filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
+                                    description: filter is a valid LDAP search filter that retrieves all relevant entries from the LDAP server with the base DN
                                     type: string
                                   pageSize:
-                                    description: PageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
+                                    description: pageSize is the maximum preferred page size, measured in LDAP entries. A page size of 0 means no paging will be done.
                                     type: integer
                                   scope:
-                                    description: 'The (optional) scope of the search. Can be: base: only the base object, one:  all object on the base level, sub:  the entire subtree Defaults to the entire subtree if not set'
+                                    description: |-
+                                      The (optional) scope of the search. Can be:
+                                      base: only the base object,
+                                      one:  all object on the base level,
+                                      sub:  the entire subtree
+                                      Defaults to the entire subtree if not set
                                     type: string
                                   timeout:
-                                    description: TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding before the wait for a response is given up. If this is 0, no client-side limit is imposed
+                                    description: |-
+                                      TimeLimit holds the limit of time in seconds that any request to the server can remain outstanding
+                                      before the wait for a response is given up. If this is 0, no client-side limit is imposed
                                     type: integer
                                 required:
                                   - baseDN
@@ -863,23 +987,35 @@ spec:
               properties:
                 conditions:
                   items:
-                    description: "Condition contains details for one aspect of the current state of this API Resource. --- This struct is intended for direct use as an array at the field path .status.conditions.  For example, \n type FooStatus struct{ // Represents the observations of a foo's current state. // Known .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge // +listType=map // +listMapKey=type Conditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
+                    description: Condition contains details for one aspect of the current state of this API Resource.
                     properties:
                       lastTransitionTime:
-                        description: lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                        description: |-
+                          lastTransitionTime is the last time the condition transitioned from one status to another.
+                          This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
                         format: date-time
                         type: string
                       message:
-                        description: message is a human readable message indicating details about the transition. This may be an empty string.
+                        description: |-
+                          message is a human readable message indicating details about the transition.
+                          This may be an empty string.
                         maxLength: 32768
                         type: string
                       observedGeneration:
-                        description: observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                        description: |-
+                          observedGeneration represents the .metadata.generation that the condition was set based upon.
+                          For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                          with respect to the current state of the instance.
                         format: int64
                         minimum: 0
                         type: integer
                       reason:
-                        description: reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+                        description: |-
+                          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                          Producers of specific condition types may define expected values and meanings for this field,
+                          and whether the values are considered a guaranteed API.
+                          The value should be a CamelCase string.
+                          This field may not be empty.
                         maxLength: 1024
                         minLength: 1
                         pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
@@ -892,7 +1028,7 @@ spec:
                           - Unknown
                         type: string
                       type:
-                        description: type of condition in CamelCase or in foo.example.com/CamelCase. --- Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
                         maxLength: 316
                         pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                         type: string

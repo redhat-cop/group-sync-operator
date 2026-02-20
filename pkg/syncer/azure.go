@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/url"
 	"reflect"
+	"sort"
+	"strings"
 	"time"
 
 	nethttp "net/http"
@@ -33,6 +35,8 @@ import (
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	msgroups "github.com/microsoftgraph/msgraph-sdk-go/groups"
 	graph "github.com/microsoftgraph/msgraph-sdk-go/models"
+
+	"github.com/google/cel-go/cel"
 )
 
 var (
@@ -66,6 +70,7 @@ type AzureSyncer struct {
 	Context           context.Context
 	Adapter           *msgraphsdk.GraphRequestAdapter
 	CaCertificate     []byte
+	compiledFilter    cel.Program
 }
 
 func (a *AzureSyncer) Init() bool {
@@ -203,11 +208,23 @@ func (a *AzureSyncer) Bind() error {
 
 	a.Client = msgraphsdk.NewGraphServiceClient(a.Adapter)
 
+	// Compile CEL client filter if provided
+	if a.Provider.ClientFilter != "" {
+		err = a.compileClientFilter()
+		if err != nil {
+			return fmt.Errorf("failed to compile client filter: %w", err)
+		}
+	}
+
 	return nil
 
 }
 
 func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
+
+	if err := a.probeClientFilter(); err != nil {
+		return nil, err
+	}
 
 	ocpGroups := []userv1.Group{}
 	aadGroups := []graph.Group{}
@@ -339,6 +356,15 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 		}
 
 		if !isGroupAllowed(*groupName, a.Provider.Groups) {
+			continue
+		}
+
+		// Apply client-side CEL filter if configured
+		if shouldInclude, err := a.evaluateClientFilter(group); err != nil {
+			azureLogger.Error(err, "Failed to evaluate client filter, skipping group", "Group", *groupName, "Provider", a.Name)
+			continue
+		} else if !shouldInclude {
+			azureLogger.V(1).Info("Group filtered by clientFilter", "Group", *groupName, "Provider", a.Name)
 			continue
 		}
 
@@ -514,3 +540,187 @@ func (a *AzureSyncer) getGroupsFromResults(result graph.GroupCollectionResponsea
 
 	return groups, nil
 }
+
+// celCompatibleKinds lists the reflect.Kind values that are safe to pass to CEL.
+// Complex SDK types (interfaces, structs, func maps) are excluded intentionally.
+var celCompatibleKinds = map[reflect.Kind]bool{
+	reflect.String: true,
+	reflect.Bool:   true,
+	reflect.Int32:  true,
+}
+
+// zeroForType returns the zero value used when a getter returns nil,
+// ensuring CEL always receives a concrete typed value instead of nil.
+func zeroForType(t reflect.Type) interface{} {
+	switch t.Kind() {
+	case reflect.String:
+		return ""
+	case reflect.Bool:
+		return false
+	case reflect.Int32:
+		return int32(0)
+	}
+	if t == reflect.TypeOf(time.Time{}) {
+		return time.Time{}
+	}
+	// []string
+	if t.Kind() == reflect.Slice && t.Elem().Kind() == reflect.String {
+		return []string{}
+	}
+	return nil
+}
+
+// extractGroupFields dynamically extracts all CEL-compatible scalar fields from
+// a Graph Group by reflecting over its Get* methods. Only methods that:
+//   - take no arguments
+//   - return exactly one value
+//   - return *string, *bool, *int32, *time.Time, or []string
+//
+// are included. Complex SDK types (collections of objects, interfaces, func maps)
+// are silently skipped. Absent (nil pointer) fields are replaced with their zero
+// value so CEL expressions never receive nil.
+func extractGroupFields(group graph.Group) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	// All Get* methods on graph.Group use pointer receivers, so we must reflect
+	// on the pointer to see the full method set.
+	val := reflect.ValueOf(&group)
+	typ := val.Type()
+
+	for i := 0; i < val.NumMethod(); i++ {
+		methodType := typ.Method(i)
+		if !strings.HasPrefix(methodType.Name, "Get") {
+			continue
+		}
+
+		// Only zero-argument methods: on a concrete type, Type.Method includes
+		// the receiver as in[0], so NumIn()==1 means no extra arguments.
+		mt := methodType.Type
+		if mt.NumIn() != 1 || mt.NumOut() != 1 {
+			continue
+		}
+
+		retType := mt.Out(0)
+
+		// Determine if the return type is CEL-compatible and extract value
+		var fieldValue interface{}
+		ret := val.Method(i).Call(nil)[0]
+
+		switch {
+		case retType.Kind() == reflect.Ptr && celCompatibleKinds[retType.Elem().Kind()]:
+			// *string, *bool, *int32 — dereference or use zero value
+			if ret.IsNil() {
+				fieldValue = zeroForType(retType.Elem())
+			} else {
+				fieldValue = ret.Elem().Interface()
+			}
+		case retType.Kind() == reflect.Ptr && retType.Elem() == reflect.TypeOf(time.Time{}):
+			// *time.Time
+			if ret.IsNil() {
+				fieldValue = time.Time{}
+			} else {
+				fieldValue = ret.Elem().Interface()
+			}
+		case retType.Kind() == reflect.Slice && retType.Elem().Kind() == reflect.String:
+			// []string
+			if ret.IsNil() {
+				fieldValue = []string{}
+			} else {
+				fieldValue = ret.Interface()
+			}
+		default:
+			// Complex SDK type — skip entirely
+			continue
+		}
+
+		// Convert "GetDisplayName" → "displayName"
+		name := methodType.Name[3:]
+		if len(name) == 0 {
+			continue
+		}
+		fieldName := strings.ToLower(name[:1]) + name[1:]
+		result[fieldName] = fieldValue
+	}
+
+	return result
+}
+
+// probeClientFilter evaluates the compiled filter against a zero-value group map
+// to catch field name and type errors before processing any real groups.
+// The available field list is included in any error message.
+func (a *AzureSyncer) probeClientFilter() error {
+	if a.compiledFilter == nil {
+		return nil
+	}
+	probe := extractGroupFields(*graph.NewGroup())
+	_, _, err := a.compiledFilter.Eval(map[string]interface{}{"group": probe})
+	if err != nil {
+		keys := make([]string, 0, len(probe))
+		for k := range probe {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		return fmt.Errorf("clientFilter expression error: %w\navailable fields: %v", err, keys)
+	}
+	return nil
+}
+
+// compileClientFilter compiles the CEL expression for client-side filtering.
+func (a *AzureSyncer) compileClientFilter() error {
+	env, err := cel.NewEnv(
+		cel.Variable("group", cel.MapType(cel.StringType, cel.AnyType)),
+	)
+	if err != nil {
+		return err
+	}
+
+	ast, issues := env.Compile(a.Provider.ClientFilter)
+	if issues != nil && issues.Err() != nil {
+		return issues.Err()
+	}
+
+	a.compiledFilter, err = env.Program(ast)
+	if err != nil {
+		return err
+	}
+
+	// Log the available fields so operators can see them in pod logs
+	fields := extractGroupFields(*graph.NewGroup())
+	keys := make([]string, 0, len(fields))
+	for k := range fields {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	azureLogger.Info("CEL clientFilter compiled", "availableFields", keys)
+
+	return nil
+}
+
+// evaluateClientFilter evaluates the CEL filter against a group.
+func (a *AzureSyncer) evaluateClientFilter(group graph.Group) (bool, error) {
+	if a.compiledFilter == nil {
+		return true, nil // No filter means include all
+	}
+
+	groupData := extractGroupFields(group)
+
+	out, _, err := a.compiledFilter.Eval(map[string]interface{}{
+		"group": groupData,
+	})
+	if err != nil {
+		keys := make([]string, 0, len(groupData))
+		for k := range groupData {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		return false, fmt.Errorf("clientFilter evaluation error: %w (available fields: %v)", err, keys)
+	}
+
+	result, ok := out.Value().(bool)
+	if !ok {
+		return false, fmt.Errorf("client filter did not return a boolean value")
+	}
+
+	return result, nil
+}
+

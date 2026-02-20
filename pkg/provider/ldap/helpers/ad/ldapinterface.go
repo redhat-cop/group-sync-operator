@@ -1,7 +1,7 @@
 package ad
 
 import (
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -70,7 +70,11 @@ func (e *ADLDAPInterface) ExtractMembers(ldapGroupUID string) ([]*ldap.Entry, er
 			return nil, err
 		}
 
-		currEntries, err := ldapquery.QueryForEntries(e.clientConfig, searchRequest)
+			ldapClient, err := e.connect()
+			if err != nil {
+				return nil, err
+			}
+			currEntries, err := ldapquery.QueryForEntries(ldapClient, searchRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +110,11 @@ func (e *ADLDAPInterface) populateCache() error {
 
 	searchRequest := e.userQuery.NewSearchRequest(e.requiredUserAttributes())
 
-	userEntries, err := ldapquery.QueryForEntries(e.clientConfig, searchRequest)
+	ldapClient, err := e.connect()
+	if err != nil {
+		return err
+	}
+	userEntries, err := ldapquery.QueryForEntries(ldapClient, searchRequest)
 	if err != nil {
 		return err
 	}
@@ -131,6 +139,10 @@ func (e *ADLDAPInterface) populateCache() error {
 	e.cacheFullyPopulated = true
 
 	return nil
+}
+
+func (e *ADLDAPInterface) connect() (ldap.Client, error) {
+	return ldapclient.ConnectMaybeBind(e.clientConfig)
 }
 
 func isEntryPresent(haystack []*ldap.Entry, needle *ldap.Entry) bool {

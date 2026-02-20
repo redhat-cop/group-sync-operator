@@ -1,7 +1,7 @@
 package ad
 
 import (
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -61,7 +61,11 @@ func (e *AugmentedADLDAPInterface) GroupEntryFor(ldapGroupUID string) (*ldap.Ent
 		return nil, err
 	}
 
-	group, err = ldapquery.QueryForUniqueEntry(e.clientConfig, searchRequest)
+	ldapClient, err := e.connect()
+	if err != nil {
+		return nil, err
+	}
+	group, err = ldapquery.QueryForUniqueEntry(ldapClient, searchRequest)
 	if err != nil {
 		return nil, err
 	}

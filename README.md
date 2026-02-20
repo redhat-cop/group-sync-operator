@@ -79,6 +79,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | `baseGroups` | List of groups to start searching from instead of listing all groups in the directory | | No |
 | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
 | `filter` | Graph API filter | | No |
+| `clientFilter` | CEL expression for client-side filtering of groups (See below) | | No |
 | `groups` | List of groups to filter against | | No |
 | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
 | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |
@@ -98,6 +99,71 @@ spec:
         name: azure-group-sync
         namespace: group-sync-operator
 ```
+
+#### Client-Side Filtering
+
+The `clientFilter` field allows you to apply additional filtering logic using [CEL (Common Expression Language)](https://github.com/google/cel-spec) expressions after groups are retrieved from Azure. This is useful when the Azure Graph API filter capabilities are insufficient for your requirements.
+
+The CEL expression evaluates against a `group` object whose fields are derived from the Azure Group SDK object via reflection. Absent fields default to zero values (`""` for strings, `false` for booleans, `0` for integers) so no nil guards are needed. The full list of available fields is logged at operator startup and included in any filter error message.
+
+Commonly used fields:
+
+* `displayName` - The group's display name
+* `mailNickname` - The group's mail nickname
+* `mail` - The group's email address
+* `id` - The unique identifier
+* `description` - The group description
+* `securityEnabled` - Whether the group is security-enabled (`bool`)
+* `mailEnabled` - Whether the group is mail-enabled (`bool`)
+* `groupTypes` - Array of group type strings (e.g. `["Unified"]`)
+* `createdDateTime` - When the group was created
+* `expirationDateTime` - When the group expires
+* `visibility` - The group's visibility (`Public`, `Private`, etc.)
+* `classification` - The group's sensitivity classification
+* `membershipRule` - The dynamic membership rule expression
+* `isAssignableToRole` - Whether the group can be assigned to an Azure AD role (`bool`)
+* `onPremisesSyncEnabled` - Whether the group is synced from on-premises (`bool`)
+* `onPremisesDomainName` - The on-premises domain name
+* `onPremisesSamAccountName` - The on-premises SAM account name
+* `securityIdentifier` - The group's security identifier (SID)
+
+**Example: Filter groups where mailNickname matches displayName**
+
+This is useful to distinguish manually-created groups from auto-generated ones:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: azure-groupsync
+spec:
+  providers:
+  - name: azure
+    azure:
+      credentialsSecret:
+        name: azure-group-sync
+        namespace: group-sync-operator
+      filter: "startsWith(displayName,'amacp-')"
+      clientFilter: "group.mailNickname == group.displayName"
+```
+
+**Additional CEL expression examples:**
+
+```yaml
+# Only security-enabled groups
+clientFilter: "group.securityEnabled"
+
+# Groups without a description (absent fields default to zero value: "" for strings, false for bool)
+clientFilter: 'group.description == ""'
+
+# Complex expression combining multiple conditions
+clientFilter: "group.securityEnabled && !group.mailEnabled && group.mailNickname == group.displayName"
+
+# Groups created after a specific date
+clientFilter: "group.createdDateTime > timestamp('2024-01-01T00:00:00Z')"
+```
+
+**Performance Note:** The `filter` parameter uses server-side filtering (fast), while `clientFilter` applies after retrieving groups (slower for large result sets). For best performance, use `filter` to narrow down the result set, then use `clientFilter` for fine-grained control.
 
 #### Authenticating to Azure
 

@@ -144,6 +144,14 @@ spec:
         path: providers[0].azure.filter
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Client Filter (CEL Expression) is a CEL expression for client-side
+          filtering of groups after retrieval from Azure. String fields default to
+          "", bool fields to false. Example: 'group.securityEnabled && group.description
+          == ""'
+        displayName: Client Filter (CEL Expression)
+        path: providers[0].azure.clientFilter
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Groups represents a filtered list of groups to synchronize
         displayName: Groups to Synchronize
         path: providers[0].azure.groups
@@ -781,6 +789,7 @@ spec:
     | `baseGroups` | List of groups to start searching from instead of listing all groups in the directory | | No |
     | `credentialsSecret` | Name of the secret containing authentication details (See below) | | Yes |
     | `filter` | Graph API filter | | No |
+    | `clientFilter` | CEL expression for client-side filtering after retrieval (e.g. `group.securityEnabled && group.description == ""`) | | No |
     | `groups` | List of groups to filter against | | No |
     | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
     | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |

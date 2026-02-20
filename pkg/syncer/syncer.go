@@ -119,7 +119,7 @@ func (m *GroupSyncMgr) Validate() error {
 	// Validate Cron Schedule
 	if m.GroupSync.Spec.Schedule != "" {
 		if _, err := cron.ParseStandard(m.GroupSync.Spec.Schedule); err != nil {
-			syncersError = append(syncersError, fmt.Errorf(fmt.Sprintf("Failed to validate cron schedule: %s", m.GroupSync.Spec.Schedule)))
+			syncersError = append(syncersError, fmt.Errorf("failed to validate cron schedule: %s", m.GroupSync.Spec.Schedule))
 		}
 	}
 
