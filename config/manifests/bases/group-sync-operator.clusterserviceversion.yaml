@@ -398,6 +398,57 @@ spec:
         path: providers[0].gitlab.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: IbmSecurityVerify represents the IBM Security Verify provider
+        displayName: IBM Security Verify
+        path: providers[0].ibmsecurityverify
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for the IBM Security Verify server
+        displayName: Secret Containing the Credentials
+        path: providers[0].ibmsecurityverify.credentialsSecret
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].ibmsecurityverify.credentialsSecret.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].ibmsecurityverify.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].ibmsecurityverify.credentialsSecret.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].ibmsecurityverify.credentialsSecret.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Groups is the list of ISV groups to synchronize
+        displayName: Groups to Synchronize
+        path: providers[0].ibmsecurityverify.groups
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The ID of the group as defined in IBM Security Verify. This value
+          can be found by using the API.
+        displayName: Id
+        path: providers[0].ibmsecurityverify.groups[0].id
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The display name of the group as defined in IBM Security Verify
+        displayName: Name
+        path: providers[0].ibmsecurityverify.groups[0].name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: TenantURL is the location of the IBM Security Verify tenant
+        displayName: Tenant URL
+        path: providers[0].ibmsecurityverify.tenantUrl
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
         path: providers[0].keycloak
@@ -1163,7 +1214,7 @@ spec:
       ```shell
       oc create secret generic okta-api-token --from-literal=okta-api-token=<OKTA_API_TOKEN> -n group-sync-operator
       ```
-    
+
     ### IBM Security Verify
 
     Groups defined in [IBM Security Verify](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) (ISV) can be synchronized into OpenShift. Currently only the `userName` field from ISV will be synchronized. The developer docs for the ISV API can be found [here](https://docs.verify.ibm.com/verify/page/api-documentation).

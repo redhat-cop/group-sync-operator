@@ -337,6 +337,51 @@ spec:
                         required:
                           - credentialsSecret
                         type: object
+                      ibmsecurityverify:
+                        description: IbmSecurityVerify represents the IBM Security Verify provider
+                        properties:
+                          credentialsSecret:
+                            description: CredentialsSecret is a reference to a secret containing authentication details for the IBM Security Verify server
+                            properties:
+                              key:
+                                description: Key represents the specific key to reference from the resource
+                                type: string
+                              kind:
+                                default: Secret
+                                description: Kind is a string value representing the resource type
+                                enum:
+                                  - ConfigMap
+                                  - Secret
+                                type: string
+                              name:
+                                description: Name represents the name of the resource
+                                type: string
+                              namespace:
+                                description: Namespace represents the namespace containing the resource
+                                type: string
+                            required:
+                              - name
+                              - namespace
+                            type: object
+                          groups:
+                            description: Groups is the list of ISV groups to synchronize
+                            items:
+                              properties:
+                                id:
+                                  description: The ID of the group as defined in IBM Security Verify. This value can be found by using the API.
+                                  type: string
+                                name:
+                                  description: The display name of the group as defined in IBM Security Verify
+                                  type: string
+                              type: object
+                            type: array
+                          tenantUrl:
+                            description: TenantURL is the location of the IBM Security Verify tenant
+                            type: string
+                        required:
+                          - credentialsSecret
+                          - tenantUrl
+                        type: object
                       keycloak:
                         description: Keycloak represents the Keycloak provider
                         properties:
@@ -439,54 +484,6 @@ spec:
                           - credentialsSecret
                           - realm
                           - url
-                        type: object
-                      ibmsecurityverify:
-                        description: The IBM Security Verify (ISV) provider
-                        properties:
-                          credentialsSecret:
-                            description: CredentialsSecret is a reference to a secret containing authentication details for the ISV server
-                            properties:
-                              key:
-                                description: Key represents the specific key to reference from the resource
-                                type: string
-                              kind:
-                                default: Secret
-                                description: Kind is a string value representing the resource type
-                                enum:
-                                  - ConfigMap
-                                  - Secret
-                                type: string
-                              name:
-                                description: Name represents the name of the resource
-                                type: string
-                              namespace:
-                                description: Namespace represents the namespace containing the resource
-                                type: string
-                            required:
-                              - name
-                              - namespace
-                            type: object
-                          groups:
-                            description: The ISV groups to synchronize
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                name:
-                                  description: Name of the ISV group
-                                  type: string
-                                id:
-                                  description: ID of the ISV group
-                                  type: string
-                              required:
-                                - id
-                          tenantUrl:
-                            description: URL for the ISV server of the tenant
-                            type: string
-                        required:
-                          - credentialsSecret
-                          - tenantUrl
-                          - groups
                         type: object
                       ldap:
                         description: Ldap represents the LDAP provider
