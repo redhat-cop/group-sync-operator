@@ -167,6 +167,13 @@ spec:
         path: providers[0].azure.userNameAttributes
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: UseUIDAsGroupName determines whether the Azure group object ID
+          (UID) is used as the name of the OpenShift group instead of the display
+          name. Default is false
+        displayName: Use UID as Group Name
+        path: providers[0].azure.useUIDAsGroupName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: GitHub represents the GitHub provider
         displayName: GitHub Provider
         path: providers[0].github
@@ -783,6 +790,7 @@ spec:
     | `filter` | Graph API filter | | No |
     | `groups` | List of groups to filter against | | No |
     | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
+    | `useUIDAsGroupName` | Use the Azure group object ID (UID) instead of the display name as the name of the OpenShift group | `false` | No |
     | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:

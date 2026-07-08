@@ -342,13 +342,18 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			continue
 		}
 
+		ocpGroupName := *groupName
+		if a.Provider.UseUIDAsGroupName {
+			ocpGroupName = *group.DirectoryObject.GetId()
+		}
+
 		ocpGroup := userv1.Group{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Group",
 				APIVersion: userv1.GroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:        *groupName,
+				Name:        ocpGroupName,
 				Annotations: map[string]string{},
 				Labels:      map[string]string{},
 			},

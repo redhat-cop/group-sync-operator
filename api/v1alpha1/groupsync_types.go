@@ -423,6 +423,11 @@ type AzureProvider struct {
 	// +kubebuilder:validation:Optional
 	UserNameAttributes *[]string `json:"userNameAttributes,omitempty"`
 
+	// UseUIDAsGroupName determines whether the Azure group object ID (UID) is used as the name of the OpenShift group instead of the display name. Default is false
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Use UID as Group Name",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +kubebuilder:validation:Optional
+	UseUIDAsGroupName bool `json:"useUIDAsGroupName,omitempty"`
+
 	// Prune Whether to prune groups that are no longer in Azure. Default is false
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	// +kubebuilder:validation:Optional
