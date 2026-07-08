@@ -82,6 +82,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | `clientFilter` | CEL expression for client-side filtering of groups (See below) | | No |
 | `groups` | List of groups to filter against | | No |
 | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
+| `useUIDAsGroupName` | Use the Azure group object ID (UID) instead of the display name as the name of the OpenShift group | `false` | No |
 | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
