@@ -89,7 +89,7 @@ func getGroupSyncerForProvider(groupSync *redhatcopv1alpha1.GroupSync, provider 
 			return &LdapSyncer{GroupSync: groupSync, Provider: provider.Ldap, Name: provider.Name, ReconcilerBase: reconcilerBase}, nil
 		}
 	case provider.IbmSecurityVerify != nil:
-		{	
+		{
 			apiClient := &ibmsecurityverify.ApiClient{}
 			return &IbmSecurityVerifySyncer{GroupSync: groupSync, Provider: provider.IbmSecurityVerify, Name: provider.Name, ReconcilerBase: reconcilerBase, ApiClient: apiClient}, nil
 		}

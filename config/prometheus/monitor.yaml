@@ -18,7 +18,7 @@ spec:
             key: 'tls.crt'
             name: group-sync-operator-certs
             optional: false
-        serverName: $(METRICS_SERVICE_NAME).$(METRICS_SERVICE_NAMESPACE).svc
+        serverName: controller-manager-metrics-service.system.svc
   selector:
     matchLabels:
       control-plane: group-sync-operator

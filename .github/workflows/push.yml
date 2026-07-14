@@ -27,4 +27,4 @@ jobs:
       RUN_UNIT_TESTS: true
       RUN_INTEGRATION_TESTS: false
       RUN_HELMCHART_TEST: false
-      OPERATOR_SDK_VERSION: v1.25.2
+      OPERATOR_SDK_VERSION: v1.40.0

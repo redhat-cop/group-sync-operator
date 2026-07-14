@@ -723,4 +723,3 @@ func (a *AzureSyncer) evaluateClientFilter(group graph.Group) (bool, error) {
 
 	return result, nil
 }
-

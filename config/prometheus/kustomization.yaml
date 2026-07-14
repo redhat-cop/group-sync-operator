@@ -2,6 +2,3 @@ resources:
   - monitor.yaml
   - role.yaml
   - rolebinding.yaml
-
-configurations:
-  - kustomizeconfig.yaml

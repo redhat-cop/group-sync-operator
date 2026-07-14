@@ -84,8 +84,9 @@ spec:
         path: providers[0].azure.ca.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'CaSecret is a reference to a secret containing a CA certificate
-          to communicate to Azure Deprecated: Use Ca instead.'
+      - description: |-
+          CaSecret is a reference to a secret containing a CA certificate to communicate to Azure
+          Deprecated: Use Ca instead.
         displayName: Resource Containing the CA Certificate
         path: providers[0].azure.caSecret
         x-descriptors:
@@ -109,6 +110,18 @@ spec:
       - description: Namespace represents the namespace containing the resource
         displayName: Namespace
         path: providers[0].azure.caSecret.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: |-
+          ClientFilter is a CEL expression for client-side filtering of groups after retrieval from Azure.
+          The expression evaluates against a 'group' object with fields derived from the Azure Group object.
+          String fields absent from the API response default to "", bool fields to false, int fields to 0.
+          Supported fields: displayName, mailNickname, id, securityEnabled, mailEnabled, description,
+          groupTypes, createdDateTime, visibility, membershipRule, onPremisesSyncEnabled, mail.
+          Example: 'group.mailNickname == group.displayName' filters to groups where these fields match.
+          Example: 'group.securityEnabled && group.description == ""' filters to security groups without descriptions.
+        displayName: Client Filter (CEL Expression)
+        path: providers[0].azure.clientFilter
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: CredentialsSecret is a reference to a secret containing authentication
@@ -142,14 +155,6 @@ spec:
           using the Filter feature of the Azure Graph API
         displayName: Filter
         path: providers[0].azure.filter
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
-      - description: Client Filter (CEL Expression) is a CEL expression for client-side
-          filtering of groups after retrieval from Azure. String fields default to
-          "", bool fields to false. Example: 'group.securityEnabled && group.description
-          == ""'
-        displayName: Client Filter (CEL Expression)
-        path: providers[0].azure.clientFilter
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Groups represents a filtered list of groups to synchronize
@@ -205,8 +210,9 @@ spec:
         path: providers[0].github.ca.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'CaSecret is a reference to a secret containing a CA certificate
-          to communicate to the GitHub server Deprecated: Use Ca instead.'
+      - description: |-
+          CaSecret is a reference to a secret containing a CA certificate to communicate to the GitHub server
+          Deprecated: Use Ca instead.
         displayName: Resource Containing the CA Certificate
         path: providers[0].github.caSecret
         x-descriptors:
@@ -327,8 +333,9 @@ spec:
         path: providers[0].gitlab.ca.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'CaSecret is a reference to a secret containing a CA certificate
-          to communicate to the GitLab server Deprecated: Use Ca instead.'
+      - description: |-
+          CaSecret is a reference to a secret containing a CA certificate to communicate to the GitLab server
+          Deprecated: Use Ca instead.
         displayName: Resource Containing the CA Certificate
         path: providers[0].gitlab.caSecret
         x-descriptors:
@@ -406,6 +413,57 @@ spec:
         path: providers[0].gitlab.url
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: IbmSecurityVerify represents the IBM Security Verify provider
+        displayName: IBM Security Verify
+        path: providers[0].ibmsecurityverify
+      - description: CredentialsSecret is a reference to a secret containing authentication
+          details for the IBM Security Verify server
+        displayName: Secret Containing the Credentials
+        path: providers[0].ibmsecurityverify.credentialsSecret
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - description: Key represents the specific key to reference from the resource
+        displayName: Key
+        path: providers[0].ibmsecurityverify.credentialsSecret.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Kind is a string value representing the resource type
+        displayName: Kind
+        path: providers[0].ibmsecurityverify.credentialsSecret.kind
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:ConfigMap
+        - urn:alm:descriptor:com.tectonic.ui:select:Secret
+      - description: Name represents the name of the resource
+        displayName: Name
+        path: providers[0].ibmsecurityverify.credentialsSecret.name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Namespace represents the namespace containing the resource
+        displayName: Namespace
+        path: providers[0].ibmsecurityverify.credentialsSecret.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: Groups is the list of ISV groups to synchronize
+        displayName: Groups to Synchronize
+        path: providers[0].ibmsecurityverify.groups
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The ID of the group as defined in IBM Security Verify. This value
+          can be found by using the API.
+        displayName: Id
+        path: providers[0].ibmsecurityverify.groups[0].id
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The display name of the group as defined in IBM Security Verify
+        displayName: Name
+        path: providers[0].ibmsecurityverify.groups[0].name
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: TenantURL is the location of the IBM Security Verify tenant
+        displayName: Tenant URL
+        path: providers[0].ibmsecurityverify.tenantUrl
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: Keycloak represents the Keycloak provider
         displayName: Keycloak Provider
         path: providers[0].keycloak
@@ -436,8 +494,9 @@ spec:
         path: providers[0].keycloak.ca.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'CaSecret is a reference to a secret containing a CA certificate
-          to communicate to the Keycloak server Deprecated: Use Ca instead.'
+      - description: |-
+          CaSecret is a reference to a secret containing a CA certificate to communicate to the Keycloak server
+          Deprecated: Use Ca instead.
         displayName: Resource Containing the CA Certificate
         path: providers[0].keycloak.caSecret
         x-descriptors:
@@ -564,8 +623,9 @@ spec:
         path: providers[0].ldap.ca.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      - description: 'CaSecret is a reference to a secret containing a CA certificate
-          to communicate to LDAP Deprecated: Use Ca instead.'
+      - description: |-
+          CaSecret is a reference to a secret containing a CA certificate to communicate to LDAP
+          Deprecated: Use Ca instead.
         displayName: Resource Containing the CA Certificate
         path: providers[0].ldap.caSecret
         x-descriptors:
@@ -1172,7 +1232,7 @@ spec:
       ```shell
       oc create secret generic okta-api-token --from-literal=okta-api-token=<OKTA_API_TOKEN> -n group-sync-operator
       ```
-    
+
     ### IBM Security Verify
 
     Groups defined in [IBM Security Verify](https://help.okta.com/en/prod/Content/Topics/users-groups-profiles/usgp-main.htm) (ISV) can be synchronized into OpenShift. Currently only the `userName` field from ISV will be synchronized. The developer docs for the ISV API can be found [here](https://docs.verify.ibm.com/verify/page/api-documentation).

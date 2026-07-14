@@ -1,6 +1,6 @@
 domain: redhat.io
-layout: 
-- go.kubebuilder.io/v3
+layout:
+- go.kubebuilder.io/v4
 projectName: group-sync-operator
 repo: github.com/redhat-cop/group-sync-operator
 resources:
