@@ -32,14 +32,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
-	"github.com/redhat-cop/group-sync-operator/controllers"
+	"github.com/redhat-cop/group-sync-operator/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -84,9 +84,13 @@ func main() {
 	flag.DurationVar(&retryPeriod, "leaderRetryPeriod", defaultRetryPeriod,
 		"Configure leader election lease retry period")
 
+	opts := zap.Options{
+		Development: true,
+	}
+	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	watchNamespace := getWatchNamespace()
 
@@ -126,7 +130,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.GroupSyncReconciler{
+	if err = (&controller.GroupSyncReconciler{
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName), mgr.GetAPIReader()),
 		Log:            ctrl.Log.WithName("controllers").WithName(controllerName),
 	}).SetupWithManager(mgr); err != nil {

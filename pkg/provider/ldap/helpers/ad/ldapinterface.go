@@ -70,11 +70,11 @@ func (e *ADLDAPInterface) ExtractMembers(ldapGroupUID string) ([]*ldap.Entry, er
 			return nil, err
 		}
 
-			ldapClient, err := e.connect()
-			if err != nil {
-				return nil, err
-			}
-			currEntries, err := ldapquery.QueryForEntries(ldapClient, searchRequest)
+		ldapClient, err := e.connect()
+		if err != nil {
+			return nil, err
+		}
+		currEntries, err := ldapquery.QueryForEntries(ldapClient, searchRequest)
 		if err != nil {
 			return nil, err
 		}

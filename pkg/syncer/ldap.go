@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-ldap/ldap/v3"
 	legacyconfigv1 "github.com/openshift/api/legacyconfig/v1"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/openshift/library-go/pkg/security/ldapclient"
@@ -20,7 +21,6 @@ import (
 	"github.com/redhat-cop/group-sync-operator/pkg/provider/ldap/helpers/interfaces"
 	syncerror "github.com/redhat-cop/group-sync-operator/pkg/provider/ldap/helpers/syncerror"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/go-ldap/ldap/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
