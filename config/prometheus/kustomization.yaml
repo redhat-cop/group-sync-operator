@@ -1,4 +1,7 @@
 resources:
   - monitor.yaml
-  - role.yaml
-  - rolebinding.yaml
+  - service_account.yaml
+  - service_account_secret.yaml
+
+configurations:
+  - kustomizeconfig.yaml

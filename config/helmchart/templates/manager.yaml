@@ -28,36 +28,19 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - args:
-          - --secure-listen-address=0.0.0.0:8443
-          - --upstream=http://127.0.0.1:8080/
-          - --logtostderr=true
-          - --tls-cert-file=/etc/certs/tls/tls.crt
-          - --tls-private-key-file=/etc/certs/tls/tls.key
-          image: "{{ template "group-sync-operator.image" .Values.kube_rbac_proxy.image }}"
-          name: kube-rbac-proxy
-          ports:
-          - containerPort: 8443
-            name: https
-          volumeMounts:
-          - mountPath: /etc/certs/tls
-            name: tls-cert
-          imagePullPolicy: {{ .Values.kube_rbac_proxy.image.pullPolicy }}
-          {{- with .Values.env }}
-          env:
-          {{- toYaml . | nindent 10 }}
-          {{- end }}          
-          resources:
-            {{- toYaml .Values.kube_rbac_proxy.resources | nindent 12 }}
         - command:
           - /manager
           args:
           - --health-probe-bind-address=:8081
-          - --metrics-addr=127.0.0.1:8080
+          - --metrics-addr=:8443
           - --leader-elect
           image: "{{ template "group-sync-operator.image" .Values.image }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           name: {{ .Chart.Name }}
+          ports:
+          - containerPort: 8443
+            name: metrics
+            protocol: TCP
           env:
             {{- if eq (include "group-sync-operator.checkWatchNamespace" .) ""  }}
             - name: WATCH_NAMESPACE
@@ -82,6 +65,10 @@ spec:
               port: 8081
             initialDelaySeconds: 5
             periodSeconds: 10
+          volumeMounts:
+          - mountPath: /etc/certs/tls
+            name: tls-cert
+            readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

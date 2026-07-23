@@ -1,0 +1,11 @@
+nameReference:
+- kind: ServiceAccount
+  version: v1
+  fieldSpecs:
+  - path: metadata/annotations/kubernetes.io\/service-account.name
+    kind: Secret
+- kind: Secret
+  version: v1
+  fieldSpecs:
+  - path: spec/endpoints/authorization/credentials/name
+    kind: ServiceMonitor

@@ -11,6 +11,6 @@ spec:
   ports:
     - name: https
       port: 8443
-      targetPort: https
+      targetPort: metrics
   selector:
     control-plane: group-sync-operator

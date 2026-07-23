@@ -766,20 +766,13 @@ helm upgrade group-sync-operator group-sync-operator/group-sync-operator
 
 ## Metrics
 
-Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's default cluster monitoring. To enable OpenShift cluster monitoring, label the namespace the operator is deployed in with the label `openshift.io/cluster-monitoring="true"`.
-
-```shell
-oc label namespace <namespace> openshift.io/cluster-monitoring="true"
-```
+Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's user workload monitoring without any additional action required. 
 
 ### Test metrics
 
 ```sh
 export operatorNamespace=group-sync-operator-local # or group-sync-operator
-oc label namespace ${operatorNamespace} openshift.io/cluster-monitoring="true"
-oc rsh -n openshift-monitoring -c prometheus prometheus-k8s-0 /bin/bash
-export operatorNamespace=group-sync-operator-local # or group-sync-operator
-curl -v -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://group-sync-operator-controller-manager-metrics-service.${operatorNamespace}.svc.cluster.local:8443/metrics
+oc exec -n ${operatorNamespace} deployment/group-sync-operator-controller-manager -- curl -v -s -k -H "Authorization: Bearer $(oc get secret -n ${operatorNamespace} group-sync-operator-controller-manager-metrics-token -o jsonpath='{.data.token}' | base64 -d)" https://group-sync-operator-controller-manager-metrics-service.${operatorNamespace}.svc.cluster.local:8443/metrics
 exit
 ```
 
@@ -837,11 +830,11 @@ make docker-push IMG=quay.io/$repo/group-sync-operator:latest
 ```shell
 make manifests
 make bundle IMG=quay.io/$repo/group-sync-operator:latest
-operator-sdk bundle validate ./bundle --select-optional name=operatorhub
+operator-sdk bundle validate ./bundle --select-optional name=operatorhubv2
 make bundle-build BUNDLE_IMG=quay.io/$repo/group-sync-operator-bundle:latest
 docker login quay.io/$repo/group-sync-operator-bundle
 docker push quay.io/$repo/group-sync-operator-bundle:latest
-operator-sdk bundle validate quay.io/$repo/group-sync-operator-bundle:latest --select-optional name=operatorhub
+operator-sdk bundle validate quay.io/$repo/group-sync-operator-bundle:latest --select-optional name=operatorhubv2
 oc new-project group-sync-operator
 oc label namespace group-sync-operator openshift.io/cluster-monitoring="true"
 operator-sdk cleanup group-sync-operator -n group-sync-operator

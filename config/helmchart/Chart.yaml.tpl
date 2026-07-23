@@ -8,4 +8,3 @@ keywords:
   - security
 sources:
   - https://github.com/redhat-cop/group-sync-operator
-engine: gotpl

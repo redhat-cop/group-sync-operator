@@ -1406,6 +1406,7 @@ spec:
   - email: ablock@redhat.com
     name: Andrew Block
   maturity: alpha
+  minKubeVersion: 1.18.3
   provider:
     name: Red Hat Community of Practice
   version: 0.0.0

@@ -35,14 +35,4 @@ env:
   # - name: VAR_NAME
   #   value: var-value
 
-kube_rbac_proxy:
-  image:
-    repository: quay.io/redhat-cop/kube-rbac-proxy
-    pullPolicy: IfNotPresent
-    version: v0.11.1-0
-  resources:
-    requests:
-      cpu: 100m
-      memory: 20Mi
-
 enableMonitoring: true
