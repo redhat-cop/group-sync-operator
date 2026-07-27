@@ -12,9 +12,9 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/microsoft/kiota-authentication-azure-go v0.6.0
-	github.com/microsoft/kiota-http-go v0.16.1
-	github.com/microsoftgraph/msgraph-sdk-go v0.61.0
-	github.com/microsoftgraph/msgraph-sdk-go-core v0.36.0
+	github.com/microsoft/kiota-http-go v0.16.2
+	github.com/microsoftgraph/msgraph-sdk-go v0.64.0
+	github.com/microsoftgraph/msgraph-sdk-go-core v0.36.1
 	github.com/okta/okta-sdk-golang/v2 v2.20.0
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
@@ -125,10 +125,10 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/microsoft/kiota-abstractions-go v0.19.0
+	github.com/microsoft/kiota-abstractions-go v0.19.1
 	github.com/microsoft/kiota-serialization-form-go v0.9.1 // indirect
-	github.com/microsoft/kiota-serialization-json-go v0.9.1 // indirect
-	github.com/microsoft/kiota-serialization-text-go v0.7.0 // indirect
+	github.com/microsoft/kiota-serialization-json-go v0.9.2 // indirect
+	github.com/microsoft/kiota-serialization-text-go v0.7.1 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
