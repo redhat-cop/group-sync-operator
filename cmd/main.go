@@ -37,6 +37,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/internal/controller"
@@ -67,12 +68,15 @@ func init() {
 
 func main() {
 	var metricsAddr string
+	var metricsSecure bool
 	var enableLeaderElection bool
 	var leaseDuration time.Duration
 	var renewDeadline time.Duration
 	var retryPeriod time.Duration
 	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-addr", ":8443", "The address the metric endpoint binds to.")
+	flag.BoolVar(&metricsSecure, "metrics-secure", true,
+		"If set, the metrics endpoint is served securely via HTTPS with authentication and authorization.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
@@ -94,11 +98,16 @@ func main() {
 
 	watchNamespace := getWatchNamespace()
 
+	metricsOpts := metricsserver.Options{BindAddress: metricsAddr}
+	if metricsSecure {
+		metricsOpts.SecureServing = true
+		metricsOpts.CertDir = "/etc/certs/tls"
+		metricsOpts.FilterProvider = filters.WithAuthenticationAndAuthorization
+	}
+
 	options := ctrl.Options{
-		Scheme: scheme,
-		Metrics: metricsserver.Options{
-			BindAddress: metricsAddr,
-		},
+		Scheme:                     scheme,
+		Metrics:                    metricsOpts,
 		HealthProbeBindAddress:     probeAddr,
 		LeaderElection:             enableLeaderElection,
 		LeaderElectionID:           "085c249a.redhat.io",
