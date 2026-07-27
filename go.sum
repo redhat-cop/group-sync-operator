@@ -247,6 +247,8 @@ github.com/mfridman/tparse v0.18.0 h1:wh6dzOKaIwkUGyKgOntDW4liXSo37qg5AXbIhkMV3v
 github.com/mfridman/tparse v0.18.0/go.mod h1:gEvqZTuCgEhPbYk/2lS3Kcxg1GmTxxU7kTC8DvP0i/A=
 github.com/microsoft/kiota-abstractions-go v0.19.0 h1:R57UbZaIMdouccDpBMTNiwXljN/sOkeRSpXLtBAl2wg=
 github.com/microsoft/kiota-abstractions-go v0.19.0/go.mod h1:0lbPErVO6Rj3HHpntNYW/OFmHhJJ1ewPdsi1xPxYIMc=
+github.com/microsoft/kiota-abstractions-go v0.20.0 h1:d1p+aW6RhKMRgjdZZ2wKMwfYcDXhmXvPD8JDIeYB/5c=
+github.com/microsoft/kiota-abstractions-go v0.20.0/go.mod h1:0lbPErVO6Rj3HHpntNYW/OFmHhJJ1ewPdsi1xPxYIMc=
 github.com/microsoft/kiota-authentication-azure-go v0.6.0 h1:Il9bLO34J6D8DY89xYAXoGh9muvlphayqG4eihyT6B8=
 github.com/microsoft/kiota-authentication-azure-go v0.6.0/go.mod h1:EJCHiLWLXW1/mSgX7lYReAhVO37MzRT5Xi2mcPTwCRQ=
 github.com/microsoft/kiota-http-go v0.16.1 h1:5SZbSwHs14Xve5VMQHHz00lwL/kEg3H9rgESAUrXnvw=

@@ -125,7 +125,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/microsoft/kiota-abstractions-go v0.19.0
+	github.com/microsoft/kiota-abstractions-go v0.20.0
 	github.com/microsoft/kiota-serialization-form-go v0.9.1 // indirect
 	github.com/microsoft/kiota-serialization-json-go v0.9.1 // indirect
 	github.com/microsoft/kiota-serialization-text-go v0.7.0 // indirect
