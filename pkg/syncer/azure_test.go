@@ -318,3 +318,76 @@ func TestExtractGroupFieldsWithNilValues(t *testing.T) {
 		t.Errorf("mailNickname should be empty string when not set, got %v", mailNickname)
 	}
 }
+
+// TestAzureBaseGroupFilter verifies that a baseGroups entry is resolved by
+// object ID when it is a GUID and by display name otherwise. Combining both
+// into a single OData filter is not possible because "id eq '<non-guid>'" is
+// rejected by Microsoft Graph.
+func TestAzureBaseGroupFilter(t *testing.T) {
+	tests := []struct {
+		name      string
+		baseGroup string
+		expected  string
+	}{
+		{
+			name:      "object ID (GUID) is matched by id",
+			baseGroup: "b60f04c2-b6f3-4086-8570-059e7aa446bd",
+			expected:  "id eq 'b60f04c2-b6f3-4086-8570-059e7aa446bd'",
+		},
+		{
+			name:      "display name is matched by displayName",
+			baseGroup: "my-group",
+			expected:  "displayName eq 'my-group'",
+		},
+		{
+			name:      "non-ASCII display name is matched by displayName",
+			baseGroup: "グループ002",
+			expected:  "displayName eq 'グループ002'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := azureBaseGroupFilter(tt.baseGroup); got != tt.expected {
+				t.Errorf("azureBaseGroupFilter(%q) = %q, want %q", tt.baseGroup, got, tt.expected)
+			}
+		})
+	}
+}
+
+// TestAzureGroupMatches verifies that the groups filter matches on either the
+// display name or the object ID, and that an empty filter matches everything.
+func TestAzureGroupMatches(t *testing.T) {
+	newGroup := func(id, displayName string) graph.Groupable {
+		g := graph.NewGroup()
+		if id != "" {
+			g.SetId(strPtr(id))
+		}
+		if displayName != "" {
+			g.SetDisplayName(strPtr(displayName))
+		}
+		return g
+	}
+	guid := "b60f04c2-b6f3-4086-8570-059e7aa446bd"
+
+	tests := []struct {
+		name    string
+		group   graph.Groupable
+		allowed []string
+		want    bool
+	}{
+		{"empty filter allows any group", newGroup(guid, "team"), nil, true},
+		{"match by display name", newGroup(guid, "team"), []string{"team"}, true},
+		{"match by object ID", newGroup(guid, "team"), []string{guid}, true},
+		{"no match", newGroup(guid, "team"), []string{"other"}, false},
+		{"match by ID when display name differs", newGroup(guid, "renamed"), []string{guid}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := azureGroupMatches(tt.group, tt.allowed); got != tt.want {
+				t.Errorf("azureGroupMatches() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -37,6 +37,7 @@ import (
 	graph "github.com/microsoftgraph/msgraph-sdk-go/models"
 
 	"github.com/google/cel-go/cel"
+	"github.com/google/uuid"
 )
 
 var (
@@ -233,7 +234,7 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 		for _, baseGroup := range a.Provider.BaseGroups {
 
-			filter := fmt.Sprintf("displayName eq '%s'", baseGroup)
+			filter := azureBaseGroupFilter(baseGroup)
 			groupRequestParameters := &msgroups.GroupsRequestBuilderGetQueryParameters{
 				Filter: &filter,
 			}
@@ -355,7 +356,10 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			continue
 		}
 
-		if !isGroupAllowed(*groupName, a.Provider.Groups) {
+		// Match the configured groups filter against either the display name or
+		// the object ID. Azure display names are mutable and non-unique, so
+		// object IDs must be accepted as selectors as well.
+		if !azureGroupMatches(&group, a.Provider.Groups) {
 			continue
 		}
 
@@ -400,8 +404,43 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 	}
 
+	if len(a.Provider.Groups) > 0 && len(ocpGroups) == 0 {
+		azureLogger.Info("'groups' filter matched no Azure groups; verify the configured display names or object IDs",
+			"Provider", a.Name, "groups", a.Provider.Groups)
+	}
+
 	return ocpGroups, nil
 
+}
+
+// azureBaseGroupFilter builds the OData $filter used to resolve a configured
+// baseGroups entry. Azure group display names are neither unique nor stable, so
+// when the entry is a valid object ID (GUID) it is matched directly; otherwise
+// the display name is used. Note that "id eq '<value>'" with a non-GUID value is
+// rejected by Microsoft Graph (Request_BadRequest), so the two forms cannot be
+// combined into a single filter.
+func azureBaseGroupFilter(baseGroup string) string {
+	if _, err := uuid.Parse(baseGroup); err == nil {
+		return fmt.Sprintf("id eq '%s'", baseGroup)
+	}
+	return fmt.Sprintf("displayName eq '%s'", baseGroup)
+}
+
+// azureGroupMatches reports whether an Azure AD group satisfies the configured
+// groups filter. An empty filter matches everything. Both the display name and
+// the object ID are considered, so stable, unique object IDs may be used in
+// addition to (mutable, non-unique) display names.
+func azureGroupMatches(group graph.Groupable, allowedGroups []string) bool {
+	if len(allowedGroups) == 0 {
+		return true
+	}
+	if name := group.GetDisplayName(); name != nil && isGroupAllowed(*name, allowedGroups) {
+		return true
+	}
+	if id := group.GetId(); id != nil && isGroupAllowed(*id, allowedGroups) {
+		return true
+	}
+	return false
 }
 
 func (a *AzureSyncer) GetProviderName() string {
