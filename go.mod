@@ -6,7 +6,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/go-ldap/ldap/v3 v3.4.14
-	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/logr v1.4.4
 	github.com/google/cel-go v0.29.0
 	github.com/google/go-github/v45 v45.2.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
