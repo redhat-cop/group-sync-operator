@@ -278,14 +278,14 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 			}
 
-			baseGroupMembersRequest, err := a.Client.GroupsById(*baseGroupResult[0].GetId()).Members().GraphGroup().Get(a.Context, baseGroupMembersRequestConfiguration)
+			baseGroupMembersRequest, err := a.Client.Groups().ByGroupId(*baseGroupResult[0].GetId()).Members().GraphGroup().Get(a.Context, baseGroupMembersRequestConfiguration)
 
 			if err != nil {
 				azureLogger.Error(err, "Failed to get base group members", "Provider", a.Name, "Base Group", baseGroup)
 				return nil, err
 			}
 
-			pageIterator, err := msgraphcore.NewPageIterator[*graph.Group](baseGroupMembersRequest, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+			pageIterator, err := msgraphcore.NewPageIterator[*graph.Group](baseGroupMembersRequest, a.Adapter, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 			if err != nil {
 				return nil, err
@@ -429,7 +429,7 @@ func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
 		Headers:         headers,
 	}
 
-	memberRequest, err := a.Client.GroupsById(*groupID).TransitiveMembers().GraphUser().Get(a.Context, &transitiveMembersConfiguration)
+	memberRequest, err := a.Client.Groups().ByGroupId(*groupID).TransitiveMembers().GraphUser().Get(a.Context, &transitiveMembersConfiguration)
 
 	if err != nil {
 		return nil, err
@@ -523,7 +523,7 @@ func getAuthorityHost(authorityHost *string) string {
 func (a *AzureSyncer) getGroupsFromResults(result graph.GroupCollectionResponseable) ([]graph.Group, error) {
 	groups := []graph.Group{}
 
-	pageIterator, err := msgraphcore.NewPageIterator[*graph.Group](result, &a.Adapter.GraphRequestAdapterBase, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
+	pageIterator, err := msgraphcore.NewPageIterator[*graph.Group](result, a.Adapter, graph.CreateGroupCollectionResponseFromDiscriminatorValue)
 
 	if err != nil {
 		return nil, err
