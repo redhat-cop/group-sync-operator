@@ -19,11 +19,9 @@ package main
 import (
 	"flag"
 	"os"
-	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
@@ -96,8 +94,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	watchNamespace := getWatchNamespace()
-
 	metricsOpts := metricsserver.Options{BindAddress: metricsAddr}
 	if metricsSecure {
 		metricsOpts.SecureServing = true
@@ -120,17 +116,6 @@ func main() {
 				DisableFor: []client.Object{&v1.Secret{}},
 			},
 		},
-	}
-
-	if watchNamespace != "" {
-		namespaceConfigs := make(map[string]cache.Config)
-		for _, ns := range strings.Split(watchNamespace, ",") {
-			namespaceConfigs[strings.TrimSpace(ns)] = cache.Config{}
-		}
-		options.Cache = cache.Options{DefaultNamespaces: namespaceConfigs}
-		if strings.Contains(watchNamespace, ",") {
-			setupLog.Info("manager set up with multiple namespaces", "namespaces", watchNamespace)
-		}
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
@@ -162,18 +147,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-// getWatchNamespace returns the Namespace the operator should be watching for changes
-func getWatchNamespace() string {
-	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-	// which specifies the Namespace to watch.
-	// An empty value means the operator is running with cluster scope.
-	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
-
-	ns, found := os.LookupEnv(watchNamespaceEnvVar)
-	if !found {
-		ns = ""
-	}
-	return ns
 }
