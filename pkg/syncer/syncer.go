@@ -3,12 +3,16 @@ package syncer
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/provider/ibmsecurityverify"
 	"github.com/redhat-cop/operator-utils/pkg/util"
 	"github.com/robfig/cron/v3"
+	"github.com/spiffe/go-spiffe/v2/svid/jwtsvid"
+	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -195,4 +199,30 @@ func determineFromDeprecatedObjectRef(objectRef *redhatcopv1alpha1.ObjectRef, de
 
 	return deprecatedObjectRef
 
+}
+
+func getSecretOrEnvValue(secret *corev1.Secret, key string) (string, bool) {
+	if val, ok := os.LookupEnv(key); ok {
+		return val, true
+	}
+	if secret != nil {
+		if val, ok := secret.Data[key]; ok {
+			return string(val), true
+		}
+	}
+	return "", false
+}
+
+func getSpiffeJWTToken(socketPath string, audience string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	svid, err := workloadapi.FetchJWTSVID(ctx, jwtsvid.Params{
+		Audience: audience,
+	}, workloadapi.WithAddr(socketPath))
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch SPIFFE JWT-SVID: %w", err)
+	}
+
+	return svid.Marshal(), nil
 }

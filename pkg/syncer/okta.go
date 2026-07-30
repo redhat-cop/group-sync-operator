@@ -64,16 +64,21 @@ func (o *OktaSyncer) Init() bool {
 func (o *OktaSyncer) Validate() error {
 	const validations = 2
 	validationErrors := make([]error, validations)
-	credentialsSecret, err := o.getSecrets()
 
-	if err != nil {
-		validationErrors = append(validationErrors, err)
-	} else {
-		if _, found := credentialsSecret.Data[secretOktaTokenKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("could not find api token '%s' in namespace '%s'", o.Provider.CredentialsSecret.Name, o.Provider.CredentialsSecret.Namespace))
+	if o.Provider.CredentialsSecret != nil {
+		credentialsSecret, err := o.getSecrets()
+
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		} else {
+			if _, found := credentialsSecret.Data[secretOktaTokenKey]; !found {
+				validationErrors = append(validationErrors, fmt.Errorf("could not find api token '%s' in namespace '%s'", o.Provider.CredentialsSecret.Name, o.Provider.CredentialsSecret.Namespace))
+			}
+
+			o.credentialsSecret = credentialsSecret
 		}
-
-		o.credentialsSecret = credentialsSecret
+	} else {
+		validationErrors = append(validationErrors, fmt.Errorf("credentialsSecret must be provided for Okta provider"))
 	}
 
 	if _, err := url.ParseRequestURI(o.Provider.URL); err != nil {

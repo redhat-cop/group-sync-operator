@@ -75,27 +75,32 @@ func (k *KeycloakSyncer) Validate() error {
 	validationErrors := []error{}
 
 	// Verify Secret Containing Username and Password Exists with Valid Keys
-	credentialsSecret := &corev1.Secret{}
-	err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CredentialsSecret.Name, Namespace: k.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+	if k.Provider.CredentialsSecret != nil {
+		credentialsSecret := &corev1.Secret{}
+		err := k.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: k.Provider.CredentialsSecret.Name, Namespace: k.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
-	if err != nil {
-		validationErrors = append(validationErrors, err)
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		} else {
+
+			// Username key validation
+			if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
+				validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s'", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
+			}
+
+			// Password key validation
+			if _, found := credentialsSecret.Data[secretPasswordKey]; !found {
+				validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s'", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
+			}
+
+			k.CredentialsSecret = credentialsSecret
+
+		}
 	} else {
-
-		// Username key validation
-		if _, found := credentialsSecret.Data[secretUsernameKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' key in secret '%s' in namespace '%s'", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
-		}
-
-		// Password key validation
-		if _, found := credentialsSecret.Data[secretPasswordKey]; !found {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'password' key in secret '%s' in namespace '%s'", k.Provider.CredentialsSecret.Name, k.Provider.CredentialsSecret.Namespace))
-		}
-
-		k.CredentialsSecret = credentialsSecret
-
+		validationErrors = append(validationErrors, fmt.Errorf("credentialsSecret must be provided for Keycloak provider"))
 	}
 
+	var err error
 	if k.URL, err = url.ParseRequestURI(k.Provider.URL); err != nil {
 		validationErrors = append(validationErrors, err)
 	}

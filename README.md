@@ -189,6 +189,95 @@ The secret can be created by executing the following command:
 oc create secret generic azure-group-sync --from-literal=AZURE_TENANT_ID=<AZURE_TENANT_ID> --from-literal=AZURE_CLIENT_ID=<AZURE_CLIENT_ID> --from-literal=AZURE_CLIENT_SECRET=<AZURE_CLIENT_SECRET>
 ```
 
+#### Workload Identity Support
+
+Authentication with Azure can be achieved without a static credential (secret) by using a JWT that is sourced from a file or obtained dynamically with [SPIFFE](https://spiffe.io). To utilize Workload Identity, in most cases, customizations will need to be made to the operator Pod. When using the [Operator Lifecycle Manager](https://olm.operatorframework.io) (pre v1.0), these changes can be made within the `Subscription` resource. An example of such a change is found below:
+
+```yaml
+...
+spec:
+  config:
+    volumeMounts:
+      - mountPath: /spiffe-workload-api
+        name: spiffe-workload-api
+        readOnly: true
+    volumes:
+      - csi:
+          driver: csi.spiffe.io
+          readOnly: true
+        name: spiffe-workload-api
+...
+```
+
+The following sections describe the ways to manage workload identity.
+
+##### Sourcing a JWT From a File
+
+The `AZURE_FEDERATED_TOKEN_FILE` key can be added to the credential Secret to specify the location of a file within the operator Pod containing a JWT that is used to authenticate with Azure. Alternatively, this property (along with every other property within the Credential Secret) can be provided as an Environment Variable -- aligning with how these values are provided when using [Azure AD Workload Identity](https://azure.github.io/azure-workload-identity).
+
+##### Obtaining a JWT from SPIFFE
+
+An integration with SPIFFE/Red Hat Zero Trust Workload Identity Manager is available to dynamically obtain a JWT from the SPIFFE socket mounted to the operator pod. The SPIFFE capability is enabled when the `SPIFFE_ENDPOINT_SOCKET` property is present in the Credential Secret or exposed as an Environment Variable. `unix:///spiffe-workload-api/spire-agent.sock` is a valid example of this property.
+
+##### Azure Configuration
+
+The following steps need to be completed to support workload identity within Azure
+
+1. Create a [User Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
+2. Assign App Roles to the newly created identity
+3. Create a Federated Identity Credential to link the identity with the workload
+
+First, create a user managed identity
+
+```shell
+az identity create --name "<name>" --resource-group "<resource_group>"
+```
+
+Next, obtain the AppRole ID for the required permissions needed to query the Microsoft Graph API
+
+```shell
+az ad sp show --id "$00000003-0000-0000-c000-000000000000" --query "appRoles[?value=='GroupMember.Read.All' && allowedMemberTypes[?@=='Application']].id" --output tsv
+```
+
+NOTE: Replace `GroupMember.Read.All` with the desired permission as necessary
+
+Next, obtain the Object ID of the Graph API Service Principal
+
+```shell
+az ad sp list --filter "appId eq '00000003-0000-0000-c000-000000000000'" --query "[0].id" -o tsv
+```
+
+Obtain the Principal ID of the user managed identity created previously:
+
+```shell
+az identity show --resource-group "${UNIQUE_NAME}" --name "<name>" --query "principalId" -o tsv
+```
+
+Assign the Permission to the user managed identity by specifying the Principal ID, AppRole ID, and Object ID of the Graph API Service Principal:
+
+```shell
+az rest --method POST \                                                                                                
+  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/<principal_id>/appRoleAssignments" \
+  --headers '{"Content-Type": "application/json"}' \
+  --body "{
+    \"principalId\": \"<prinicpal_id>\",
+    \"resourceId\": \"<graph_id>\",
+    \"appRoleId\": \"<app_role_id>\"
+  }"
+```
+
+Finally, create a federated Credential linking the user managed identity to the workload
+
+```shell
+az identity federated-credential create \
+    --name <name> \
+    --identity-name <identity_name>  \
+    --resource-group <resource_group> \
+    --issuer <oidc_issuer> \
+    --subject <subject> \
+    --audience api://AzureADTokenExchange
+```
+
 ### GitHub
 
 Teams stored within a GitHub organization can be synchronized into OpenShift. The following table describes the set of configuration options for the GitHub provider:

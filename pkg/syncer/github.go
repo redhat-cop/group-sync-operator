@@ -83,22 +83,26 @@ func (g *GitHubSyncer) Validate() error {
 
 	validationErrors := []error{}
 
-	credentialsSecret := &corev1.Secret{}
-	err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+	if g.Provider.CredentialsSecret != nil {
+		credentialsSecret := &corev1.Secret{}
+		err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
-	if err != nil {
-		validationErrors = append(validationErrors, err)
-	} else {
-		// Check that provided secret contains required keys
-		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
-		_, privateKeyFound := credentialsSecret.Data[privateKey]
-		_, integrationIdFound := credentialsSecret.Data[appId]
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		} else {
+			// Check that provided secret contains required keys
+			_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
+			_, privateKeyFound := credentialsSecret.Data[privateKey]
+			_, integrationIdFound := credentialsSecret.Data[appId]
 
-		if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			if !tokenSecretFound && !(privateKeyFound && integrationIdFound) {
+				validationErrors = append(validationErrors, fmt.Errorf("Could not find `token` or `privateKey` and `appId` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			}
+
+			g.CredentialsSecret = credentialsSecret
 		}
-
-		g.CredentialsSecret = credentialsSecret
+	} else {
+		validationErrors = append(validationErrors, fmt.Errorf("credentialsSecret must be provided for GitHub provider"))
 	}
 
 	if g.Provider.Organization == "" {
@@ -134,6 +138,7 @@ func (g *GitHubSyncer) Validate() error {
 			validationErrors = append(validationErrors, fmt.Errorf("GitHub URL Must end with a slash ('/')"))
 		}
 
+		var err error
 		g.URL, err = url.Parse(*g.Provider.URL)
 
 		if err != nil {

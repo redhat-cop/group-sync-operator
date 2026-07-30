@@ -158,8 +158,6 @@ spec:
                             items:
                               type: string
                             type: array
-                        required:
-                          - credentialsSecret
                         type: object
                       github:
                         description: GitHub represents the GitHub provider
