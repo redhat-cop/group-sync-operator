@@ -39,20 +39,25 @@ func (g *IbmSecurityVerifySyncer) Init() bool {
 
 func (g *IbmSecurityVerifySyncer) Validate() error {
 	validationErrors := []error{}
-	credentialsSecret := &corev1.Secret{}
-	err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
-	if err != nil {
-		validationErrors = append(validationErrors, err)
-	} else {
-		// Check that provided secret contains required keys
-		_, clientIdFound := credentialsSecret.Data[secretClientIdKey]
-		_, clientSecretFound := credentialsSecret.Data[secretClientSecretKey]
 
-		if !clientIdFound && !clientSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find `clientId` and `clientSecret` secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+	if g.Provider.CredentialsSecret != nil {
+		credentialsSecret := &corev1.Secret{}
+		err := g.ReconcilerBase.GetClient().Get(g.Context, types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		} else {
+			// Check that provided secret contains required keys
+			_, clientIdFound := credentialsSecret.Data[secretClientIdKey]
+			_, clientSecretFound := credentialsSecret.Data[secretClientSecretKey]
+
+			if !clientIdFound && !clientSecretFound {
+				validationErrors = append(validationErrors, fmt.Errorf("Could not find `clientId` and `clientSecret` secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			}
+
+			g.ApiClient.SetCredentialsSecret(credentialsSecret)
 		}
-
-		g.ApiClient.SetCredentialsSecret(credentialsSecret)
+	} else {
+		validationErrors = append(validationErrors, fmt.Errorf("credentialsSecret must be provided for IBM Security Verify provider"))
 	}
 
 	if g.Provider.TenantURL == "" {

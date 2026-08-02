@@ -395,8 +395,8 @@ type AzureProvider struct {
 
 	// CredentialsSecret is a reference to a secret containing authentication details for communicating to Azure
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Secret Containing the Credentials",xDescriptors={"urn:alm:descriptor:io.kubernetes:Secret"}
-	// +kubebuilder:validation:Required
-	CredentialsSecret *ObjectRef `json:"credentialsSecret"`
+	// +kubebuilder:validation:Optional
+	CredentialsSecret *ObjectRef `json:"credentialsSecret,omitempty"`
 
 	// Filter allows for limiting the results from the groups response using the Filter feature of the Azure Graph API
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Filter",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}

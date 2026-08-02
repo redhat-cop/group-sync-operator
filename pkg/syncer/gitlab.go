@@ -63,24 +63,28 @@ func (g *GitLabSyncer) Validate() error {
 
 	validationErrors := []error{}
 
-	credentialsSecret := &corev1.Secret{}
-	err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
+	if g.Provider.CredentialsSecret != nil {
+		credentialsSecret := &corev1.Secret{}
+		err := g.ReconcilerBase.GetClient().Get(context.TODO(), types.NamespacedName{Name: g.Provider.CredentialsSecret.Name, Namespace: g.Provider.CredentialsSecret.Namespace}, credentialsSecret)
 
-	if err != nil {
-		validationErrors = append(validationErrors, err)
-	} else {
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		} else {
 
-		// Check that provided secret contains required keys
-		_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
-		_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
-		_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
+			// Check that provided secret contains required keys
+			_, usernameSecretFound := credentialsSecret.Data[secretUsernameKey]
+			_, passwordSecretFound := credentialsSecret.Data[secretPasswordKey]
+			_, tokenSecretFound := credentialsSecret.Data[secretTokenKey]
 
-		if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
-			validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			if !(usernameSecretFound && passwordSecretFound) && !tokenSecretFound {
+				validationErrors = append(validationErrors, fmt.Errorf("Could not find 'username' and `password` or `token` key in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace))
+			}
+
+			g.CredentialsSecret = credentialsSecret
+
 		}
-
-		g.CredentialsSecret = credentialsSecret
-
+	} else {
+		validationErrors = append(validationErrors, fmt.Errorf("credentialsSecret must be provided for GitLab provider"))
 	}
 
 	providerCaResource := determineFromDeprecatedObjectRef(g.Provider.Ca, g.Provider.CaSecret)
@@ -109,6 +113,7 @@ func (g *GitLabSyncer) Validate() error {
 
 	if g.Provider.URL != nil {
 
+		var err error
 		g.URL, err = url.Parse(*g.Provider.URL)
 
 		if err != nil {
