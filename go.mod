@@ -9,6 +9,7 @@ require (
 	github.com/go-logr/logr v1.4.4
 	github.com/google/cel-go v0.30.0
 	github.com/google/go-github/v45 v45.2.0
+	github.com/google/go-github/v90 v90.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/microsoft/kiota-authentication-azure-go v1.3.1
@@ -116,7 +117,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
