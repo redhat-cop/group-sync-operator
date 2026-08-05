@@ -63,6 +63,9 @@ spec:
           - mountPath: /etc/certs/tls
             name: tls-cert
             readOnly: true
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -80,3 +83,6 @@ spec:
           secret:
             defaultMode: 420
             secretName: group-sync-operator-certs
+        {{- with .Values.volumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
