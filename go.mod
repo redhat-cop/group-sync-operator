@@ -16,7 +16,7 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v1.100.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.4.1
 	github.com/okta/okta-sdk-golang/v2 v2.20.0
-	github.com/onsi/ginkgo/v2 v2.28.1
+	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
 	github.com/openshift/api v0.0.0-20260317165824-54a3998d81eb
 	github.com/openshift/library-go v0.0.0-20260311094140-ac826d10cb40
@@ -52,7 +52,7 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20260115054156-294ebfa9ad83 // indirect
+	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
