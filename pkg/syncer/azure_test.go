@@ -318,3 +318,63 @@ func TestExtractGroupFieldsWithNilValues(t *testing.T) {
 		t.Errorf("mailNickname should be empty string when not set, got %v", mailNickname)
 	}
 }
+
+// TestResolveGroupName tests the naming of the OpenShift Group derived from an Azure group
+func TestResolveGroupName(t *testing.T) {
+	tests := []struct {
+		name              string
+		useUIDAsGroupName bool
+		group             graph.Group
+		expectedName      string
+	}{
+		{
+			name:              "display name used by default",
+			useUIDAsGroupName: false,
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "test-group",
+		},
+		{
+			name:              "object id used when enabled",
+			useUIDAsGroupName: true,
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94",
+		},
+		{
+			name:              "display name used as fallback when id is absent",
+			useUIDAsGroupName: true,
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				// id intentionally not set (nil)
+				return *g
+			}(),
+			expectedName: "test-group",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			syncer := &AzureSyncer{
+				Name: "azure",
+				Provider: &redhatcopv1alpha1.AzureProvider{
+					UseUIDAsGroupName: tt.useUIDAsGroupName,
+				},
+			}
+
+			groupName := syncer.resolveGroupName(tt.group, *tt.group.GetDisplayName())
+			if groupName != tt.expectedName {
+				t.Errorf("resolveGroupName() = %v, want %v", groupName, tt.expectedName)
+			}
+		})
+	}
+}

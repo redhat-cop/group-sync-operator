@@ -82,7 +82,7 @@ Groups contained within Azure Active Directory can be synchronized into OpenShif
 | `clientFilter` | CEL expression for client-side filtering of groups (See below) | | No |
 | `groups` | List of groups to filter against | | No |
 | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
-| `useUIDAsGroupName` | Use the Azure group object ID (UID) instead of the display name as the name of the OpenShift group | `false` | No |
+| `useUIDAsGroupName` | Use the Azure group object ID (UID) instead of the display name as the name of the OpenShift group (See below) | `false` | No |
 | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |
 
 The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
@@ -165,6 +165,29 @@ clientFilter: "group.createdDateTime > timestamp('2024-01-01T00:00:00Z')"
 ```
 
 **Performance Note:** The `filter` parameter uses server-side filtering (fast), while `clientFilter` applies after retrieving groups (slower for large result sets). For best performance, use `filter` to narrow down the result set, then use `clientFilter` for fine-grained control.
+
+#### Using the Object ID as the Group Name
+
+By default, the Azure `displayName` becomes the name of the OpenShift group. Setting `useUIDAsGroupName` to `true` uses the Azure group object ID instead, which yields a name that remains stable when a group is renamed in Azure and that matches the identifier used by systems referencing groups by object ID:
+
+```yaml
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GroupSync
+metadata:
+  name: azure-groupsync
+spec:
+  providers:
+  - name: azure
+    azure:
+      credentialsSecret:
+        name: azure-group-sync
+        namespace: group-sync-operator
+      useUIDAsGroupName: true
+```
+
+The `groups`, `filter` and `clientFilter` options continue to operate on the display name; only the resulting group name is affected. The display name remains available on the synchronized group as the `group-sync-operator.redhat-cop.io/sync.source.name` annotation.
+
+**Migration Note:** Because groups are matched by name, changing this setting on an existing installation causes the groups to be recreated under their new names. With `prune: true`, the groups carrying the previous names are removed on the next synchronization; with `prune: false`, they remain behind and have to be deleted manually.
 
 #### Authenticating to Azure
 

@@ -6,6 +6,7 @@ const (
 	SyncSourceURL     = AnnotationBase + "/sync.source.url"
 	SyncSourceHost    = AnnotationBase + "/sync.source.host"
 	SyncSourceUID     = AnnotationBase + "/sync.source.uid"
+	SyncSourceName    = AnnotationBase + "/sync.source.name"
 	SyncProvider      = AnnotationBase + "/sync-provider"
 	HierarchyChildren = "hierarchy_children"
 	HierarchyParent   = "hierarchy_parent"
