@@ -35,4 +35,8 @@ env:
   # - name: VAR_NAME
   #   value: var-value
 
+volumes: []
+
+volumeMounts: []
+
 enableMonitoring: true
