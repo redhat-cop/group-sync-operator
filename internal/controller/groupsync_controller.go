@@ -95,6 +95,14 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		return r.ManageError(context, instance, err)
 	}
 
+	// Collect the names of all live GroupSync resources once per reconcile so
+	// that a Group whose recorded owner no longer exists (typically after a
+	// GroupSync was renamed) can be adopted instead of skipped forever
+	liveGroupSyncNames, err := r.liveGroupSyncNames(context)
+	if err != nil {
+		return r.ManageError(context, instance, err)
+	}
+
 	syncErrors := []error{}
 
 	// Execute Each Provider Syncer
@@ -154,9 +162,13 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 				continue
 			} else {
 				// Verify this group is not managed by another provider
-				if groupProviderLabel, exists := ocpGroup.Labels[constants.SyncProvider]; !exists || (groupProviderLabel != providerLabel) {
+				groupProviderLabel, exists := ocpGroup.Labels[constants.SyncProvider]
+				if !shouldSyncExistingGroup(groupProviderLabel, exists, providerLabel, liveGroupSyncNames) {
 					r.Log.Info("Group Provider Label Did Not Match Expected Provider Label", "Provider", groupSyncer.GetProviderName(), "Group Name", ocpGroup.Name, "Expected Label", providerLabel, "Found Label", groupProviderLabel)
 					continue
+				}
+				if groupProviderLabel != providerLabel {
+					r.Log.Info("Adopting Group Whose GroupSync No Longer Exists", "Provider", groupSyncer.GetProviderName(), "Group Name", ocpGroup.Name, "New Label", providerLabel, "Previous Label", groupProviderLabel)
 				}
 			}
 
@@ -253,6 +265,54 @@ func (r *GroupSyncReconciler) manageSyncError(prometheusLabels prometheus.Labels
 
 	*syncErrors = append(*syncErrors, err)
 
+}
+
+// liveGroupSyncNames returns the names of all GroupSync resources currently
+// present in the cluster. Groups record only the GroupSync name in their
+// sync-provider label (not the namespace), so names are collected across all
+// namespaces: as long as any live GroupSync claims a name, Groups labeled with
+// that name are treated as owned and are never adopted.
+func (r *GroupSyncReconciler) liveGroupSyncNames(context context.Context) (map[string]bool, error) {
+
+	groupSyncList := &redhatcopv1alpha1.GroupSyncList{}
+	if err := r.GetClient().List(context, groupSyncList); err != nil {
+		return nil, err
+	}
+
+	names := make(map[string]bool, len(groupSyncList.Items))
+	for _, groupSync := range groupSyncList.Items {
+		names[groupSync.Name] = true
+	}
+
+	return names, nil
+}
+
+// shouldSyncExistingGroup decides whether the current reconcile may write to an
+// existing Group, based on the Group's sync-provider label. It answers true
+// when the label matches the provider label of the current reconcile, or when
+// the label names a GroupSync that no longer exists — the Group is orphaned
+// (typically by a GroupSync rename) and is adopted. A Group without the label
+// was never synced by this operator and is left alone, as is a Group whose
+// label names a live GroupSync (genuine contention).
+func shouldSyncExistingGroup(foundLabel string, labelExists bool, providerLabel string, liveGroupSyncNames map[string]bool) bool {
+
+	if !labelExists {
+		return false
+	}
+
+	if foundLabel == providerLabel {
+		return true
+	}
+
+	// The label format is "<groupsync-name>_<provider-name>". Kubernetes object
+	// names cannot contain an underscore, so the first underscore unambiguously
+	// terminates the GroupSync name even when the provider name contains one.
+	groupSyncName, _, found := strings.Cut(foundLabel, "_")
+	if !found || groupSyncName == "" {
+		return false
+	}
+
+	return !liveGroupSyncNames[groupSyncName]
 }
 
 func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *redhatcopv1alpha1.GroupSync, syncedGroups []userv1.Group, providerName, providerLabel string, logger logr.Logger) (int, error) {
