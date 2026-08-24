@@ -414,13 +414,15 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			continue
 		}
 
+		ocpGroupName := a.resolveGroupName(group, *groupName)
+
 		ocpGroup := userv1.Group{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Group",
 				APIVersion: userv1.GroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:        *groupName,
+				Name:        ocpGroupName,
 				Annotations: map[string]string{},
 				Labels:      map[string]string{},
 			},
@@ -430,6 +432,11 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = azureURL.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *group.DirectoryObject.GetId()
+
+		// Retain the Azure display name whenever it is not used as the Group name
+		if ocpGroupName != *groupName {
+			ocpGroup.GetAnnotations()[constants.SyncSourceName] = *groupName
+		}
 
 		groupMembers, err := a.listGroupMembers(group.DirectoryObject.GetId())
 
@@ -452,6 +459,25 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 func (a *AzureSyncer) GetProviderName() string {
 	return a.Name
+}
+
+// resolveGroupName determines the name to assign to the OpenShift Group. The Azure
+// display name is used unless UseUIDAsGroupName is enabled, in which case the Azure
+// group object ID is used, providing a name that is stable across group renames.
+func (a *AzureSyncer) resolveGroupName(group graph.Group, displayName string) string {
+
+	if !a.Provider.UseUIDAsGroupName {
+		return displayName
+	}
+
+	groupID := group.GetId()
+
+	if groupID == nil {
+		azureLogger.Info(fmt.Sprintf("Warning: Falling back to displayName for Group record with empty id. Group: %s", displayName), "Provider", a.Name)
+		return displayName
+	}
+
+	return *groupID
 }
 
 func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {
