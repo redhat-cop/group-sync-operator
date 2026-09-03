@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/microsoft/kiota-authentication-azure-go v1.3.1
 	github.com/microsoft/kiota-http-go v1.5.6
-	github.com/microsoftgraph/msgraph-sdk-go v1.100.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.102.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.4.1
 	github.com/okta/okta-sdk-golang/v2 v2.20.0
 	github.com/onsi/ginkgo/v2 v2.28.1
