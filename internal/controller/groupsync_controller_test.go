@@ -88,7 +88,7 @@ var _ = Describe("MyController", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, ok := group.GetLabels()[constants.SyncProvider]
 				return !ok
-			}, 10*time.Second, time.Second)
+			}, 10*time.Second, time.Second).Should(BeTrue())
 
 		})
 	})

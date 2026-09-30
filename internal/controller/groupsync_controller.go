@@ -85,7 +85,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 			return r.ManageError(context, instance, err)
 		}
 
-		instance.SetFinalizers(nil)
+		controllerutil.RemoveFinalizer(instance, finalizer)
 		if err := r.GetClient().Update(context, instance); err != nil {
 			return r.ManageError(context, instance, err)
 		}
@@ -352,6 +352,7 @@ func (r *GroupSyncReconciler) disownGroupsForProvider(ctx context.Context, insta
 	for _, group := range ocpGroups.Items {
 		labels := group.GetLabels()
 		delete(labels, constants.SyncProvider)
+		group.SetLabels(labels)
 		errs = append(errs, r.GetClient().Update(ctx, &group))
 	}
 

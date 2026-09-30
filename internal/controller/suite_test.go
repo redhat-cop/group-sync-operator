@@ -88,6 +88,7 @@ var _ = BeforeSuite(func() {
 		Log:            ctrl.Log.WithName("controllers").WithName("GroupSync"),
 		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GroupSync"), mgr.GetAPIReader()),
 	}).SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
 
 	var ctx context.Context
 	ctx, cancel = context.WithCancel(context.Background())
