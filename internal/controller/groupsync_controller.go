@@ -79,6 +79,28 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 	// Get Group Sync Manager
 	groupSyncMgr, err := syncer.GetGroupSyncMgr(instance, r.ReconcilerBase)
 
+	// Group Sync Deleted; disown groups it is managing
+	if instance.GetDeletionTimestamp() != nil {
+		if err := r.disownGroups(context, instance); err != nil {
+			return r.ManageError(context, instance, err)
+		}
+
+		instance.SetFinalizers(nil)
+		if err := r.GetClient().Update(context, instance); err != nil {
+			return r.ManageError(context, instance, err)
+		}
+
+		return reconcile.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(instance, finalizer) {
+		r.Log.Info("adding finalizer to groupsync", "name", instance.GetName())
+		controllerutil.AddFinalizer(instance, finalizer)
+		if err := r.GetClient().Update(context, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	if err != nil {
 		return r.ManageError(context, instance, err)
 	}
@@ -98,35 +120,6 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		return r.ManageError(context, instance, err)
 	}
 
-	// Group Sync Deleted; disown groups it is managing
-	if instance.GetDeletionTimestamp() != nil {
-		deleteErrs := []error{}
-		for _, groupSyncer := range groupSyncMgr.GroupSyncers {
-			if err := r.disownGroups(context, instance, groupSyncer); err != nil {
-				deleteErrs = append(deleteErrs, err)
-			}
-		}
-
-		if len(deleteErrs) > 0 {
-			return r.ManageError(context, instance, utilerrors.NewAggregate(deleteErrs))
-		}
-
-		instance.SetFinalizers(nil)
-		if err := r.GetClient().Update(context, instance); err != nil {
-			return r.ManageError(context, instance, err)
-		}
-
-		return reconcile.Result{}, nil
-	}
-
-	if !controllerutil.ContainsFinalizer(instance, finalizer) {
-		r.Log.Info("adding finalizer to groupsync", "name", instance.GetName())
-		controllerutil.AddFinalizer(instance, finalizer)
-		if err := r.GetClient().Update(context, instance); err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
 	syncErrors := []error{}
 
 	// Execute Each Provider Syncer
@@ -137,7 +130,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		prometheusLabels := prometheus.Labels{METRICS_CR_NAMESPACE_LABEL: instance.GetNamespace(), METRICS_CR_NAME_LABEL: instance.GetName(), METRICS_PROVIDER_LABEL: groupSyncer.GetProviderName()}
 
 		// Provider Label
-		providerLabel := getProviderLabel(instance, groupSyncer)
+		providerLabel := getProviderLabel(instance, groupSyncer.GetProviderName())
 
 		// Initialize Connection
 		if err := groupSyncer.Bind(); err != nil {
@@ -339,8 +332,17 @@ func mergeMap(m1, m2 map[string]string) map[string]string {
 
 }
 
-func (r *GroupSyncReconciler) disownGroups(ctx context.Context, instance *redhatcopv1alpha1.GroupSync, s syncer.GroupSyncer) error {
-	providerLabel := getProviderLabel(instance, s)
+func (r *GroupSyncReconciler) disownGroups(ctx context.Context, instance *redhatcopv1alpha1.GroupSync) error {
+	errs := []error{}
+	for _, p := range instance.Spec.Providers {
+		errs = append(errs, r.disownGroupsForProvider(ctx, instance, p.Name))
+	}
+
+	return utilerrors.NewAggregate(errs)
+}
+
+func (r *GroupSyncReconciler) disownGroupsForProvider(ctx context.Context, instance *redhatcopv1alpha1.GroupSync, providerName string) error {
+	providerLabel := getProviderLabel(instance, providerName)
 	ocpGroups := &userv1.GroupList{}
 	if err := r.listOwnedGroups(ctx, ocpGroups, providerLabel); err != nil {
 		return err
@@ -368,6 +370,6 @@ func (r *GroupSyncReconciler) listOwnedGroups(ctx context.Context, ocpGroups *us
 	return nil
 }
 
-func getProviderLabel(instance *redhatcopv1alpha1.GroupSync, s syncer.GroupSyncer) string {
-	return fmt.Sprintf("%s_%s", instance.Name, s.GetProviderName())
+func getProviderLabel(instance *redhatcopv1alpha1.GroupSync, providerName string) string {
+	return fmt.Sprintf("%s_%s", instance.Name, providerName)
 }

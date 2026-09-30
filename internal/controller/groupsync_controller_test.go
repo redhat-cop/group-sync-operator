@@ -2,16 +2,18 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
+	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
 	// "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	userv1 "github.com/openshift/api/user/v1"
 )
 
 var _ = Describe("MyController", func() {
@@ -26,6 +28,8 @@ var _ = Describe("MyController", func() {
 			Namespace: namespace,
 		}
 
+		testProviderName := "test-provider"
+
 		BeforeEach(func() {
 			// Create namespace for isolation
 			ns := &corev1.Namespace{}
@@ -37,25 +41,35 @@ var _ = Describe("MyController", func() {
 			resource := &redhatcopv1alpha1.GroupSync{}
 			err = k8sClient.Get(ctx, typeNamespacedName, resource)
 			if err != nil {
-				resource := &redhatcopv1alpha1.GroupSync{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: namespace,
-					},
-					Spec: redhatcopv1alpha1.GroupSyncSpec{
-						// Define your spec here
+				resource.SetName(resourceName)
+				resource.SetNamespace(namespace)
+				resource.Spec.Providers = []redhatcopv1alpha1.Provider{
+					{
+						Name: testProviderName,
+						ProviderType: &redhatcopv1alpha1.ProviderType{
+							Azure: &redhatcopv1alpha1.AzureProvider{},
+						},
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
-		It("should contain the finalizer", func() {
+		It("should contain the finalizer and disown a group when deleted", func() {
 			// Reconcile logic is triggered by the controller manager running in BeforeSuite
 			// or by calling the reconciler directly.
 
 			gs := &redhatcopv1alpha1.GroupSync{}
 			Expect(k8sClient.Get(ctx, typeNamespacedName, gs)).To(Succeed())
+
+			ocpGroup := &userv1.Group{}
+			ocpGroup.SetName("group")
+			ocpGroup.SetLabels(map[string]string{
+				constants.SyncProvider: getProviderLabel(gs, testProviderName),
+			})
+			ocpGroup.Users = []string{}
+
+			Expect(k8sClient.Create(ctx, ocpGroup)).To(Succeed())
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, typeNamespacedName, gs)
@@ -63,12 +77,19 @@ var _ = Describe("MyController", func() {
 					return false
 				}
 
-				fmt.Printf("%+v\n", gs)
-				labels := gs.GetLabels()
-				_, ok := labels[finalizer]
-				fmt.Printf("%v", labels)
-				return ok
+				return controllerutil.ContainsFinalizer(gs, finalizer)
 			}, 10*time.Second, time.Second).Should(BeTrue())
+
+			Expect(k8sClient.Delete(ctx, gs)).To(Succeed())
+
+			Eventually(func() bool {
+				group := &userv1.Group{}
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: ocpGroup.Name}, group)
+				Expect(err).NotTo(HaveOccurred())
+				_, ok := group.GetLabels()[constants.SyncProvider]
+				return !ok
+			}, 10*time.Second, time.Second)
+
 		})
 	})
 })
