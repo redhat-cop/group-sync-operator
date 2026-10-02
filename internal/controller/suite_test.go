@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -31,14 +32,21 @@ import (
 
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
+
+	userv1 "github.com/openshift/api/user/v1"
+	"github.com/redhat-cop/operator-utils/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
+var (
+	cfg       *rest.Config
+	k8sClient client.Client
+	testEnv   *envtest.Environment
+	cancel    context.CancelFunc
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -51,7 +59,10 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{
+			filepath.Join("..", "..", "config", "crd", "bases"),
+			filepath.Join("..", "..", "config", "testing"),
+		},
 	}
 
 	var err error
@@ -61,16 +72,35 @@ var _ = BeforeSuite(func() {
 
 	err = redhatcopv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
+	err = userv1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
+
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{})
+	Expect(err).NotTo(HaveOccurred())
+
+	err = (&GroupSyncReconciler{
+		Log:            ctrl.Log.WithName("controllers").WithName("GroupSync"),
+		ReconcilerBase: util.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor("GroupSync"), mgr.GetAPIReader()),
+	}).SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	var ctx context.Context
+	ctx, cancel = context.WithCancel(context.Background())
+	go func() {
+		defer GinkgoRecover()
+		Expect(mgr.Start(ctx)).NotTo(HaveOccurred())
+	}()
 })
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	cancel()
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })

@@ -37,10 +37,13 @@ import (
 	kubeclock "k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 )
+
+const finalizer = "groupsync.redhatcop.redhat.io/finalizer"
 
 var clock kubeclock.Clock = &kubeclock.RealClock{}
 
@@ -76,6 +79,28 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 	// Get Group Sync Manager
 	groupSyncMgr, err := syncer.GetGroupSyncMgr(instance, r.ReconcilerBase)
 
+	// Group Sync Deleted; disown groups it is managing
+	if instance.GetDeletionTimestamp() != nil {
+		if err := r.disownGroups(context, instance); err != nil {
+			return r.ManageError(context, instance, err)
+		}
+
+		controllerutil.RemoveFinalizer(instance, finalizer)
+		if err := r.GetClient().Update(context, instance); err != nil {
+			return r.ManageError(context, instance, err)
+		}
+
+		return reconcile.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(instance, finalizer) {
+		r.Log.Info("adding finalizer to groupsync", "name", instance.GetName())
+		controllerutil.AddFinalizer(instance, finalizer)
+		if err := r.GetClient().Update(context, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	if err != nil {
 		return r.ManageError(context, instance, err)
 	}
@@ -105,7 +130,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		prometheusLabels := prometheus.Labels{METRICS_CR_NAMESPACE_LABEL: instance.GetNamespace(), METRICS_CR_NAME_LABEL: instance.GetName(), METRICS_PROVIDER_LABEL: groupSyncer.GetProviderName()}
 
 		// Provider Label
-		providerLabel := fmt.Sprintf("%s_%s", instance.Name, groupSyncer.GetProviderName())
+		providerLabel := getProviderLabel(instance, groupSyncer.GetProviderName())
 
 		// Initialize Connection
 		if err := groupSyncer.Bind(); err != nil {
@@ -259,11 +284,7 @@ func (r *GroupSyncReconciler) pruneGroups(context context.Context, instance *red
 	prunedGroups := 0
 
 	ocpGroups := &userv1.GroupList{}
-	opts := []client.ListOption{
-		client.InNamespace(""),
-		client.MatchingLabels{constants.SyncProvider: providerLabel},
-	}
-	err := r.GetClient().List(context, ocpGroups, opts...)
+	err := r.listOwnedGroups(context, ocpGroups, providerLabel)
 	if err != nil {
 		return prunedGroups, err
 	}
@@ -309,4 +330,47 @@ func mergeMap(m1, m2 map[string]string) map[string]string {
 		return m2
 	}
 
+}
+
+func (r *GroupSyncReconciler) disownGroups(ctx context.Context, instance *redhatcopv1alpha1.GroupSync) error {
+	errs := []error{}
+	for _, p := range instance.Spec.Providers {
+		errs = append(errs, r.disownGroupsForProvider(ctx, instance, p.Name))
+	}
+
+	return utilerrors.NewAggregate(errs)
+}
+
+func (r *GroupSyncReconciler) disownGroupsForProvider(ctx context.Context, instance *redhatcopv1alpha1.GroupSync, providerName string) error {
+	providerLabel := getProviderLabel(instance, providerName)
+	ocpGroups := &userv1.GroupList{}
+	if err := r.listOwnedGroups(ctx, ocpGroups, providerLabel); err != nil {
+		return err
+	}
+
+	errs := []error{}
+	for _, group := range ocpGroups.Items {
+		labels := group.GetLabels()
+		delete(labels, constants.SyncProvider)
+		group.SetLabels(labels)
+		errs = append(errs, r.GetClient().Update(ctx, &group))
+	}
+
+	return utilerrors.NewAggregate(errs)
+}
+
+func (r *GroupSyncReconciler) listOwnedGroups(ctx context.Context, ocpGroups *userv1.GroupList, providerLabel string) error {
+	opts := []client.ListOption{
+		client.InNamespace(""),
+		client.MatchingLabels{constants.SyncProvider: providerLabel},
+	}
+	err := r.GetClient().List(ctx, ocpGroups, opts...)
+	if err != nil {
+		return fmt.Errorf("failed to list owned groups: %w", err)
+	}
+	return nil
+}
+
+func getProviderLabel(instance *redhatcopv1alpha1.GroupSync, providerName string) string {
+	return fmt.Sprintf("%s_%s", instance.Name, providerName)
 }
