@@ -27,7 +27,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shurcooL/githubv4 v0.0.0-20220520033151-0b4e3294ff00
 	github.com/spiffe/go-spiffe/v2 v2.8.1
-	github.com/xanzy/go-gitlab v0.73.1
+	github.com/xanzy/go-gitlab v0.115.0
 	golang.org/x/text v0.40.0
 	k8s.io/api v0.35.2
 	k8s.io/apimachinery v0.35.2
