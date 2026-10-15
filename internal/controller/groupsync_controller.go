@@ -99,6 +99,7 @@ func (r *GroupSyncReconciler) Reconcile(context context.Context, req ctrl.Reques
 		if err := r.GetClient().Update(context, instance); err != nil {
 			return reconcile.Result{}, err
 		}
+		return reconcile.Result{RequeueAfter: time.Second}, nil
 	}
 
 	if err != nil {
