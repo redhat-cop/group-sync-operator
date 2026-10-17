@@ -1,6 +1,6 @@
 module github.com/redhat-cop/group-sync-operator
 
-go 1.25.8
+go 1.26.9
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
