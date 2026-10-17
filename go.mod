@@ -16,6 +16,7 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v1.104.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.4.1
 	github.com/okta/okta-sdk-golang/v2 v2.20.0
+	github.com/okta/okta-sdk-golang/v7 v7.0.0
 	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
 	github.com/openshift/api v0.0.0-20261017003925-24b2699a9b32
