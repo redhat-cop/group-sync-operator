@@ -13,7 +13,7 @@ import (
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
-	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/api/client-go"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
@@ -241,7 +241,7 @@ func (g *GitLabSyncer) Sync() ([]userv1.Group, error) {
 
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = g.URL.Host
-		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = strconv.Itoa(group.ID)
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = strconv.FormatInt(group.ID, 10)
 
 		for _, groupMember := range groupMembers {
 			ocpGroup.Users = append(ocpGroup.Users, groupMember.Username)
@@ -300,7 +300,7 @@ func (g *GitLabSyncer) getGroups() ([]*gitlab.Group, error) {
 
 }
 
-func (g *GitLabSyncer) getDescendantGroups(groupId int) ([]*gitlab.Group, error) {
+func (g *GitLabSyncer) getDescendantGroups(groupId int64) ([]*gitlab.Group, error) {
 
 	descendantGroups := []*gitlab.Group{}
 
@@ -331,7 +331,7 @@ func (g *GitLabSyncer) getDescendantGroups(groupId int) ([]*gitlab.Group, error)
 
 }
 
-func (g *GitLabSyncer) getGroupMembers(groupId int, scope redhatcopv1alpha1.SyncScope) ([]*gitlab.GroupMember, error) {
+func (g *GitLabSyncer) getGroupMembers(groupId int64, scope redhatcopv1alpha1.SyncScope) ([]*gitlab.GroupMember, error) {
 
 	groupMembers := []*gitlab.GroupMember{}
 
