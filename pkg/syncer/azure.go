@@ -37,7 +37,7 @@ import (
 	msgroups "github.com/microsoftgraph/msgraph-sdk-go/groups"
 	graph "github.com/microsoftgraph/msgraph-sdk-go/models"
 
-	"github.com/google/cel-go/cel"
+	"cel.dev/cel-go/cel"
 )
 
 var (

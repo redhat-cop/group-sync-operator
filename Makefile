@@ -20,7 +20,7 @@ VERSION ?= 0.0.1
 # Operator SDK
 OPERATOR_SDK ?= operator-sdk
 # YQ Version
-YQ_VERSION ?= 4.44.1
+YQ_VERSION ?= 4.54.1
 
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
@@ -35,9 +35,9 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 IMG ?= quay.io/redhat-cop/group-sync-operator:$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.31.0
+ENVTEST_K8S_VERSION = 1.37.0
 
-ENVTEST_VERSION ?= release-0.19
+ENVTEST_VERSION ?= release-0.25
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -215,9 +215,8 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.4.3
-CONTROLLER_TOOLS_VERSION ?= v0.20.1
-
+KUSTOMIZE_VERSION ?= v5.8.2
+CONTROLLER_TOOLS_VERSION ?= v0.21.0
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
