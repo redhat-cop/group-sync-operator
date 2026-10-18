@@ -2,15 +2,14 @@ package syncer
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 	"sync"
 
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
-
-	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/okta/okta-sdk-golang/v7/okta"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
@@ -36,9 +35,9 @@ const (
 
 type OktaSyncer struct {
 	cachedGroups       map[string]*okta.Group
-	cachedGroupMembers map[string][]*okta.User
+	cachedGroupMembers map[string][]okta.User
 	credentialsSecret  *corev1.Secret
-	goOkta             *okta.Client
+	goOkta             *okta.APIClient
 	GroupSync          *v1alpha1.GroupSync
 	Name               string
 	Provider           *v1alpha1.OktaProvider
@@ -46,7 +45,7 @@ type OktaSyncer struct {
 }
 
 func (o *OktaSyncer) Init() bool {
-	o.cachedGroupMembers = make(map[string][]*okta.User)
+	o.cachedGroupMembers = make(map[string][]okta.User)
 	o.cachedGroups = make(map[string]*okta.Group)
 
 	if o.Provider.GroupLimit == 0 {
@@ -99,15 +98,15 @@ func (o OktaSyncer) getSecrets() (*corev1.Secret, error) {
 }
 
 func (o *OktaSyncer) Bind() error {
-	var err error
-
-	_, o.goOkta, err = okta.NewClient(context.TODO(),
+	config, err := okta.NewConfiguration(
 		okta.WithOrgUrl(o.Provider.URL),
 		okta.WithToken(string(o.credentialsSecret.Data[secretOktaTokenKey])))
 	if err != nil {
 		oktaLogger.Error(err, "establishing new okta client")
 		return err
 	}
+
+	o.goOkta = okta.NewAPIClient(config)
 
 	return nil
 }
@@ -121,7 +120,7 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 	}
 
 	for _, group := range groups {
-		if _, groupFound := o.cachedGroups[group.Id]; !groupFound {
+		if _, groupFound := o.cachedGroups[group.GetId()]; !groupFound {
 			if err := o.processGroupsAndMembers(group); err != nil {
 				oktaLogger.Error(err, "processing groups and members")
 			}
@@ -135,11 +134,12 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 
 	var ocpGroups []userv1.Group
 	for _, cachedGroup := range o.cachedGroups {
+		groupName, _ := groupProfileFields(cachedGroup)
 		validatedGroupAttr := map[string]string{}
 		groupAttributes := o.mapAttributes(cachedGroup)
 		for key, value := range groupAttributes {
 			if errs := validation.IsQualifiedName(key); len(errs) != 0 {
-				oktaLogger.Info("unable to add annotation to", "group", cachedGroup.Profile.Name, "key", key, "value", value)
+				oktaLogger.Info("unable to add annotation to", "group", groupName, "key", key, "value", value)
 			} else {
 				validatedGroupAttr[key] = value
 			}
@@ -151,7 +151,7 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 				APIVersion: userv1.GroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:        cachedGroup.Profile.Name,
+				Name:        groupName,
 				Annotations: validatedGroupAttr,
 				Labels:      map[string]string{},
 			},
@@ -159,13 +159,12 @@ func (o *OktaSyncer) Sync() ([]userv1.Group, error) {
 		}
 
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = providerUrl.Host
-		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = cachedGroup.Id
+		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = cachedGroup.GetId()
 
-		users := o.cachedGroupMembers[cachedGroup.Id]
+		users := o.cachedGroupMembers[cachedGroup.GetId()]
 		for _, user := range users {
-			profile := *user.Profile
-			if user.Status == activeStatus {
-				if userName, ok := profile[o.Provider.ProfileKey].(string); !ok {
+			if user.GetStatus() == activeStatus {
+				if userName, ok := getProfileAttribute(user.GetProfile(), o.Provider.ProfileKey); !ok {
 					oktaLogger.Info("attribute unavailable on okta user profile " + o.Provider.ProfileKey)
 				} else if o.Provider.ExtractLoginUsername {
 					userName, _, _ = strings.Cut(userName, "@")
@@ -186,7 +185,7 @@ func (o OktaSyncer) getGroups() ([]*okta.Group, error) {
 		groups []*okta.Group
 	)
 
-	appGroups, resp, err := o.goOkta.Application.ListApplicationGroupAssignments(context.TODO(), o.Provider.AppId, query.NewQueryParams(query.WithLimit(int64(o.Provider.GroupLimit))))
+	appGroups, resp, err := o.goOkta.ApplicationGroupsAPI.ListApplicationGroupAssignments(context.TODO(), o.Provider.AppId).Limit(int32(o.Provider.GroupLimit)).Execute()
 
 	if err != nil {
 		oktaLogger.Error(err, "getting groups for specified application")
@@ -194,8 +193,8 @@ func (o OktaSyncer) getGroups() ([]*okta.Group, error) {
 	}
 
 	for resp.HasNextPage() {
-		var nextAppGroups []*okta.ApplicationGroupAssignment
-		resp, err = resp.Next(context.TODO(), &nextAppGroups)
+		var nextAppGroups []okta.ApplicationGroupAssignment
+		resp, err = resp.Next(&nextAppGroups)
 
 		if err != nil {
 			oktaLogger.Error(err, "getting groups for specified application")
@@ -209,13 +208,13 @@ func (o OktaSyncer) getGroups() ([]*okta.Group, error) {
 	return groups, err
 }
 
-func (o OktaSyncer) fetchGroupsAsync(appGroups []*okta.ApplicationGroupAssignment) ([]*okta.Group, error) {
+func (o OktaSyncer) fetchGroupsAsync(appGroups []okta.ApplicationGroupAssignment) ([]*okta.Group, error) {
 
 	wg := &sync.WaitGroup{}
 	groupCh := make(chan *okta.Group, len(appGroups))
 	wg.Add(len(appGroups))
 	for _, appGroup := range appGroups {
-		go getGroup(appGroup, groupCh, o.goOkta.Group, wg)
+		go getGroup(appGroup, groupCh, o.goOkta.GroupAPI, wg)
 	}
 
 	wg.Wait()
@@ -233,45 +232,91 @@ func (o OktaSyncer) fetchGroupsAsync(appGroups []*okta.ApplicationGroupAssignmen
 	return groups, nil
 }
 
-func getGroup(app *okta.ApplicationGroupAssignment, groupChan chan *okta.Group, resource *okta.GroupResource, wg *sync.WaitGroup) {
+func getGroup(app okta.ApplicationGroupAssignment, groupChan chan *okta.Group, groupAPI okta.GroupAPI, wg *sync.WaitGroup) {
 	defer wg.Done()
-	group, _, err := resource.GetGroup(context.TODO(), app.Id)
+	group, _, err := groupAPI.GetGroupExecute(groupAPI.GetGroup(context.TODO(), app.GetId()))
 	if err != nil {
-		oktaLogger.Error(err, "fetching group id "+app.Id)
+		oktaLogger.Error(err, "fetching group id "+app.GetId())
 	} else {
 		groupChan <- group
 	}
 }
 
+// groupProfileFields returns the name and description of an Okta group. Group
+// profiles are polymorphic: standard groups use OktaUserGroupProfile while
+// groups imported from Active Directory use OktaActiveDirectoryGroupProfile.
+func groupProfileFields(group *okta.Group) (string, string) {
+	if group.Profile == nil {
+		return "", ""
+	}
+
+	if profile := group.Profile.OktaUserGroupProfile; profile != nil {
+		return profile.GetName(), profile.GetDescription()
+	}
+
+	if profile := group.Profile.OktaActiveDirectoryGroupProfile; profile != nil {
+		return profile.GetName(), profile.GetDescription()
+	}
+
+	return "", ""
+}
+
+// getProfileAttribute looks up an attribute of an Okta user profile by key.
+// Custom attributes are exposed through AdditionalProperties, while standard
+// attributes are typed fields, so the profile is serialized to a map to allow
+// generic lookups.
+func getProfileAttribute(profile okta.UserProfile, key string) (string, bool) {
+	profileBytes, err := json.Marshal(profile)
+	if err != nil {
+		return "", false
+	}
+
+	profileMap := map[string]interface{}{}
+	if err := json.Unmarshal(profileBytes, &profileMap); err != nil {
+		return "", false
+	}
+
+	value, found := profileMap[key]
+	if !found {
+		return "", false
+	}
+
+	userName, ok := value.(string)
+	return userName, ok
+}
+
 func (o OktaSyncer) mapAttributes(group *okta.Group) map[string]string {
 	attr := make(map[string]string)
 
-	attr["created"] = group.Created.String()
-	attr["description"] = group.Profile.Description
-	attr["id"] = group.Id
-	attr["lastUpdated"] = group.LastUpdated.String()
-	attr["lastMembershipUpdated"] = group.LastMembershipUpdated.String()
-	attr["name"] = group.Profile.Name
+	name, description := groupProfileFields(group)
+
+	attr["created"] = group.GetCreated().String()
+	attr["description"] = description
+	attr["id"] = group.GetId()
+	attr["lastUpdated"] = group.GetLastUpdated().String()
+	attr["lastMembershipUpdated"] = group.GetLastMembershipUpdated().String()
+	attr["name"] = name
 	attr["objectClass"] = strings.Join(group.ObjectClass, ",")
-	attr["type"] = group.Type
+	attr["type"] = group.GetType()
 
 	return attr
 }
 
 func (o *OktaSyncer) processGroupsAndMembers(group *okta.Group) error {
 
-	if !isGroupAllowed(group.Profile.Name, o.Provider.Groups) {
+	groupName, _ := groupProfileFields(group)
+	if !isGroupAllowed(groupName, o.Provider.Groups) {
 		return nil
 	}
 
-	o.cachedGroups[group.Id] = group
-	users, _, err := o.goOkta.Group.ListGroupUsers(context.TODO(), group.Id, nil)
+	o.cachedGroups[group.GetId()] = group
+	users, _, err := o.goOkta.GroupAPI.ListGroupUsers(context.TODO(), group.GetId()).Execute()
 	if err != nil {
 		oktaLogger.Error(err, "failed to get users", "Provider", o.Name)
 		return err
 	}
 
-	o.cachedGroupMembers[group.Id] = users
+	o.cachedGroupMembers[group.GetId()] = users
 	return nil
 }
 

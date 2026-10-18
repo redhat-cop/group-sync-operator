@@ -9,7 +9,7 @@ import (
 
 	"crypto/x509"
 
-	"github.com/Nerzal/gocloak/v13"
+	"github.com/Nerzal/gocloak/v14"
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
@@ -193,9 +193,7 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 		groupAttributes := map[string]string{}
 		if cachedGroup.Attributes != nil {
-			cachedGroupAttributes := *cachedGroup.Attributes
-
-			for key, value := range cachedGroupAttributes {
+			for key, value := range cachedGroup.Attributes {
 				// we add the annotation that qualify for OCP annotations and log for the ones that don't
 				if errs := validation.IsQualifiedName(key); len(errs) == 0 {
 					groupAttributes[key] = strings.Join(value, "'")
@@ -220,24 +218,16 @@ func (k *KeycloakSyncer) Sync() ([]userv1.Group, error) {
 
 		childrenGroups := []string{}
 
-		if cachedGroup.SubGroups != nil {
-			cachedGroupSubgroups := *cachedGroup.SubGroups
-
-			for _, subgroup := range cachedGroupSubgroups {
-
-				childrenGroups = append(childrenGroups, *subgroup.Name)
-			}
+		for _, subgroup := range cachedGroup.SubGroups {
+			childrenGroups = append(childrenGroups, *subgroup.Name)
 		}
 
 		parentGroups := []string{}
 
 		for _, group := range k.CachedGroups {
-			if group.SubGroups != nil {
-				groupSubGroups := *group.SubGroups
-				for _, subgroup := range groupSubGroups {
-					if *subgroup.Name == *cachedGroup.Name {
-						parentGroups = append(parentGroups, *group.Name)
-					}
+			for _, subgroup := range group.SubGroups {
+				if *subgroup.Name == *cachedGroup.Name {
+					parentGroups = append(parentGroups, *group.Name)
 				}
 			}
 		}
@@ -289,11 +279,11 @@ func (k *KeycloakSyncer) processGroupsAndMembers(group, parentGroup *gocloak.Gro
 	}
 
 	// Process Subgroups
-	if redhatcopv1alpha1.SubSyncScope == scope && group.SubGroups != nil {
-		groupSubGroups := *group.SubGroups
-		for _, subGroup := range groupSubGroups {
+	if redhatcopv1alpha1.SubSyncScope == scope && len(group.SubGroups) > 0 {
+		for i := range group.SubGroups {
+			subGroup := &group.SubGroups[i]
 			if _, subGroupFound := k.CachedGroups[*subGroup.ID]; !subGroupFound {
-				k.processGroupsAndMembers(&subGroup, group, scope)
+				k.processGroupsAndMembers(subGroup, group, scope)
 			}
 		}
 	}
@@ -332,16 +322,15 @@ func (k *KeycloakSyncer) setGroupsAttributes(groups []*gocloak.Group) {
 			continue
 		}
 
-		if g.Attributes != nil && len(*g.Attributes) > 0 {
+		if g.Attributes != nil && len(g.Attributes) > 0 {
 			group.Attributes = g.Attributes
 		}
 
-		if group.SubGroups != nil && len(*group.SubGroups) > 0 {
-			groupSubGroupsSlice := make([]*gocloak.Group, 0, len(*group.SubGroups))
-			groupSubGroups := *group.SubGroups
+		if len(group.SubGroups) > 0 {
+			groupSubGroupsSlice := make([]*gocloak.Group, 0, len(group.SubGroups))
 
-			for _, group := range groupSubGroups {
-				groupSubGroupsSlice = append(groupSubGroupsSlice, &group)
+			for i := range group.SubGroups {
+				groupSubGroupsSlice = append(groupSubGroupsSlice, &group.SubGroups[i])
 			}
 
 			k.setGroupsAttributes(groupSubGroupsSlice)

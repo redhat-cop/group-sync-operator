@@ -12,7 +12,7 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/shurcooL/githubv4"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v92/github"
 	userv1 "github.com/openshift/api/user/v1"
 	"github.com/palantir/go-githubapp/githubapp"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
@@ -242,10 +242,6 @@ func (g *GitHubSyncer) Bind() error {
 		}
 	} else {
 		return fmt.Errorf("Could not locate credentials in secret '%s' in namespace '%s'", g.Provider.CredentialsSecret.Name, g.Provider.CredentialsSecret.Namespace)
-	}
-
-	if g.URL != nil {
-		ghClient.BaseURL = g.URL
 	}
 
 	g.Client = ghClient
