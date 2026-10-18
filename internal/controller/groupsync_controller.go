@@ -28,7 +28,7 @@ import (
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
 	"github.com/redhat-cop/group-sync-operator/pkg/syncer"
 	"github.com/redhat-cop/operator-utils/pkg/util"
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

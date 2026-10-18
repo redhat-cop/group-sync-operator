@@ -13,7 +13,7 @@ import (
 	userv1 "github.com/openshift/api/user/v1"
 	redhatcopv1alpha1 "github.com/redhat-cop/group-sync-operator/api/v1alpha1"
 	"github.com/redhat-cop/group-sync-operator/pkg/constants"
-	"gitlab.com/gitlab-org/api/client-go"
+	"gitlab.com/gitlab-org/api/client-go/v3"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/redhat-cop/operator-utils/pkg/util"
