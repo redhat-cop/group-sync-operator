@@ -10,6 +10,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.15
 	github.com/go-logr/logr v1.4.4
 	github.com/google/go-github/v45 v45.2.0
+	github.com/google/go-github/v93 v93.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/microsoft/kiota-authentication-azure-go v1.3.1
