@@ -63,12 +63,33 @@ Service Acount Name
 {{- end }}
 
 {{/*
-Create the image path for the passed in image field
+Return the proper image name.
+Usage:
+  {{ include "group-sync-operator.image" ( dict "imageRoot" .Values.image "global" .Values.global "Chart" .Chart "context" $ ) }}
 */}}
 {{- define "group-sync-operator.image" -}}
-{{- if eq (substr 0 7 .version) "sha256:" -}}
-{{- printf "%s@%s" .repository .version -}}
-{{- else -}}
-{{- printf "%s:%s" .repository .version -}}
+{{- $registryName := "" -}}
+{{- $repositoryName := .imageRoot.repository | default "" -}}
+{{- $tag := .imageRoot.tag | default .imageRoot.version | default .Chart.AppVersion | toString -}}
+{{- if .imageRoot.registry }}
+    {{- $registryName = tpl .imageRoot.registry .context -}}
+{{- end -}}
+{{- if .global }}
+    {{- if .global.imageRegistry }}
+        {{- $registryName = tpl .global.imageRegistry .context -}}
+    {{- end -}}
+{{- end -}}
+{{- if eq (substr 0 7 $tag) "sha256:" -}}
+{{- if $registryName }}
+    {{- printf "%s/%s@%s" $registryName $repositoryName $tag -}}
+{{- else }}
+    {{- printf "%s@%s" $repositoryName $tag -}}
+{{- end -}}
+{{- else }}
+{{- if $registryName }}
+    {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- else }}
+    {{- printf "%s:%s" $repositoryName $tag -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}

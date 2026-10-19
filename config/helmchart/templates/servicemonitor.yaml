@@ -1,0 +1,32 @@
+{{- if .Values.enableMonitoring }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    control-plane: group-sync-operator
+  name: group-sync-operator-controller-manager-metrics-monitor
+spec:
+  endpoints:
+    - interval: 30s
+      port: https
+      {{- if .Values.metricsSecure }}
+      authorization:
+        type: Bearer
+        credentials:
+          key: token
+          name: group-sync-operator-controller-manager-metrics-token
+      scheme: https
+      tlsConfig:
+        ca:
+          secret:
+            key: tls.crt
+            name: group-sync-operator-certs
+            optional: false
+        serverName: group-sync-operator-controller-manager-metrics-service.{{ .Release.Namespace }}.svc
+      {{- else }}
+      scheme: http
+      {{- end }}
+  selector:
+    matchLabels:
+      control-plane: group-sync-operator
+{{- end }}

@@ -12,7 +12,7 @@ namePrefix: group-sync-operator-
 #commonLabels:
 #  someName: someValue
 
-bases:
+resources:
   - ../rbac
   - ../prometheus
 

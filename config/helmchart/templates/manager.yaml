@@ -22,6 +22,8 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       serviceAccountName: {{ include "group-sync-operator.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -32,19 +34,29 @@ spec:
           - /manager
           args:
           - --health-probe-bind-address=:8081
+          {{- if .Values.enableMonitoring }}
           - --metrics-addr=:8443
+          - --metrics-secure={{ .Values.metricsSecure }}
+          {{- end }}
           - --leader-elect
-          image: "{{ template "group-sync-operator.image" .Values.image }}"
+          {{- with .Values.args }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          image: {{ include "group-sync-operator.image" ( dict "imageRoot" .Values.image "global" .Values.global "Chart" .Chart "context" $ ) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           name: {{ .Chart.Name }}
+          {{- if .Values.enableMonitoring }}
           ports:
           - containerPort: 8443
             name: metrics
             protocol: TCP
+          {{- end }}
           env:
-            {{- with .Values.env }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
+          {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
@@ -59,12 +71,16 @@ spec:
               port: 8081
             initialDelaySeconds: 5
             periodSeconds: 10
+          {{- if or .Values.enableMonitoring .Values.volumeMounts }}
           volumeMounts:
+          {{- end }}
+          {{- if .Values.enableMonitoring }}
           - mountPath: /etc/certs/tls
             name: tls-cert
             readOnly: true
+          {{- end }}
           {{- with .Values.volumeMounts }}
-            {{- toYaml . | nindent 10 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -78,11 +94,15 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if or .Values.enableMonitoring .Values.volumes }}
       volumes:
+      {{- end }}
+      {{- if .Values.enableMonitoring }}
         - name: tls-cert
           secret:
             defaultMode: 420
             secretName: group-sync-operator-certs
-        {{- with .Values.volumes }}
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

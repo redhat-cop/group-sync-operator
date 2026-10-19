@@ -853,6 +853,33 @@ helm repo update
 helm upgrade group-sync-operator group-sync-operator/group-sync-operator
 ```
 
+#### Helm Chart Values
+
+| Value | Description | Default |
+|---|---|---|
+| `replicaCount` | Number of operator replicas | `1` |
+| `image.registry` | Image registry prefix (overridden by `global.imageRegistry` if set). Leave empty to use `image.repository` as the full image path | `""` |
+| `image.repository` | Image repository | `quay.io/redhat-cop/group-sync-operator` |
+| `image.tag` | Image tag (defaults to the chart `appVersion`) | latest release |
+| `image.version` | **DEPRECATED**: use `image.tag` instead. Kept for backwards compatibility | latest release |
+| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+| `global.imageRegistry` | Global Docker image registry (overrides `image.registry`) | `""` |
+| `imagePullSecrets` | Image pull secrets | `[]` |
+| `nameOverride` / `fullnameOverride` | Override resource names | `""` |
+| `env` | Additional environment variables for the manager | `[]` |
+| `args` | Additional command line arguments for the manager | `[]` |
+| `podAnnotations` / `podLabels` / `commonLabels` | Extra annotations/labels applied to the pods and resources | `{}` |
+| `podSecurityContext` | Pod security context | `runAsNonRoot: true` |
+| `securityContext` | Container security context | `allowPrivilegeEscalation: false`, drops all capabilities |
+| `resources` | Manager container resources | `cpu: 300m`, `memory: 200Mi` requests |
+| `nodeSelector` / `tolerations` / `affinity` | Pod scheduling configuration | `{}` / `[]` / `{}` |
+| `volumes` / `volumeMounts` | Additional volumes and mounts | `[]` / `[]` |
+| `enableMonitoring` | Create the metrics Service and ServiceMonitor resources (requires Prometheus Operator CRDs for the ServiceMonitor) | `true` |
+| `metricsSecure` | Serve the metrics endpoint over HTTPS with authentication. Set to `false` for plain HTTP | `true` |
+| `enableCertManager` | Create a cert-manager `Certificate` for the metrics service (requires cert-manager). Recommended on Kubernetes clusters where OpenShift serving certificates are not available. When `false`, the metrics Service is annotated so OpenShift creates the serving certificate automatically | `false` |
+| `certificate.issuerRef` | Issuer reference used by the cert-manager certificate (a self-signed `Issuer` is created when left at the default) | `name: selfsigned-issuer`, `kind: Issuer` |
+
+
 ## Metrics
 
 Prometheus compatible metrics are exposed by the Operator and can be integrated into OpenShift's user workload monitoring without any additional action required. 

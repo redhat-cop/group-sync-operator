@@ -33,6 +33,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/redhat-cop/group-sync-operator:$(VERSION)
+IMG_NO_TAG = $(firstword $(subst :, ,${IMG}))
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.37.0
@@ -214,10 +215,21 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+HELM ?= $(LOCALBIN)/helm
+KIND ?= $(LOCALBIN)/kind
+KUBECTL ?= $(LOCALBIN)/kubectl
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.8.2
 CONTROLLER_TOOLS_VERSION ?= v0.21.0
+HELM_VERSION ?= v4.3.1
+KIND_VERSION ?= v0.33.0
+KIND_NODE_VERSION ?= v1.37.0
+KIND_CLUSTER_NAME ?= group-sync-operator
+KUBECTL_VERSION ?= v1.37.1
+KUBECTL_WAIT_TIMEOUT ?= 20m
+KUBE_CONTEXT ?= kind-$(KIND_CLUSTER_NAME)
+KUBE_CONFIG_FILE ?= /tmp/$(KIND_CLUSTER_NAME)-kubeconfig
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
@@ -232,6 +244,35 @@ $(KUSTOMIZE): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
+
+.PHONY: helm
+helm: ## Download helm locally if necessary.
+	@[ -f "$(HELM)-$(HELM_VERSION)" ] || { \
+	set -e ;\
+	echo "Downloading helm $(HELM_VERSION) to $(HELM)..." ;\
+	OS=$(shell go env GOOS) ;\
+	ARCH=$(shell go env GOARCH) ;\
+	curl --create-dirs -sSLo $(HELM).tar.gz https://get.helm.sh/helm-$(HELM_VERSION)-$${OS}-$${ARCH}.tar.gz ;\
+	tar -xf $(HELM).tar.gz -C $(LOCALBIN)/ ;\
+	mv $(LOCALBIN)/$${OS}-$${ARCH}/helm $(HELM)-$(HELM_VERSION) ;\
+	rm -f $(HELM).tar.gz ;\
+	rm -rf $(LOCALBIN)/$${OS}-$${ARCH} ;\
+	} ;\
+	ln -sf $(HELM)-$(HELM_VERSION) $(HELM)
+
+.PHONY: helm-unittest
+helm-unittest: helm ## Download helm unittest plugin locally if necessary.
+	${HELM} plugin list | grep -q unittest || ${HELM} plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
+
+.PHONY: kind
+kind: $(KIND) ## Download kind locally if necessary.
+$(KIND): $(LOCALBIN)
+	test -s $(LOCALBIN)/kind || GOBIN=$(LOCALBIN) go install sigs.k8s.io/kind@$(KIND_VERSION)
+
+.PHONY: kubectl
+kubectl: $(KUBECTL) ## Download kubectl locally if necessary.
+$(KUBECTL): $(LOCALBIN)
+	test -s $(LOCALBIN)/kubectl || { curl --create-dirs -sSLo $(KUBECTL) https://dl.k8s.io/release/$(KUBECTL_VERSION)/bin/$$(go env GOOS)/$$(go env GOARCH)/kubectl && chmod +x $(KUBECTL) ; }
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
@@ -290,24 +331,97 @@ catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
 # Generate helm chart
-helmchart: kustomize
+.PHONY: helmchart
+helmchart: helmchart-clean kustomize helm
 	mkdir -p ./charts/${OPERATOR_NAME}/templates
 	mkdir -p ./charts/${OPERATOR_NAME}/crds
-	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates
-	$(KUSTOMIZE) build ./config/helmchart | sed 's/release-namespace/{{.Release.Namespace}}/' > ./charts/${OPERATOR_NAME}/templates/metadata.yaml
+	$(KUSTOMIZE) build ./config/helmchart -o ./charts/${OPERATOR_NAME}/templates
 	$(KUSTOMIZE) build ./config/crd > ./charts/${OPERATOR_NAME}/crds/crds.yaml
+	@for f in ./charts/${OPERATOR_NAME}/templates/*.yaml; do \
+	  sed 's/release-namespace/{{.Release.Namespace}}/' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \
+	done
+	rm -f ./charts/${OPERATOR_NAME}/templates/monitoring.coreos.com_v1_servicemonitor_*.yaml
+	cp ./config/helmchart/templates/* ./charts/${OPERATOR_NAME}/templates/
 	version=${VERSION} envsubst < ./config/helmchart/Chart.yaml.tpl  > ./charts/${OPERATOR_NAME}/Chart.yaml
-	version=${VERSION} image_repo=$${IMG%:*} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
-	helm lint ./charts/${OPERATOR_NAME}	
+	version=${VERSION} image_repo=${IMG_NO_TAG} envsubst < ./config/helmchart/values.yaml.tpl  > ./charts/${OPERATOR_NAME}/values.yaml
+	$(HELM) lint ./charts/${OPERATOR_NAME}
 
+.PHONY: helmchart-clean
+helmchart-clean:
+	rm -rf ./charts
+
+.PHONY: helmchart-repo
 helmchart-repo: helmchart
 	mkdir -p ${HELM_REPO_DEST}/${OPERATOR_NAME}
-	helm package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
-	helm repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
+	$(HELM) package -d ${HELM_REPO_DEST}/${OPERATOR_NAME} ./charts/${OPERATOR_NAME}
+	$(HELM) repo index --url ${CHART_REPO_URL} ${HELM_REPO_DEST}
 
-helmchart-repo-push: helmchart-repo	
+.PHONY: helmchart-repo-push
+helmchart-repo-push: helmchart-repo
 	git -C ${HELM_REPO_DEST} add .
 	git -C ${HELM_REPO_DEST} status
 	git -C ${HELM_REPO_DEST} commit -m "Release ${VERSION}"
-	git -C ${HELM_REPO_DEST} push origin "gh-pages"	
+	git -C ${HELM_REPO_DEST} push origin "gh-pages"
+
+.PHONY: helmchart-unittest
+helmchart-unittest: helmchart helm-unittest
+	mkdir -p ./charts-unittest/
+	rm -rf ./charts-unittest/${OPERATOR_NAME}
+	cp -r ./charts/${OPERATOR_NAME} ./charts-unittest/${OPERATOR_NAME}
+	cp -r ./config/helmchart/tests ./charts-unittest/${OPERATOR_NAME}/tests
+	${HELM} unittest ./charts-unittest/${OPERATOR_NAME}/
+
+# Create a kind cluster for testing.
+.PHONY: kind-setup
+kind-setup: kind
+	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+	  echo "Kind cluster '$(KIND_CLUSTER_NAME)' already exists, reusing"; \
+	else \
+	  echo "Creating Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
+	  $(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image docker.io/kindest/node:$(KIND_NODE_VERSION); \
+	fi
+	$(KIND) export kubeconfig --name $(KIND_CLUSTER_NAME) --kubeconfig $(KUBE_CONFIG_FILE)
+
+# Delete the kind cluster and its kubeconfig.
+.PHONY: kind-teardown
+kind-teardown: kind
+	@if $(KIND) get clusters 2>/dev/null | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+	  echo "Deleting Kind cluster '$(KIND_CLUSTER_NAME)'..."; \
+	  $(KIND) delete cluster --name $(KIND_CLUSTER_NAME); \
+	else \
+	  echo "Kind cluster '$(KIND_CLUSTER_NAME)' does not exist, nothing to delete"; \
+	fi
+	@rm -f $(KUBE_CONFIG_FILE)
+
+HELM_TEST_IMG_NAME ?= ${OPERATOR_NAME}
+HELM_TEST_IMG_TAG ?= helmchart-test
+
+# Deploy the helmchart to a kind cluster to test deployment.
+# The operator pod must become ready with cert-manager-backed metrics certificates
+# and the secure metrics endpoint must respond.
+.PHONY: helmchart-test
+helmchart-test: kind-setup kubectl helmchart
+	$(MAKE) IMG=${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker-build
+	$(CONTAINER_TOOL) tag ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}
+	@if [ "$(CONTAINER_TOOL)" = "podman" ]; then \
+	  $(CONTAINER_TOOL) save ${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG} -o /tmp/kind-helm-image.tar && \
+	  $(KIND) load image-archive --name $(KIND_CLUSTER_NAME) /tmp/kind-helm-image.tar && \
+	  rm -f /tmp/kind-helm-image.tar; \
+	else \
+	  $(KIND) load docker-image --name $(KIND_CLUSTER_NAME) docker.io/library/${HELM_TEST_IMG_NAME}:${HELM_TEST_IMG_TAG}; \
+	fi
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add jetstack https://charts.jetstack.io --force-update
+	$(HELM) --kube-context $(KUBE_CONTEXT) install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.21.1 --set crds.enabled=true
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/instance=cert-manager --timeout=${KUBECTL_WAIT_TIMEOUT}
+	$(HELM) --kube-context $(KUBE_CONTEXT) repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
+	$(HELM) --kube-context $(KUBE_CONTEXT) install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n default -f integration/kube-prometheus-stack-values.yaml
+	$(HELM) --kube-context $(KUBE_CONTEXT) install prometheus-rbac integration/helm/prometheus-rbac -n default
+	$(HELM) --kube-context $(KUBE_CONTEXT) upgrade -i ${OPERATOR_NAME}-local charts/${OPERATOR_NAME} -n ${OPERATOR_NAME}-local --create-namespace --force-conflicts \
+	  --set enableMonitoring=true \
+	  --set enableCertManager=true \
+	  --set image.repository=${HELM_TEST_IMG_NAME} \
+	  --set image.tag=${HELM_TEST_IMG_TAG}
+	$(KUBECTL) --context $(KUBE_CONTEXT) wait --namespace ${OPERATOR_NAME}-local --for=condition=ready pod --selector=app.kubernetes.io/name=${OPERATOR_NAME} --timeout=${KUBECTL_WAIT_TIMEOUT} || { $(KUBECTL) --context $(KUBE_CONTEXT) get pods -A; $(KUBECTL) --context $(KUBE_CONTEXT) logs -n ${OPERATOR_NAME}-local deploy/${OPERATOR_NAME}-local --all-containers; exit 1; }
+	METRICS_TOKEN=$$($(KUBECTL) --context $(KUBE_CONTEXT) get secret group-sync-operator-controller-manager-metrics-token -n ${OPERATOR_NAME}-local -o jsonpath='{.data.token}' | base64 -d) && \
+	$(KUBECTL) --context $(KUBE_CONTEXT) exec -n ${OPERATOR_NAME}-local deploy/${OPERATOR_NAME}-local -c group-sync-operator -- curl -s -k -H "Authorization: Bearer $$METRICS_TOKEN" https://group-sync-operator-controller-manager-metrics-service.${OPERATOR_NAME}-local.svc.cluster.local:8443/metrics > /dev/null && echo "Metrics endpoint verified"
 	
