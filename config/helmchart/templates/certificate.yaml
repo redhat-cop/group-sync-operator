@@ -1,0 +1,24 @@
+{{- if .Values.enableCertManager }}
+{{- $issuerRef := .Values.certificate.issuerRef }}
+{{- $isDefault := and (eq ($issuerRef.name | default "") "selfsigned-issuer") (eq ($issuerRef.kind | default "") "Issuer") }}
+{{- if $isDefault }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: group-sync-operator-certs
+spec:
+  dnsNames:
+    - group-sync-operator-controller-manager-metrics-service.{{ .Release.Namespace }}.svc
+    - group-sync-operator-controller-manager-metrics-service.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    {{- toYaml $issuerRef | nindent 4 }}
+  secretName: group-sync-operator-certs
+{{- end }}
