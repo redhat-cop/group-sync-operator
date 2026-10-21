@@ -40,6 +40,8 @@ ENVTEST_K8S_VERSION = 1.37.0
 
 ENVTEST_VERSION ?= release-0.25
 
+OPENSHIFT_SUPPORTED_VERSION ?= v4.14
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -279,6 +281,8 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
+	@printf "%s\n" '' 'LABEL com.redhat.openshift.versions="$(OPENSHIFT_SUPPORTED_VERSION)"' >> bundle.Dockerfile
+	@printf "%s\n" '' '  # OpenShift annotations.' '  com.redhat.openshift.versions: $(OPENSHIFT_SUPPORTED_VERSION)' >> bundle/metadata/annotations.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-build
