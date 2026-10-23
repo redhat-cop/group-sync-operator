@@ -153,6 +153,9 @@ spec:
                           prune:
                             description: Prune Whether to prune groups that are no longer in Azure. Default is false
                             type: boolean
+                          useUIDAsGroupName:
+                            description: UseUIDAsGroupName determines whether the Azure group object ID (UID) is used as the name of the OpenShift group instead of the display name. Default is false
+                            type: boolean
                           userNameAttributes:
                             description: UserNameAttributes are the fields to consider on the User object containing the username
                             items:
