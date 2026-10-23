@@ -22,7 +22,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
 	github.com/openshift/api v0.0.0-20261017003925-24b2699a9b32
-	github.com/openshift/library-go v0.0.0-20261016185738-b2ae89191cc2
+	github.com/openshift/library-go v0.0.0-20261023170121-9a2bc12675c2
 	github.com/palantir/go-githubapp v0.48.0
 	github.com/prometheus/client_golang v1.25.0
 	github.com/redhat-cop/operator-utils v1.3.8
