@@ -270,6 +270,8 @@ github.com/openshift/api v0.0.0-20261017003925-24b2699a9b32 h1:8S9304xp9Ufdfq0V9
 github.com/openshift/api v0.0.0-20261017003925-24b2699a9b32/go.mod h1:2oI3aXQFDjjl7l4xA9ZPSkB+l+lyfWLg7P2sWg9yEvM=
 github.com/openshift/library-go v0.0.0-20261016185738-b2ae89191cc2 h1:V84t/iPMEQFADcO0Roqd0GWn8IvyWAL3XVAs/CAJEkw=
 github.com/openshift/library-go v0.0.0-20261016185738-b2ae89191cc2/go.mod h1:EwF5uw+vMz6MG3Fj2wKMfNsHl7y+FLgJvZIpNUFxQss=
+github.com/openshift/library-go v0.0.0-20261023170121-9a2bc12675c2 h1:GdSZS+hUOLOSQcQrNRTahFQ0TPPE/EZj/VXtlVK79mw=
+github.com/openshift/library-go v0.0.0-20261023170121-9a2bc12675c2/go.mod h1:JOJKlqc8fqB/I632V61geb80zImgXC8FEQR3jn2/syI=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/palantir/go-githubapp v0.48.0 h1:mN1FGDsdquYxIkcTB6bZTfC+IpKj5hhtlRSDJfjuX6U=
