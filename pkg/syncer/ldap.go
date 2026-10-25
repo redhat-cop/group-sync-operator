@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	legacyconfigv1 "github.com/openshift/api/legacyconfig/v1"
@@ -30,6 +31,13 @@ import (
 
 var (
 	ldapLogger = logf.Log.WithName("syncer_ldap")
+
+	// dialAttempts is the number of times the LDAP dial (connect and bind) is
+	// attempted before the sync fails.
+	dialAttempts = 3
+	// dialBackoff is the base delay between dial attempts; it grows
+	// exponentially with each failed attempt (2s, 4s, 8s, ...).
+	dialBackoff = 2 * time.Second
 )
 
 type LdapSyncer struct {
@@ -45,6 +53,9 @@ type LdapSyncer struct {
 	Whitelist         []string
 	Blacklist         []string
 	Syncer            *syncgroups.LDAPGroupSyncer
+	// ldapClient holds the single LDAP connection shared by every query of a
+	// sync run. It is established in Bind() and closed at the end of Sync().
+	ldapClient ldap.Client
 }
 
 func (l *LdapSyncer) Init() bool {
@@ -194,9 +205,24 @@ func (l *LdapSyncer) Bind() error {
 		return fmt.Errorf("could not determine LDAP client configuration: %v", err)
 	}
 
+	// Establish the single LDAP connection shared by every query of the sync
+	// run, retrying transient dial failures.
+	l.ldapClient, err = l.dialWithRetry(clientConfig)
+	if err != nil {
+		return err
+	}
+
+	// If anything below fails, don't leak the established connection.
+	bound := false
+	defer func() {
+		if !bound {
+			l.closeLDAP()
+		}
+	}()
+
 	errorHandler := l.CreateErrorHandler()
 
-	syncBuilder, err := buildSyncBuilder(clientConfig, l.Provider, errorHandler)
+	syncBuilder, err := buildSyncBuilder(l.ldapClient, l.Provider, errorHandler)
 	if err != nil {
 		return err
 	}
@@ -229,11 +255,16 @@ func (l *LdapSyncer) Bind() error {
 	}
 
 	l.Syncer = syncer
+	bound = true
 
 	return nil
 }
 
 func (l *LdapSyncer) Sync() ([]userv1.Group, error) {
+
+	// The connection established in Bind() serves the entire sync run; close it
+	// when the sync finishes, on success or failure.
+	defer l.closeLDAP()
 
 	// Now we run the Syncer and report any errors
 	ocpGroups := []userv1.Group{}
@@ -251,6 +282,63 @@ func (l *LdapSyncer) Sync() ([]userv1.Group, error) {
 
 func (l *LdapSyncer) GetProviderName() string {
 	return l.Name
+}
+
+// dialWithRetry attempts to establish and bind the LDAP connection, retrying
+// failed attempts up to dialAttempts times with exponential backoff. It gives
+// up early if the syncer's context is cancelled.
+func (l *LdapSyncer) dialWithRetry(config ldapclient.Config) (ldap.Client, error) {
+	var lastErr error
+	for attempt := 1; attempt <= dialAttempts; attempt++ {
+		client, err := connectAndBind(config)
+		if err == nil {
+			return client, nil
+		}
+		lastErr = err
+		ldapLogger.Error(err, "LDAP dial failed", "attempt", attempt, "of", dialAttempts)
+		if attempt < dialAttempts {
+			ctx := l.Context
+			if ctx == nil {
+				ctx = context.Background()
+			}
+			select {
+			case <-time.After(dialBackoff << (attempt - 1)):
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+		}
+	}
+	return nil, fmt.Errorf("could not connect to LDAP server after %d attempts: %v", dialAttempts, lastErr)
+}
+
+// connectAndBind establishes an LDAP connection and binds when credentials were
+// provided. It mirrors ldapclient.ConnectMaybeBind, but closes the connection
+// when the bind fails, which ConnectMaybeBind neglects to do.
+var connectAndBind = func(config ldapclient.Config) (ldap.Client, error) {
+	client, err := config.Connect()
+	if err != nil {
+		return nil, err
+	}
+	if bindDN, bindPassword := config.GetBindCredentials(); len(bindDN) > 0 {
+		if err := client.Bind(bindDN, bindPassword); err != nil {
+			client.Close()
+			return nil, err
+		}
+	}
+	return client, nil
+}
+
+// closeLDAP politely unbinds and closes the held LDAP connection, if any.
+func (l *LdapSyncer) closeLDAP() {
+	if l.ldapClient == nil {
+		return
+	}
+	// Unbind does a polite quit and closes the connection.
+	// But when it fails, we need to ensure the connection is closed for sure.
+	if err := l.ldapClient.Unbind(); err != nil {
+		_ = l.ldapClient.Close()
+	}
+	l.ldapClient = nil
 }
 
 func ValidateRFC2307Config(config *legacyconfigv1.RFC2307Config) []error {
@@ -376,14 +464,14 @@ func (l *LdapSyncer) CreateErrorHandler() syncerror.Handler {
 	return syncerror.NewCompoundHandler(components...)
 }
 
-func buildSyncBuilder(clientConfig ldapclient.Config, provider *redhatcopv1alpha1.LdapProvider, errorHandler syncerror.Handler) (ldapbuilders.SyncBuilder, error) {
+func buildSyncBuilder(ldapClient ldap.Client, provider *redhatcopv1alpha1.LdapProvider, errorHandler syncerror.Handler) (ldapbuilders.SyncBuilder, error) {
 	switch {
 	case provider.RFC2307Config != nil:
-		return &ldapbuilders.RFC2307Builder{ClientConfig: clientConfig, Config: provider.RFC2307Config, ErrorHandler: errorHandler}, nil
+		return &ldapbuilders.RFC2307Builder{LDAPClient: ldapClient, Config: provider.RFC2307Config, ErrorHandler: errorHandler}, nil
 	case provider.ActiveDirectoryConfig != nil:
-		return &ldapbuilders.ADBuilder{ClientConfig: clientConfig, Config: provider.ActiveDirectoryConfig}, nil
+		return &ldapbuilders.ADBuilder{LDAPClient: ldapClient, Config: provider.ActiveDirectoryConfig}, nil
 	case provider.AugmentedActiveDirectoryConfig != nil:
-		return &ldapbuilders.AugmentedADBuilder{ClientConfig: clientConfig, Config: provider.AugmentedActiveDirectoryConfig}, nil
+		return &ldapbuilders.AugmentedADBuilder{LDAPClient: ldapClient, Config: provider.AugmentedActiveDirectoryConfig}, nil
 	default:
 		return nil, errors.New("invalid sync config type")
 	}
