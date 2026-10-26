@@ -23,7 +23,7 @@ require (
 	github.com/onsi/gomega v1.44.0
 	github.com/openshift/api v0.0.0-20261017003925-24b2699a9b32
 	github.com/openshift/library-go v0.0.0-20261016185738-b2ae89191cc2
-	github.com/palantir/go-githubapp v0.48.0
+	github.com/palantir/go-githubapp v0.49.0
 	github.com/prometheus/client_golang v1.25.0
 	github.com/redhat-cop/operator-utils v1.3.8
 	github.com/robfig/cron/v3 v3.0.1
@@ -92,6 +92,7 @@ require (
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-github/v88 v88.0.0 // indirect
+	github.com/google/go-github/v93 v93.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -108,7 +109,7 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.0.12 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
-	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/microsoft/kiota-serialization-form-go v1.1.3 // indirect
 	github.com/microsoft/kiota-serialization-json-go v1.1.4 // indirect
