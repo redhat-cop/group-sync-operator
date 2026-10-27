@@ -174,6 +174,13 @@ spec:
         path: providers[0].azure.prune
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: UseUIDAsGroupName determines whether the Azure group object ID
+          (UID) is used as the name of the OpenShift group instead of the display
+          name. Default is false
+        displayName: Use UID as Group Name
+        path: providers[0].azure.useUIDAsGroupName
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: UserNameAttributes are the fields to consider on the User object
           containing the username
         displayName: Azure UserName Attributes
@@ -852,6 +859,7 @@ spec:
     | `clientFilter` | CEL expression for client-side filtering after retrieval (e.g. `group.securityEnabled && group.description == ""`) | | No |
     | `groups` | List of groups to filter against | | No |
     | `userNameAttributes` | Fields on a user record to use as the User Name | `userPrincipalName` | No |
+    | `useUIDAsGroupName` | Use the Azure group object ID (UID) instead of the display name as the name of the OpenShift group | `false` | No |
     | `prune` | Prune Whether to prune groups that are no longer in Azure | `false` | No |
 
     The following is an example of a minimal configuration that can be applied to integrate with a Azure provider:
