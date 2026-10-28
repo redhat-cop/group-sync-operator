@@ -13,7 +13,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/microsoft/kiota-abstractions-go v1.11.2
+	github.com/microsoft/kiota-abstractions-go v1.12.0
 	github.com/microsoft/kiota-authentication-azure-go v1.3.1
 	github.com/microsoft/kiota-http-go v1.5.8
 	github.com/microsoftgraph/msgraph-sdk-go v1.104.0
