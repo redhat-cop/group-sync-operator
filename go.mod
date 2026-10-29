@@ -30,7 +30,7 @@ require (
 	github.com/shurcooL/githubv4 v0.0.0-20260209031235-2402fdf4a9ed
 	github.com/spiffe/go-spiffe/v2 v2.9.0
 	github.com/stretchr/testify v1.12.1
-	gitlab.com/gitlab-org/api/client-go/v3 v3.27.0
+	gitlab.com/gitlab-org/api/client-go/v3 v3.40.0
 	golang.org/x/text v0.43.0
 	k8s.io/api v0.37.1
 	k8s.io/apimachinery v0.37.1
