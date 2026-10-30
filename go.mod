@@ -21,8 +21,8 @@ require (
 	github.com/okta/okta-sdk-golang/v7 v7.0.0
 	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
-	github.com/openshift/api v0.0.0-20261017003925-24b2699a9b32
-	github.com/openshift/library-go v0.0.0-20261016185738-b2ae89191cc2
+	github.com/openshift/api v0.0.0-20261023091600-9809689a2448
+	github.com/openshift/library-go v0.0.0-20261030161254-298cf2d19148
 	github.com/palantir/go-githubapp v0.48.0
 	github.com/prometheus/client_golang v1.25.0
 	github.com/redhat-cop/operator-utils v1.3.8
