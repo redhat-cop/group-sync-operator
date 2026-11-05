@@ -295,6 +295,7 @@ github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 h1:bsUq1dX0N8A
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/redhat-cop/operator-utils v1.3.8 h1:xhoMBg2snSzNdcxT53lSBr7PRXxrzP1cDi51NPBLaT4=
 github.com/redhat-cop/operator-utils v1.3.8/go.mod h1:s4R0YY8lVlHkC78GLV20PPuZmywjSbTwZKCHwWUQ3P8=
+github.com/redhat-cop/operator-utils/v2 v2.0.0/go.mod h1:rTZCHcBZ+EV/MmzXdUOMbG0cG2u3QqQdwMUeJQnoSvo=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/go-internal v1.16.0 h1:O9DK+vNMDVGLr2BeZqmpLeMjiMNkuXfcqntWbZV6S5g=

@@ -26,6 +26,7 @@ require (
 	github.com/palantir/go-githubapp v0.48.0
 	github.com/prometheus/client_golang v1.25.0
 	github.com/redhat-cop/operator-utils v1.3.8
+	github.com/redhat-cop/operator-utils/v2 v2.0.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shurcooL/githubv4 v0.0.0-20260209031235-2402fdf4a9ed
 	github.com/spiffe/go-spiffe/v2 v2.9.0
