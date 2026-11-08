@@ -434,6 +434,11 @@ type AzureProvider struct {
 	// +kubebuilder:validation:Optional
 	UserNameAttributes *[]string `json:"userNameAttributes,omitempty"`
 
+	// GroupNameAttributes are the fields to consider on the Group object containing the group name. The fields are considered in order and the first one present on the group is used. Defaults to the display name
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Azure GroupName Attributes",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	// +kubebuilder:validation:Optional
+	GroupNameAttributes *[]string `json:"groupNameAttributes,omitempty"`
+
 	// Prune Whether to prune groups that are no longer in Azure. Default is false
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Prune",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	// +kubebuilder:validation:Optional
