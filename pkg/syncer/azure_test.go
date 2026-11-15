@@ -318,3 +318,121 @@ func TestExtractGroupFieldsWithNilValues(t *testing.T) {
 		t.Errorf("mailNickname should be empty string when not set, got %v", mailNickname)
 	}
 }
+
+// TestResolveGroupName tests the naming of the OpenShift Group derived from an Azure group
+func TestResolveGroupName(t *testing.T) {
+	tests := []struct {
+		name                string
+		groupNameAttributes *[]string
+		group               graph.Group
+		expectedName        string
+	}{
+		{
+			name:                "display name used by default",
+			groupNameAttributes: nil,
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "test-group",
+		},
+		{
+			name:                "object id used when configured",
+			groupNameAttributes: &[]string{"id"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94",
+		},
+		{
+			name:                "attributes considered in order",
+			groupNameAttributes: &[]string{"mailNickname", "displayName"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetMailNickname(strPtr("test-group-nickname"))
+				return *g
+			}(),
+			expectedName: "test-group-nickname",
+		},
+		{
+			name:                "next attribute used when the preceding one is absent",
+			groupNameAttributes: &[]string{"mailNickname", "id"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				// mailNickname intentionally not set (nil)
+				return *g
+			}(),
+			expectedName: "8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94",
+		},
+		{
+			name:                "empty attribute value skipped",
+			groupNameAttributes: &[]string{"mailNickname", "id"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetMailNickname(strPtr(""))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94",
+		},
+		{
+			name:                "display name used as fallback when no attribute resolves",
+			groupNameAttributes: &[]string{"id"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				// id intentionally not set (nil)
+				return *g
+			}(),
+			expectedName: "test-group",
+		},
+		{
+			name:                "unknown attribute skipped",
+			groupNameAttributes: &[]string{"notAnAttribute", "id"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94",
+		},
+		{
+			name:                "non string attribute skipped",
+			groupNameAttributes: &[]string{"securityEnabled", "id"},
+			group: func() graph.Group {
+				g := graph.NewGroup()
+				g.SetDisplayName(strPtr("test-group"))
+				g.SetSecurityEnabled(boolPtr(true))
+				g.SetId(strPtr("8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94"))
+				return *g
+			}(),
+			expectedName: "8c4d1b3e-9d2a-4f61-8b0a-1f6c2d5e7a94",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			syncer := &AzureSyncer{
+				Name: "azure",
+				Provider: &redhatcopv1alpha1.AzureProvider{
+					GroupNameAttributes: tt.groupNameAttributes,
+				},
+			}
+
+			groupName := syncer.resolveGroupName(tt.group, *tt.group.GetDisplayName())
+			if groupName != tt.expectedName {
+				t.Errorf("resolveGroupName() = %v, want %v", groupName, tt.expectedName)
+			}
+		})
+	}
+}

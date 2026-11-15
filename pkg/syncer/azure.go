@@ -414,13 +414,15 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 			continue
 		}
 
+		ocpGroupName := a.resolveGroupName(group, *groupName)
+
 		ocpGroup := userv1.Group{
 			TypeMeta: v1.TypeMeta{
 				Kind:       "Group",
 				APIVersion: userv1.GroupVersion.String(),
 			},
 			ObjectMeta: v1.ObjectMeta{
-				Name:        *groupName,
+				Name:        ocpGroupName,
 				Annotations: map[string]string{},
 				Labels:      map[string]string{},
 			},
@@ -430,6 +432,11 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 		// Set Host Specific Details
 		ocpGroup.GetAnnotations()[constants.SyncSourceHost] = azureURL.Host
 		ocpGroup.GetAnnotations()[constants.SyncSourceUID] = *group.DirectoryObject.GetId()
+
+		// Retain the Azure display name whenever it is not used as the Group name
+		if ocpGroupName != *groupName {
+			ocpGroup.GetAnnotations()[constants.SyncSourceName] = *groupName
+		}
 
 		groupMembers, err := a.listGroupMembers(group.DirectoryObject.GetId())
 
@@ -452,6 +459,63 @@ func (a *AzureSyncer) Sync() ([]userv1.Group, error) {
 
 func (a *AzureSyncer) GetProviderName() string {
 	return a.Name
+}
+
+// resolveGroupName determines the name to assign to the OpenShift Group. The fields
+// listed in GroupNameAttributes are considered in order and the first one carrying a
+// value on the Azure group is used. The Azure display name is used when no attributes
+// are configured or when none of them resolves to a value.
+func (a *AzureSyncer) resolveGroupName(group graph.Group, displayName string) string {
+
+	if a.Provider.GroupNameAttributes == nil {
+		return displayName
+	}
+
+	groupValue := reflect.ValueOf(&group)
+
+	for _, groupNameAttribute := range *a.Provider.GroupNameAttributes {
+
+		groupName, found := a.isGroupNamePresent(groupValue, groupNameAttribute)
+
+		if found {
+			return groupName
+		}
+	}
+
+	azureLogger.Info(fmt.Sprintf("Warning: Falling back to displayName for Group record without any of the configured groupNameAttributes. Group: %s", displayName), "Provider", a.Name)
+
+	return displayName
+}
+
+func (a *AzureSyncer) isGroupNamePresent(value reflect.Value, field string) (string, bool) {
+
+	method := value.MethodByName(fmt.Sprintf("Get%s", caser.String(field)))
+
+	if !method.IsValid() || method.Type().NumIn() != 0 || method.Type().NumOut() != 1 {
+		azureLogger.Info(fmt.Sprintf("Warning: Skipping unknown Group name attribute %s.", field), "Provider", a.Name)
+		return "", false
+	}
+
+	attr := method.Call(nil)[0]
+
+	if attr.Kind() != reflect.Ptr || attr.Type().Elem().Kind() != reflect.String {
+		azureLogger.Info(fmt.Sprintf("Warning: Skipping non string Group name attribute %s.", field), "Provider", a.Name)
+		return "", false
+	}
+
+	if attr.IsNil() {
+		azureLogger.Info(fmt.Sprintf("Warning: Skipping Group record with empty %s.", field), "Provider", a.Name)
+		return "", false
+	}
+
+	groupName := attr.Elem().String()
+
+	if groupName == "" {
+		azureLogger.Info(fmt.Sprintf("Warning: Skipping Group record with empty %s.", field), "Provider", a.Name)
+		return "", false
+	}
+
+	return groupName, true
 }
 
 func (a *AzureSyncer) listGroupMembers(groupID *string) ([]string, error) {

@@ -142,6 +142,11 @@ spec:
                           filter:
                             description: Filter allows for limiting the results from the groups response using the Filter feature of the Azure Graph API
                             type: string
+                          groupNameAttributes:
+                            description: GroupNameAttributes are the fields to consider on the Group object containing the group name. The fields are considered in order and the first one present on the group is used. Defaults to the display name
+                            items:
+                              type: string
+                            type: array
                           groups:
                             description: Groups represents a filtered list of groups to synchronize
                             items:
